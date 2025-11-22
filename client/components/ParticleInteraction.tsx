@@ -16,7 +16,7 @@ export default function ParticleInteraction({ particlesRef, onParticleClick }: P
   const isAnimating = useRef(false);
 
   useEffect(() => {
-    raycaster.current.params.Points = { threshold: 0.5 };
+    raycaster.current.params.Points = { threshold: 2.0 };
 
     const handleClick = (event: MouseEvent) => {
       if (!particlesRef.current) return;
@@ -31,7 +31,10 @@ export default function ParticleInteraction({ particlesRef, onParticleClick }: P
       // Calculate objects intersecting the picking ray
       const intersects = raycaster.current.intersectObject(particlesRef.current);
 
+      console.log('Particle click detected, intersects:', intersects.length);
+
       if (intersects.length > 0) {
+        console.log('Showing repo card for particle:', intersects[0].index);
         const point = intersects[0].point;
         const index = intersects[0].index || 0;
 
