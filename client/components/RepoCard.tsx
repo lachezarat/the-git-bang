@@ -28,12 +28,13 @@ export default function RepoCard({ repo, position, onClose }: RepoCardProps) {
 
   // Calculate safe position within viewport bounds
   const cardWidth = 420;
-  const cardEstimatedHeight = 600; // Estimated height for positioning
-  const padding = 60; // Padding from viewport edges
+  // Use maxHeight from style (100vh - 120px = viewport height - 120)
+  const maxCardHeight = window.innerHeight - 120;
+  const padding = 20; // Minimal padding from viewport edges
 
   // Account for transform: translate(-50%, -50%)
   const halfWidth = cardWidth / 2;
-  const halfHeight = cardEstimatedHeight / 2;
+  const halfHeight = maxCardHeight / 2;
 
   // Constrain position to keep card fully visible
   const safeX = Math.min(
