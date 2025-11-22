@@ -29,8 +29,16 @@ export default function Index() {
     setSearchActive(false);
   };
 
-  const handleParticleClick = (repo: any, position: { x: number; y: number }) => {
-    console.log('handleParticleClick called with repo:', repo, 'position:', position);
+  const handleParticleClick = (
+    repo: any,
+    position: { x: number; y: number },
+  ) => {
+    console.log(
+      "handleParticleClick called with repo:",
+      repo,
+      "position:",
+      position,
+    );
     setSelectedRepo(repo);
     setRepoCardPos(position);
   };
@@ -70,14 +78,26 @@ export default function Index() {
 
       {!bootComplete && <BootSequence />}
 
-      <Canvas className="absolute inset-0" dpr={[1, 2]} gl={{ antialias: true }}>
+      <Canvas
+        className="absolute inset-0"
+        dpr={[1, 2]}
+        gl={{ antialias: true }}
+      >
         <PerspectiveCamera makeDefault fov={75} position={[0, 0, 150]} />
         <ambientLight intensity={0.05} />
         <pointLight position={[20, 20, 20]} intensity={0.3} color="#00fff9" />
-        <pointLight position={[-20, -20, -20]} intensity={0.2} color="#ff006e" />
+        <pointLight
+          position={[-20, -20, -20]}
+          intensity={0.2}
+          color="#ff006e"
+        />
         <pointLight position={[0, 20, -20]} intensity={0.15} color="#ffba08" />
-        
-        <Scene3D searchActive={searchActive} searchQuery={searchQuery} onParticleClick={handleParticleClick} />
+
+        <Scene3D
+          searchActive={searchActive}
+          searchQuery={searchQuery}
+          onParticleClick={handleParticleClick}
+        />
 
         <OrbitControls
           target={[0, 0, 0]}
@@ -95,12 +115,17 @@ export default function Index() {
           mouseButtons={{
             LEFT: THREE.MOUSE.PAN,
             MIDDLE: THREE.MOUSE.DOLLY,
-            RIGHT: THREE.MOUSE.ROTATE
+            RIGHT: THREE.MOUSE.ROTATE,
           }}
         />
       </Canvas>
 
-      {bootComplete && <HUD onSearchChange={handleSearchChange} onSuggestionSelect={handleSuggestionSelect} />}
+      {bootComplete && (
+        <HUD
+          onSearchChange={handleSearchChange}
+          onSuggestionSelect={handleSuggestionSelect}
+        />
+      )}
       {bootComplete && <AmbientSound />}
 
       {selectedRepo && (

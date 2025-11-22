@@ -17,7 +17,10 @@ export default function HUD({ onSearchChange, onSuggestionSelect }: HUDProps) {
       <StatsPanel />
       <TimelinePanel />
       <ControlsPanel />
-      <SearchBar onSearchChange={onSearchChange} onSuggestionSelect={onSuggestionSelect} />
+      <SearchBar
+        onSearchChange={onSearchChange}
+        onSuggestionSelect={onSuggestionSelect}
+      />
 
       <div
         className="hud-element absolute top-1/2 left-8 -translate-y-1/2"

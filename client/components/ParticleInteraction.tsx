@@ -8,7 +8,10 @@ interface ParticleInteractionProps {
   onParticleClick?: (repo: any, position: { x: number; y: number }) => void;
 }
 
-export default function ParticleInteraction({ particlesRef, onParticleClick }: ParticleInteractionProps) {
+export default function ParticleInteraction({
+  particlesRef,
+  onParticleClick,
+}: ParticleInteractionProps) {
   const { camera, gl, controls } = useThree();
   const raycaster = useRef(new THREE.Raycaster());
   const mouse = useRef(new THREE.Vector2());
@@ -32,7 +35,7 @@ export default function ParticleInteraction({ particlesRef, onParticleClick }: P
       const deltaY = Math.abs(event.clientY - mouseDownPos.current.y);
 
       if (deltaX > dragThreshold || deltaY > dragThreshold) {
-        console.log('Drag detected, ignoring click');
+        console.log("Drag detected, ignoring click");
         return; // This was a drag, not a click
       }
 
@@ -44,30 +47,72 @@ export default function ParticleInteraction({ particlesRef, onParticleClick }: P
       raycaster.current.setFromCamera(mouse.current, camera);
 
       // Calculate objects intersecting the picking ray
-      const intersects = raycaster.current.intersectObject(particlesRef.current);
+      const intersects = raycaster.current.intersectObject(
+        particlesRef.current,
+      );
 
-      console.log('Particle click detected, intersects:', intersects.length);
+      console.log("Particle click detected, intersects:", intersects.length);
 
       if (intersects.length > 0) {
-        console.log('Showing repo card for particle:', intersects[0].index);
+        console.log("Showing repo card for particle:", intersects[0].index);
         const point = intersects[0].point;
         const index = intersects[0].index || 0;
 
         // Generate mock repository data for the clicked particle
         const repoNames = [
-          { name: "react", owner: "facebook", desc: "A declarative, efficient JavaScript library for building user interfaces" },
-          { name: "vue", owner: "vuejs", desc: "The Progressive JavaScript Framework" },
-          { name: "tensorflow", owner: "tensorflow", desc: "An Open Source Machine Learning Framework for Everyone" },
-          { name: "kubernetes", owner: "kubernetes", desc: "Production-Grade Container Orchestration" },
-          { name: "rust", owner: "rust-lang", desc: "Empowering everyone to build reliable and efficient software" },
+          {
+            name: "react",
+            owner: "facebook",
+            desc: "A declarative, efficient JavaScript library for building user interfaces",
+          },
+          {
+            name: "vue",
+            owner: "vuejs",
+            desc: "The Progressive JavaScript Framework",
+          },
+          {
+            name: "tensorflow",
+            owner: "tensorflow",
+            desc: "An Open Source Machine Learning Framework for Everyone",
+          },
+          {
+            name: "kubernetes",
+            owner: "kubernetes",
+            desc: "Production-Grade Container Orchestration",
+          },
+          {
+            name: "rust",
+            owner: "rust-lang",
+            desc: "Empowering everyone to build reliable and efficient software",
+          },
           { name: "vscode", owner: "microsoft", desc: "Visual Studio Code" },
-          { name: "pytorch", owner: "pytorch", desc: "Tensors and Dynamic neural networks in Python" },
+          {
+            name: "pytorch",
+            owner: "pytorch",
+            desc: "Tensors and Dynamic neural networks in Python",
+          },
           { name: "node", owner: "nodejs", desc: "Node.js JavaScript runtime" },
-          { name: "django", owner: "django", desc: "The Web framework for perfectionists with deadlines" },
-          { name: "rails", owner: "rails", desc: "Ruby on Rails web framework" },
+          {
+            name: "django",
+            owner: "django",
+            desc: "The Web framework for perfectionists with deadlines",
+          },
+          {
+            name: "rails",
+            owner: "rails",
+            desc: "Ruby on Rails web framework",
+          },
         ];
 
-        const languages = ["JavaScript", "TypeScript", "Python", "Go", "Rust", "Ruby", "Java"];
+        const languages = [
+          "JavaScript",
+          "TypeScript",
+          "Python",
+          "Go",
+          "Rust",
+          "Ruby",
+          "Java",
+        ];
         const selectedRepo = repoNames[index % repoNames.length];
 
         const mockRepo = {
@@ -90,9 +135,13 @@ export default function ParticleInteraction({ particlesRef, onParticleClick }: P
         }
 
         // Calculate camera target position (move camera closer to the particle)
-        const direction = new THREE.Vector3().subVectors(point, camera.position).normalize();
+        const direction = new THREE.Vector3()
+          .subVectors(point, camera.position)
+          .normalize();
         const distance = 30; // Distance from particle to camera
-        const newCameraPosition = new THREE.Vector3().copy(point).sub(direction.multiplyScalar(distance));
+        const newCameraPosition = new THREE.Vector3()
+          .copy(point)
+          .sub(direction.multiplyScalar(distance));
 
         // Animate camera to new position
         isAnimating.current = true;
@@ -111,7 +160,7 @@ export default function ParticleInteraction({ particlesRef, onParticleClick }: P
           },
           onComplete: () => {
             isAnimating.current = false;
-          }
+          },
         });
 
         // Animate orbit controls target
@@ -121,7 +170,7 @@ export default function ParticleInteraction({ particlesRef, onParticleClick }: P
             y: point.y,
             z: point.z,
             duration: 1.5,
-            ease: "power2.inOut"
+            ease: "power2.inOut",
           });
         }
       }

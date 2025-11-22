@@ -109,14 +109,21 @@ function ConeGuides() {
   );
 }
 
-export default function Scene3D({ searchActive = false, searchQuery = "", onParticleClick }: Scene3DProps) {
+export default function Scene3D({
+  searchActive = false,
+  searchQuery = "",
+  onParticleClick,
+}: Scene3DProps) {
   const particlesRef = useRef<THREE.Points>(null);
 
   return (
     <group>
       <FunnelWireframe />
       <LightCone particlesRef={particlesRef} />
-      <ParticleInteraction particlesRef={particlesRef} onParticleClick={onParticleClick} />
+      <ParticleInteraction
+        particlesRef={particlesRef}
+        onParticleClick={onParticleClick}
+      />
       {/* <ConeGuides /> */}
     </group>
   );

@@ -144,7 +144,8 @@ export default function LightCone({ particlesRef }: LightConeProps = {}) {
       positions[i * 3 + 1] = y;
       positions[i * 3 + 2] = z;
 
-      const languageColor = languageColors[Math.floor(Math.random() * languageColors.length)];
+      const languageColor =
+        languageColors[Math.floor(Math.random() * languageColors.length)];
       colors[i * 3] = languageColor.r;
       colors[i * 3 + 1] = languageColor.g;
       colors[i * 3 + 2] = languageColor.b;
@@ -161,12 +162,15 @@ export default function LightCone({ particlesRef }: LightConeProps = {}) {
     }
 
     const geometry = new THREE.BufferGeometry();
-    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-    geometry.setAttribute('customColor', new THREE.BufferAttribute(colors, 3));
-    geometry.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
-    geometry.setAttribute('pulse', new THREE.BufferAttribute(pulses, 1));
-    geometry.setAttribute('activity', new THREE.BufferAttribute(activities, 1));
-    geometry.setAttribute('brightness', new THREE.BufferAttribute(brightnesses, 1));
+    geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+    geometry.setAttribute("customColor", new THREE.BufferAttribute(colors, 3));
+    geometry.setAttribute("size", new THREE.BufferAttribute(sizes, 1));
+    geometry.setAttribute("pulse", new THREE.BufferAttribute(pulses, 1));
+    geometry.setAttribute("activity", new THREE.BufferAttribute(activities, 1));
+    geometry.setAttribute(
+      "brightness",
+      new THREE.BufferAttribute(brightnesses, 1),
+    );
 
     const uniforms = {
       uTime: { value: 0 },
