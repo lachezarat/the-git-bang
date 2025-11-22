@@ -1,8 +1,6 @@
 import { useRef, useMemo, useEffect } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
-import particleVertexShader from "../shaders/particleVertex.glsl?raw";
-import particleFragmentShader from "../shaders/particleFragment.glsl?raw";
 
 const PARTICLE_COUNT = 50000;
 const START_YEAR = 2008;
@@ -26,6 +24,105 @@ function mapTimeToLog(year: number): number {
   const t = (year - START_YEAR) / (END_YEAR - START_YEAR);
   return Math.log(1 + t * 9) / Math.log(10);
 }
+
+const particleVertexShader = `
+uniform float uTime;
+uniform float uPixelRatio;
+
+attribute float size;
+attribute vec3 color;
+attribute float pulse;
+attribute float activity;
+
+varying vec3 vColor;
+varying float vPulse;
+
+void main() {
+  vColor = color;
+  
+  float pulseIntensity = 0.5 + 0.5 * sin(uTime * activity * 2.0 + pulse * 6.28318);
+  vPulse = pulseIntensity;
+  
+  vec4 modelPosition = modelMatrix * instanceMatrix * vec4(position, 1.0);
+  vec4 viewPosition = viewMatrix * modelPosition;
+  vec4 projectedPosition = projectionMatrix * viewPosition;
+  
+  gl_Position = projectedPosition;
+  
+  gl_PointSize = size * uPixelRatio * (300.0 / -viewPosition.z) * (0.8 + 0.4 * pulseIntensity);
+}
+`;
+
+const particleFragmentShader = `
+varying vec3 vColor;
+varying float vPulse;
+
+float dither4x4(vec2 position, float brightness) {
+  int x = int(mod(position.x, 4.0));
+  int y = int(mod(position.y, 4.0));
+  int index = x + y * 4;
+  float limit = 0.0;
+  
+  if (index == 0) limit = 0.0625;
+  else if (index == 1) limit = 0.5625;
+  else if (index == 2) limit = 0.1875;
+  else if (index == 3) limit = 0.6875;
+  else if (index == 4) limit = 0.8125;
+  else if (index == 5) limit = 0.3125;
+  else if (index == 6) limit = 0.9375;
+  else if (index == 7) limit = 0.4375;
+  else if (index == 8) limit = 0.25;
+  else if (index == 9) limit = 0.75;
+  else if (index == 10) limit = 0.125;
+  else if (index == 11) limit = 0.625;
+  else if (index == 12) limit = 1.0;
+  else if (index == 13) limit = 0.5;
+  else if (index == 14) limit = 0.875;
+  else if (index == 15) limit = 0.375;
+  
+  return brightness < limit ? 0.0 : 1.0;
+}
+
+void main() {
+  vec2 center = gl_PointCoord - vec2(0.5);
+  float dist = length(center);
+  
+  if (dist > 0.5) {
+    discard;
+  }
+  
+  float glow = 1.0 - dist * 2.0;
+  glow = pow(glow, 2.0);
+  
+  float aberration = 0.02;
+  
+  float distR = length(center - vec2(aberration, 0.0));
+  float glowR = 1.0 - distR * 2.0;
+  glowR = pow(max(glowR, 0.0), 2.0);
+  
+  float distB = length(center + vec2(aberration, 0.0));
+  float glowB = 1.0 - distB * 2.0;
+  glowB = pow(max(glowB, 0.0), 2.0);
+  
+  vec3 finalColor = vec3(
+    vColor.r * glowR,
+    vColor.g * glow,
+    vColor.b * glowB
+  );
+  
+  finalColor *= (0.7 + 0.3 * vPulse);
+  
+  float core = 1.0 - smoothstep(0.0, 0.2, dist);
+  finalColor += vec3(1.0) * core * 0.5;
+  
+  float brightness = (finalColor.r + finalColor.g + finalColor.b) / 3.0;
+  float dither = dither4x4(gl_FragCoord.xy, brightness);
+  
+  finalColor = mix(finalColor, finalColor * dither, 0.15);
+  
+  gl_FragColor = vec4(finalColor, glow * (0.8 + 0.2 * vPulse));
+}
+`;
 
 export default function LightCone() {
   const meshRef = useRef<THREE.InstancedMesh>(null);
