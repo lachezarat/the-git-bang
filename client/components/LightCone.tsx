@@ -19,20 +19,23 @@ attribute float size;
 attribute vec3 customColor;
 attribute float pulse;
 attribute float activity;
+attribute float brightness;
 
 varying vec3 vColor;
 varying float vPulse;
+varying float vBrightness;
 
 void main() {
   vColor = customColor;
-  
+  vBrightness = brightness;
+
   float pulseIntensity = 0.5 + 0.5 * sin(uTime * activity * 2.0 + pulse * 6.28318);
   vPulse = pulseIntensity;
-  
+
   vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
-  
+
   gl_Position = projectionMatrix * mvPosition;
-  
+
   gl_PointSize = size * uPixelRatio * (300.0 / -mvPosition.z) * (0.8 + 0.4 * pulseIntensity);
 }
 `;
@@ -40,41 +43,47 @@ void main() {
 const particleFragmentShader = `
 varying vec3 vColor;
 varying float vPulse;
+varying float vBrightness;
 
 void main() {
   vec2 center = gl_PointCoord - vec2(0.5);
   float dist = length(center);
-  
+
   if (dist > 0.5) {
     discard;
   }
-  
+
   float glow = 1.0 - dist * 2.0;
   glow = pow(glow, 2.5);
-  
+
   float aberration = 0.025;
-  
+
   float distR = length(center - vec2(aberration, 0.0));
   float glowR = 1.0 - distR * 2.0;
   glowR = pow(max(glowR, 0.0), 2.5);
-  
+
   float distB = length(center + vec2(aberration, 0.0));
   float glowB = 1.0 - distB * 2.0;
   glowB = pow(max(glowB, 0.0), 2.5);
-  
+
   vec3 finalColor = vec3(
     vColor.r * glowR,
     vColor.g * glow,
     vColor.b * glowB
   );
-  
+
+  // Apply brightness based on star count (popularity)
+  // Popular repos (high brightness) shine brighter, less popular are dimmer
+  finalColor *= (0.3 + 0.7 * vBrightness);
+
   finalColor *= (0.6 + 0.4 * vPulse);
-  
+
   float core = 1.0 - smoothstep(0.0, 0.15, dist);
-  finalColor += vec3(1.0) * core * 0.6;
-  
-  float alpha = glow * (0.7 + 0.3 * vPulse);
-  
+  finalColor += vec3(1.0) * core * 0.6 * vBrightness;
+
+  // Alpha also affected by brightness - dimmer stars are more transparent
+  float alpha = glow * (0.7 + 0.3 * vPulse) * (0.4 + 0.6 * vBrightness);
+
   gl_FragColor = vec4(finalColor, alpha);
 }
 `;
@@ -89,6 +98,7 @@ export default function LightCone() {
     const sizes = new Float32Array(PARTICLE_COUNT);
     const pulses = new Float32Array(PARTICLE_COUNT);
     const activities = new Float32Array(PARTICLE_COUNT);
+    const brightnesses = new Float32Array(PARTICLE_COUNT);
 
     const languageColors = [
       new THREE.Color(0x4a90e2),
@@ -135,6 +145,10 @@ export default function LightCone() {
       const popularity = Math.pow(Math.random(), 3);
       sizes[i] = 2.0 + popularity * 8;
 
+      // Brightness correlates with popularity (star count)
+      // More stars = brighter, fewer stars = dimmer
+      brightnesses[i] = popularity;
+
       pulses[i] = Math.random();
       activities[i] = 0.5 + Math.random() * 1.5;
     }
@@ -145,6 +159,7 @@ export default function LightCone() {
     geometry.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
     geometry.setAttribute('pulse', new THREE.BufferAttribute(pulses, 1));
     geometry.setAttribute('activity', new THREE.BufferAttribute(activities, 1));
+    geometry.setAttribute('brightness', new THREE.BufferAttribute(brightnesses, 1));
 
     const uniforms = {
       uTime: { value: 0 },
