@@ -6,6 +6,7 @@ import BootSequence from "../components/BootSequence";
 import HUD from "../components/HUD";
 import ScanlineOverlay from "../components/ScanlineOverlay";
 import RepoCard from "../components/RepoCard";
+import AmbientSound from "../components/AmbientSound";
 import * as THREE from "three";
 
 export default function Index() {
@@ -94,6 +95,7 @@ export default function Index() {
       </Canvas>
 
       {bootComplete && <HUD onSearchChange={handleSearchChange} onSuggestionSelect={handleSuggestionSelect} />}
+      {bootComplete && <AmbientSound />}
 
       {selectedRepo && (
         <RepoCard

@@ -88,9 +88,16 @@ void main() {
 }
 `;
 
-export default function LightCone() {
+interface LightConeProps {
+  particlesRef?: React.RefObject<THREE.Points>;
+}
+
+export default function LightCone({ particlesRef }: LightConeProps = {}) {
   const pointsRef = useRef<THREE.Points>(null);
   const materialRef = useRef<THREE.ShaderMaterial>(null);
+
+  // Use provided ref or internal ref
+  const activeRef = particlesRef || pointsRef;
 
   const { geometry, uniforms } = useMemo(() => {
     const positions = new Float32Array(PARTICLE_COUNT * 3);
@@ -176,7 +183,7 @@ export default function LightCone() {
   });
 
   return (
-    <points ref={pointsRef} geometry={geometry}>
+    <points ref={activeRef} geometry={geometry}>
       <shaderMaterial
         ref={materialRef}
         vertexShader={particleVertexShader}

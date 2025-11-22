@@ -2,6 +2,7 @@ import { useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import LightCone from "./LightCone";
 import FunnelWireframe from "./FunnelWireframe";
+import ParticleInteraction from "./ParticleInteraction";
 import * as THREE from "three";
 
 interface Scene3DProps {
@@ -108,10 +109,13 @@ function ConeGuides() {
 }
 
 export default function Scene3D({ searchActive = false, searchQuery = "" }: Scene3DProps) {
+  const particlesRef = useRef<THREE.Points>(null);
+
   return (
     <group>
       <FunnelWireframe />
-      <LightCone />
+      <LightCone particlesRef={particlesRef} />
+      <ParticleInteraction particlesRef={particlesRef} />
       {/* <ConeGuides /> */}
     </group>
   );
