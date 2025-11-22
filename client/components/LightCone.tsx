@@ -190,7 +190,7 @@ export default function LightCone({
     };
 
     return { geometry, uniforms };
-  }, [repositories]);
+  }, []);
 
   useFrame((state) => {
     if (materialRef.current) {
