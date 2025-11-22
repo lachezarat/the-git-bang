@@ -57,6 +57,7 @@ export default function Index() {
         style={{ left: cursorPos.x, top: cursorPos.y }}
       />
 
+      <div className="blue-noise-overlay" />
       <div className="noise-overlay" />
       <ScanlineOverlay />
 
