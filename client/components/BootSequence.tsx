@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 export default function BootSequence() {
   const [showScanline, setShowScanline] = useState(true);
   const [currentText, setCurrentText] = useState("");
-  const fullText = "INITIALIZING GITCOSMOS OBSERVATORY...";
+  const fullText = "INITIALIZING THE GIT BANG OBSERVATORY...";
 
   useEffect(() => {
     const scanlineTimer = setTimeout(() => {
