@@ -104,6 +104,7 @@
     @apply bg-space-void text-space-cyan font-mono;
     overflow: hidden;
     cursor: none;
+    font-variant-numeric: tabular-nums;
   }
 
   :where(p, span, li, h1, h2, h3, h4, h5, h6, a, button, label, td, th) {
@@ -193,14 +194,69 @@
 
   .hud-element {
     opacity: 0;
-    transform: translateY(-10px);
-    animation: fadeInUp 0.5s ease-out forwards;
+    animation: geometricReveal 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   }
 
-  @keyframes fadeInUp {
-    to {
+  @keyframes geometricReveal {
+    0% {
+      opacity: 0;
+      clip-path: polygon(0 0, 0 0, 0 100%, 0 100%);
+    }
+    100% {
       opacity: 1;
-      transform: translateY(0);
+      clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+    }
+  }
+
+  .liquid-glass {
+    backdrop-filter: blur(24px) saturate(180%);
+    background: linear-gradient(
+      135deg,
+      rgba(10, 14, 26, 0.8) 0%,
+      rgba(10, 14, 26, 0.6) 100%
+    );
+    border: 1px solid rgba(0, 255, 249, 0.3);
+    box-shadow: 
+      0 8px 32px rgba(0, 0, 0, 0.4),
+      inset 0 1px 0 rgba(255, 255, 255, 0.1),
+      0 0 40px rgba(0, 255, 249, 0.1);
+    position: relative;
+  }
+
+  .liquid-glass::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='2' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E");
+    pointer-events: none;
+    opacity: 0.4;
+  }
+
+  .border-beam {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .border-beam::after {
+    content: "";
+    position: absolute;
+    inset: -2px;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(0, 255, 249, 0.8) 50%,
+      transparent 100%
+    );
+    animation: borderBeam 3s linear infinite;
+    pointer-events: none;
+  }
+
+  @keyframes borderBeam {
+    0% {
+      transform: translateX(-100%) rotate(0deg);
+    }
+    100% {
+      transform: translateX(200%) rotate(0deg);
     }
   }
 
@@ -221,5 +277,48 @@
 
   .glow-amber {
     text-shadow: 0 0 10px rgba(255, 186, 8, 0.8), 0 0 20px rgba(255, 186, 8, 0.5);
+  }
+
+  .trapezoid-clip {
+    clip-path: polygon(5% 0%, 95% 0%, 100% 100%, 0% 100%);
+  }
+
+  .hexagon-clip {
+    clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%);
+  }
+
+  .diamond-clip {
+    clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+  }
+
+  .scanline-overlay {
+    background: repeating-linear-gradient(
+      0deg,
+      rgba(0, 255, 249, 0.03) 0px,
+      transparent 1px,
+      transparent 2px,
+      rgba(0, 255, 249, 0.03) 3px
+    );
+    animation: scanlineScroll 8s linear infinite;
+  }
+
+  @keyframes scanlineScroll {
+    0% { background-position: 0 0; }
+    100% { background-position: 0 4px; }
+  }
+
+  .pulse-dot {
+    animation: pulseDot 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  @keyframes pulseDot {
+    0%, 100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 0.5;
+      transform: scale(1.2);
+    }
   }
 }
