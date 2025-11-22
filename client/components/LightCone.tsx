@@ -83,7 +83,7 @@ export default function LightCone() {
   const pointsRef = useRef<THREE.Points>(null);
   const materialRef = useRef<THREE.ShaderMaterial>(null);
 
-  const particleData = useMemo(() => {
+  const { geometry, uniforms } = useMemo(() => {
     const positions = new Float32Array(PARTICLE_COUNT * 3);
     const colors = new Float32Array(PARTICLE_COUNT * 3);
     const sizes = new Float32Array(PARTICLE_COUNT);
@@ -131,16 +131,20 @@ export default function LightCone() {
       activities[i] = 0.5 + Math.random() * 1.5;
     }
 
-    return { positions, colors, sizes, pulses, activities };
-  }, []);
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    geometry.setAttribute('customColor', new THREE.BufferAttribute(colors, 3));
+    geometry.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
+    geometry.setAttribute('pulse', new THREE.BufferAttribute(pulses, 1));
+    geometry.setAttribute('activity', new THREE.BufferAttribute(activities, 1));
 
-  const uniforms = useMemo(
-    () => ({
+    const uniforms = {
       uTime: { value: 0 },
       uPixelRatio: { value: Math.min(window.devicePixelRatio, 2) },
-    }),
-    []
-  );
+    };
+
+    return { geometry, uniforms };
+  }, []);
 
   useFrame((state) => {
     if (materialRef.current) {
@@ -149,39 +153,7 @@ export default function LightCone() {
   });
 
   return (
-    <points ref={pointsRef}>
-      <bufferGeometry>
-        <bufferAttribute
-          attach="attributes-position"
-          count={particleData.positions.length / 3}
-          array={particleData.positions}
-          itemSize={3}
-        />
-        <bufferAttribute
-          attach="attributes-customColor"
-          count={particleData.colors.length / 3}
-          array={particleData.colors}
-          itemSize={3}
-        />
-        <bufferAttribute
-          attach="attributes-size"
-          count={particleData.sizes.length}
-          array={particleData.sizes}
-          itemSize={1}
-        />
-        <bufferAttribute
-          attach="attributes-pulse"
-          count={particleData.pulses.length}
-          array={particleData.pulses}
-          itemSize={1}
-        />
-        <bufferAttribute
-          attach="attributes-activity"
-          count={particleData.activities.length}
-          array={particleData.activities}
-          itemSize={1}
-        />
-      </bufferGeometry>
+    <points ref={pointsRef} geometry={geometry}>
       <shaderMaterial
         ref={materialRef}
         vertexShader={particleVertexShader}
