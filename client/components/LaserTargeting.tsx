@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from "react";
-import { useThree } from "@react-three/fiber";
+import { useState, useEffect } from "react";
+import { useThree, useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import LaserBeam from "./LaserBeam";
 import TargetingReticle from "./TargetingReticle";
@@ -17,13 +17,14 @@ export default function LaserTargeting({
 }: LaserTargetingProps) {
   const { camera } = useThree();
   const [targetPosition, setTargetPosition] = useState<THREE.Vector3 | null>(null);
-  const [startPosition, setStartPosition] = useState(new THREE.Vector3(0, -20, 30));
+  const [startPosition, setStartPosition] = useState(new THREE.Vector3());
 
-  useEffect(() => {
-    // Update search bar position in world space
-    const searchBarWorldPos = new THREE.Vector3(0, -20, 30);
-    setStartPosition(searchBarWorldPos);
-  }, []);
+  useFrame(() => {
+    // Update laser start position to camera position every frame
+    if (camera) {
+      setStartPosition(camera.position.clone());
+    }
+  });
 
   useEffect(() => {
     if (searchActive && searchQuery) {
