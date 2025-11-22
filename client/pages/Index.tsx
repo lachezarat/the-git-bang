@@ -5,6 +5,7 @@ import Scene3D from "../components/Scene3D";
 import BootSequence from "../components/BootSequence";
 import HUD from "../components/HUD";
 import ScanlineOverlay from "../components/ScanlineOverlay";
+import * as THREE from "three";
 
 export default function Index() {
   const [bootComplete, setBootComplete] = useState(false);
@@ -66,6 +67,11 @@ export default function Index() {
           enableDamping
           dampingFactor={0.05}
           zoomToCursor={true}
+          mouseButtons={{
+            LEFT: THREE.MOUSE.PAN,
+            MIDDLE: THREE.MOUSE.DOLLY,
+            RIGHT: THREE.MOUSE.ROTATE
+          }}
         />
       </Canvas>
 

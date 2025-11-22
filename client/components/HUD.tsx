@@ -95,9 +95,9 @@ export default function HUD() {
             NAVIGATION CONTROLS
           </div>
           <div className="space-y-1 text-space-cyan/50 font-data text-xs">
-            <div>ORBIT: LEFT CLICK + DRAG</div>
+            <div>PAN: LEFT CLICK + DRAG</div>
             <div>ZOOM: SCROLL WHEEL</div>
-            <div>PAN: RIGHT CLICK + DRAG</div>
+            <div>ORBIT: RIGHT CLICK + DRAG</div>
           </div>
         </div>
       </div>
