@@ -14,31 +14,31 @@ function ConeGuides() {
   return (
     <group ref={groupRef}>
       <mesh position={[0, 0, 0]}>
-        <torusGeometry args={[8, 0.02, 16, 100]} />
+        <torusGeometry args={[15, 0.03, 16, 100]} />
         <meshStandardMaterial
           color="#ff006e"
           emissive="#ff006e"
           emissiveIntensity={0.2}
           wireframe
           transparent
-          opacity={0.3}
+          opacity={0.25}
         />
       </mesh>
 
       <mesh position={[0, 0, 0]} rotation={[Math.PI / 2, 0, 0]}>
-        <torusGeometry args={[8, 0.02, 16, 100]} />
+        <torusGeometry args={[15, 0.03, 16, 100]} />
         <meshStandardMaterial
           color="#ffba08"
           emissive="#ffba08"
           emissiveIntensity={0.2}
           wireframe
           transparent
-          opacity={0.2}
+          opacity={0.15}
         />
       </mesh>
 
-      <mesh position={[15, 0, 0]}>
-        <torusGeometry args={[0.5, 0.05, 16, 32]} />
+      <mesh position={[25, 0, 0]}>
+        <torusGeometry args={[1.0, 0.08, 16, 32]} />
         <meshStandardMaterial
           color="#00fff9"
           emissive="#00fff9"
@@ -47,8 +47,8 @@ function ConeGuides() {
         />
       </mesh>
 
-      <mesh position={[-15, 0, 0]}>
-        <torusGeometry args={[0.2, 0.03, 16, 32]} />
+      <mesh position={[-25, 0, 0]}>
+        <torusGeometry args={[0.3, 0.05, 16, 32]} />
         <meshStandardMaterial
           color="#00fff9"
           emissive="#00fff9"
@@ -62,17 +62,16 @@ function ConeGuides() {
           <bufferAttribute
             attach="attributes-position"
             count={2}
-            array={new Float32Array([-15, 0, 0, 15, 0, 0])}
+            array={new Float32Array([-25, 0, 0, 25, 0, 0])}
             itemSize={3}
           />
         </bufferGeometry>
         <lineBasicMaterial color="#00fff9" opacity={0.3} transparent />
       </line>
 
-      <group position={[-15, 0, 0]}>
+      <group position={[-25, 0, 0]}>
         {[...Array(8)].map((_, i) => {
           const angle = (i / 8) * Math.PI * 2;
-          const radius = 0.2;
           return (
             <line key={i}>
               <bufferGeometry>
@@ -84,15 +83,15 @@ function ConeGuides() {
                       0,
                       0,
                       0,
-                      30 * Math.cos(angle * 0.8),
-                      30 * Math.sin(angle) * 1.2,
-                      30 * Math.cos(angle) * 0.8,
+                      50 * Math.cos(angle * 0.8),
+                      50 * Math.sin(angle) * 1.2,
+                      50 * Math.cos(angle) * 0.8,
                     ])
                   }
                   itemSize={3}
                 />
               </bufferGeometry>
-              <lineBasicMaterial color="#00fff9" opacity={0.05} transparent />
+              <lineBasicMaterial color="#00fff9" opacity={0.04} transparent />
             </line>
           );
         })}

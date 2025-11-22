@@ -2,7 +2,7 @@ import { useRef, useMemo } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 
-const PARTICLE_COUNT = 50000;
+const PARTICLE_COUNT = 25000;
 const START_YEAR = 2008;
 const END_YEAR = 2025;
 
@@ -106,14 +106,14 @@ export default function LightCone() {
       const year = START_YEAR + Math.random() * (END_YEAR - START_YEAR);
       const logT = mapTimeToLog(year);
       
-      const x = logT * 30 - 15;
-      
-      const coneRadius = logT * 8;
+      const x = logT * 50 - 25;
+
+      const coneRadius = logT * 15;
       const angle = Math.random() * Math.PI * 2;
       const radiusOffset = Math.random() * coneRadius;
-      
-      const y = Math.cos(angle) * radiusOffset + (Math.random() - 0.5) * 2;
-      const z = Math.sin(angle) * radiusOffset + (Math.random() - 0.5) * 2;
+
+      const y = Math.cos(angle) * radiusOffset + (Math.random() - 0.5) * 4;
+      const z = Math.sin(angle) * radiusOffset + (Math.random() - 0.5) * 4;
 
       positions[i * 3] = x;
       positions[i * 3 + 1] = y;
@@ -125,7 +125,7 @@ export default function LightCone() {
       colors[i * 3 + 2] = languageColor.b;
 
       const popularity = Math.pow(Math.random(), 3);
-      sizes[i] = 1.5 + popularity * 6;
+      sizes[i] = 2.0 + popularity * 8;
 
       pulses[i] = Math.random();
       activities[i] = 0.5 + Math.random() * 1.5;

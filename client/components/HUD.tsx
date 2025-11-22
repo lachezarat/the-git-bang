@@ -25,7 +25,7 @@ export default function HUD() {
             OBSERVATORY STATUS: ACTIVE
           </div>
           <div className="text-space-cyan/50 font-data text-xs mt-2">
-            PARTICLES: 50,000
+            PARTICLES: 25,000
           </div>
         </div>
       </div>

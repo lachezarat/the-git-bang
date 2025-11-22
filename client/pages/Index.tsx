@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
-import { OrbitControls, Stars, PerspectiveCamera } from "@react-three/drei";
+import { OrbitControls, PerspectiveCamera } from "@react-three/drei";
 import Scene3D from "../components/Scene3D";
 import BootSequence from "../components/BootSequence";
 import HUD from "../components/HUD";
@@ -23,7 +23,7 @@ function CameraRig() {
     }
   });
 
-  return <PerspectiveCamera ref={cameraRef} makeDefault fov={80} position={[25, 15, 25]} />;
+  return <PerspectiveCamera ref={cameraRef} makeDefault fov={75} position={[30, 20, 30]} />;
 }
 
 export default function Index() {
@@ -72,16 +72,6 @@ export default function Index() {
         <pointLight position={[-20, -20, -20]} intensity={0.2} color="#ff006e" />
         <pointLight position={[0, 20, -20]} intensity={0.15} color="#ffba08" />
         
-        <Stars
-          radius={300}
-          depth={60}
-          count={8000}
-          factor={7}
-          saturation={0}
-          fade
-          speed={0.3}
-        />
-
         <Scene3D />
 
         <OrbitControls
@@ -91,8 +81,8 @@ export default function Index() {
           enableRotate={true}
           minDistance={10}
           maxDistance={80}
-          autoRotate={bootComplete}
-          autoRotateSpeed={0.3}
+          autoRotate={false}
+          autoRotateSpeed={0.1}
           enableDamping
           dampingFactor={0.05}
         />
