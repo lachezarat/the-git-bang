@@ -260,7 +260,7 @@ export default function RepoCard({ repo, position, onClose }: RepoCardProps) {
                 </svg>
                 <div className="text-left">
                   <div className="text-space-magenta font-display font-bold glow-magenta">
-                    GENERATE VIBE CODE
+                    USE FOR VIBE CODING
                   </div>
                   <div className="text-space-magenta/50 text-xs font-mono">AI-Powered App Ideas</div>
                 </div>

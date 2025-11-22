@@ -20,24 +20,12 @@ export default function Index() {
   const handleSearchChange = (query: string, isFocused: boolean) => {
     setSearchQuery(query);
     setSearchActive(isFocused && query.length > 0);
+  };
 
-    // Demo: Show repo card when searching
-    if (isFocused && query.length > 2) {
-      setSelectedRepo({
-        name: "react",
-        owner: "facebook",
-        language: "JavaScript",
-        stars: 228000,
-        forks: 46700,
-        description: "The library for web and native user interfaces. A declarative, efficient, and flexible JavaScript library for building user interfaces.",
-        activity: 94,
-        growth: 12,
-        health: 98,
-        community: 1847,
-        year: 2013,
-      });
-      setRepoCardPos({ x: window.innerWidth / 2, y: window.innerHeight / 2 });
-    }
+  const handleSuggestionSelect = (repo: any) => {
+    setSelectedRepo(repo);
+    setRepoCardPos({ x: window.innerWidth / 2, y: window.innerHeight / 2 });
+    setSearchActive(false);
   };
 
   useEffect(() => {
@@ -104,7 +92,7 @@ export default function Index() {
         />
       </Canvas>
 
-      {bootComplete && <HUD onSearchChange={handleSearchChange} />}
+      {bootComplete && <HUD onSearchChange={handleSearchChange} onSuggestionSelect={handleSuggestionSelect} />}
 
       {selectedRepo && (
         <RepoCard
