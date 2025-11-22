@@ -1,13 +1,10 @@
-import { useRef, useMemo } from "react";
-import { useFrame } from "@react-three/fiber";
+import { useMemo } from "react";
 import * as THREE from "three";
 
 const LONGITUDINAL_LINES = 16;
 const RING_COUNT = 16;
 
 export default function FunnelWireframe() {
-  const groupRef = useRef<THREE.Group>(null);
-
   const { longitudinalGeometries, ringGeometries } = useMemo(() => {
     const longitudinalGeometries: THREE.BufferGeometry[] = [];
     const ringGeometries: THREE.BufferGeometry[] = [];
@@ -29,10 +26,10 @@ export default function FunnelWireframe() {
         const t = j / segments;
         const x = startX + (endX - startX) * t;
         const radius = startRadius + (endRadius - startRadius) * t;
-        
+
         const y = Math.cos(angle) * radius;
         const z = Math.sin(angle) * radius;
-        
+
         points.push(new THREE.Vector3(x, y, z));
       }
 
@@ -48,7 +45,7 @@ export default function FunnelWireframe() {
 
       const points: THREE.Vector3[] = [];
       const segments = 64;
-      
+
       for (let j = 0; j <= segments; j++) {
         const angle = (j / segments) * Math.PI * 2;
         const y = Math.cos(angle) * radius;
@@ -63,16 +60,8 @@ export default function FunnelWireframe() {
     return { longitudinalGeometries, ringGeometries };
   }, []);
 
-  useFrame((state) => {
-    if (groupRef.current) {
-      // Subtle breathing effect on the wireframe
-      const breathe = 1 + Math.sin(state.clock.elapsedTime * 0.5) * 0.02;
-      groupRef.current.scale.setScalar(breathe);
-    }
-  });
-
   return (
-    <group ref={groupRef}>
+    <group>
       {/* Longitudinal lines */}
       {longitudinalGeometries.map((geometry, i) => (
         <line key={`long-${i}`} geometry={geometry}>
