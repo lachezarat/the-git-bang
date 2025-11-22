@@ -24,6 +24,9 @@ export default function HUD() {
           <div className="text-space-cyan/50 font-data text-xs">
             OBSERVATORY STATUS: ACTIVE
           </div>
+          <div className="text-space-cyan/50 font-data text-xs mt-2">
+            PARTICLES: 50,000
+          </div>
         </div>
       </div>
 
@@ -46,17 +49,39 @@ export default function HUD() {
         style={{ animationDelay: "0.6s" }}
       >
         <div className="space-y-2 text-space-cyan/60">
-          <div className="flex items-center gap-2">
-            <span className="text-space-magenta glow-magenta">◆</span>
-            <span>NEURAL PATHFINDING: 100%</span>
+          <div className="text-space-cyan/80 glow-cyan mb-3 font-display">
+            TIMELINE AXIS
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-space-cyan glow-cyan">◆</span>
-            <span>QUANTUM RENDERER: OPTIMAL</span>
+            <span className="text-space-cyan glow-cyan">◀</span>
+            <span className="font-display">2008</span>
+            <span className="text-space-cyan/40">ORIGIN</span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-space-amber glow-amber">◆</span>
-            <span>CHROMATIC FILTER: ACTIVE</span>
+            <span className="text-space-magenta glow-magenta">▶</span>
+            <span className="font-display">2025</span>
+            <span className="text-space-magenta/60">PRESENT</span>
+          </div>
+          <div className="mt-4 pt-4 border-t border-space-cyan/20">
+            <div className="text-space-cyan/50 text-xs mb-2">STELLAR CLASSIFICATION</div>
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full" style={{ background: "#4a90e2" }} />
+                <span className="text-xs">JavaScript</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full" style={{ background: "#00d9ff" }} />
+                <span className="text-xs">Go</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full" style={{ background: "#ff6b35" }} />
+                <span className="text-xs">Rust</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full" style={{ background: "#e85d75" }} />
+                <span className="text-xs">Ruby</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
