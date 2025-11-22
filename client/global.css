@@ -189,11 +189,9 @@
     width: 100%;
     height: 100%;
     pointer-events: none;
-    opacity: 0.08;
+    opacity: 0.03;
     z-index: 9999;
     background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
-    background-color: rgba(0, 255, 249, 0.03);
-    mix-blend-mode: screen;
   }
 
   .blue-noise-overlay {
@@ -205,20 +203,20 @@
     pointer-events: none;
     z-index: 9998;
     background:
-      radial-gradient(ellipse at 30% 40%, rgba(0, 255, 249, 0.08) 0%, transparent 50%),
-      radial-gradient(ellipse at 70% 60%, rgba(0, 217, 255, 0.06) 0%, transparent 50%),
-      radial-gradient(ellipse at 50% 50%, rgba(74, 144, 226, 0.04) 0%, transparent 60%);
-    animation: blueNoiseShift 20s ease-in-out infinite;
+      radial-gradient(ellipse at 30% 40%, rgba(255, 0, 110, 0.02) 0%, transparent 50%),
+      radial-gradient(ellipse at 70% 60%, rgba(200, 0, 255, 0.015) 0%, transparent 50%),
+      radial-gradient(ellipse at 50% 50%, rgba(180, 50, 255, 0.01) 0%, transparent 60%);
+    animation: purpleNoiseShift 25s ease-in-out infinite;
   }
 
-  @keyframes blueNoiseShift {
+  @keyframes purpleNoiseShift {
     0%, 100% {
-      opacity: 0.6;
+      opacity: 0.3;
       transform: scale(1) rotate(0deg);
     }
     50% {
-      opacity: 0.8;
-      transform: scale(1.05) rotate(2deg);
+      opacity: 0.4;
+      transform: scale(1.02) rotate(1deg);
     }
   }
 
