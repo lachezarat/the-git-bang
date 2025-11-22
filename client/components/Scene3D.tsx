@@ -111,7 +111,7 @@ export default function Scene3D({ searchActive = false, searchQuery = "" }: Scen
   return (
     <group>
       <LightCone />
-      <ConeGuides />
+      {/* <ConeGuides /> */}
       <LaserTargeting
         searchActive={searchActive}
         searchQuery={searchQuery}
