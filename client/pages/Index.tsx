@@ -1,30 +1,10 @@
 import { useEffect, useRef, useState } from "react";
-import { Canvas, useFrame } from "@react-three/fiber";
+import { Canvas } from "@react-three/fiber";
 import { OrbitControls, PerspectiveCamera } from "@react-three/drei";
 import Scene3D from "../components/Scene3D";
 import BootSequence from "../components/BootSequence";
 import HUD from "../components/HUD";
 import ScanlineOverlay from "../components/ScanlineOverlay";
-import * as THREE from "three";
-
-function CameraRig() {
-  const cameraRef = useRef<THREE.PerspectiveCamera>(null);
-  
-  useFrame((state) => {
-    if (cameraRef.current) {
-      const time = state.clock.elapsedTime;
-      const noiseX = Math.sin(time * 0.3) * 0.03;
-      const noiseY = Math.cos(time * 0.4) * 0.03;
-      const noiseZ = Math.sin(time * 0.2) * 0.03;
-      
-      cameraRef.current.position.x = 25 + noiseX;
-      cameraRef.current.position.y = 15 + noiseY;
-      cameraRef.current.position.z = 25 + noiseZ;
-    }
-  });
-
-  return <PerspectiveCamera ref={cameraRef} makeDefault fov={75} position={[30, 20, 30]} />;
-}
 
 export default function Index() {
   const [bootComplete, setBootComplete] = useState(false);
@@ -66,7 +46,7 @@ export default function Index() {
       {!bootComplete && <BootSequence />}
 
       <Canvas className="absolute inset-0" dpr={[1, 2]} gl={{ antialias: true }}>
-        <CameraRig />
+        <PerspectiveCamera makeDefault fov={75} position={[30, 20, 30]} />
         <ambientLight intensity={0.05} />
         <pointLight position={[20, 20, 20]} intensity={0.3} color="#00fff9" />
         <pointLight position={[-20, -20, -20]} intensity={0.2} color="#ff006e" />
