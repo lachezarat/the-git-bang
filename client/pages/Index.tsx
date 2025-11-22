@@ -46,7 +46,7 @@ export default function Index() {
       {!bootComplete && <BootSequence />}
 
       <Canvas className="absolute inset-0" dpr={[1, 2]} gl={{ antialias: true }}>
-        <PerspectiveCamera makeDefault fov={75} position={[30, 20, 30]} />
+        <PerspectiveCamera makeDefault fov={75} position={[75, 50, 75]} />
         <ambientLight intensity={0.05} />
         <pointLight position={[20, 20, 20]} intensity={0.3} color="#00fff9" />
         <pointLight position={[-20, -20, -20]} intensity={0.2} color="#ff006e" />
@@ -59,8 +59,8 @@ export default function Index() {
           enableZoom={true}
           enablePan={true}
           enableRotate={true}
-          minDistance={10}
-          maxDistance={80}
+          minDistance={25}
+          maxDistance={200}
           autoRotate={false}
           autoRotateSpeed={0.1}
           enableDamping

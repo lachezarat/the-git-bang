@@ -106,14 +106,14 @@ export default function LightCone() {
       const year = START_YEAR + Math.random() * (END_YEAR - START_YEAR);
       const logT = mapTimeToLog(year);
       
-      const x = logT * 50 - 25;
+      const x = logT * 125 - 62.5;
 
-      const coneRadius = logT * 15;
+      const coneRadius = logT * 37.5;
       const angle = Math.random() * Math.PI * 2;
       const radiusOffset = Math.random() * coneRadius;
 
-      const y = Math.cos(angle) * radiusOffset + (Math.random() - 0.5) * 4;
-      const z = Math.sin(angle) * radiusOffset + (Math.random() - 0.5) * 4;
+      const y = Math.cos(angle) * radiusOffset + (Math.random() - 0.5) * 10;
+      const z = Math.sin(angle) * radiusOffset + (Math.random() - 0.5) * 10;
 
       positions[i * 3] = x;
       positions[i * 3 + 1] = y;
