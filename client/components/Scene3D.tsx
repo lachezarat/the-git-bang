@@ -1,7 +1,6 @@
 import { useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import LightCone from "./LightCone";
-import LaserTargeting from "./LaserTargeting";
 import * as THREE from "three";
 
 interface Scene3DProps {
@@ -112,11 +111,6 @@ export default function Scene3D({ searchActive = false, searchQuery = "" }: Scen
     <group>
       <LightCone />
       {/* <ConeGuides /> */}
-      <LaserTargeting
-        searchActive={searchActive}
-        searchQuery={searchQuery}
-        hoveredParticle={null}
-      />
     </group>
   );
 }

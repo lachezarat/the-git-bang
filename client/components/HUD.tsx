@@ -22,17 +22,6 @@ export default function HUD({ onSearchChange, onSuggestionSelect }: HUDProps) {
       <SearchBar onSearchChange={onSearchChange} onSuggestionSelect={onSuggestionSelect} />
 
       <div
-        className="hud-element absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none"
-        style={{ animationDelay: "0.8s" }}
-      >
-        <div className="relative w-16 h-16">
-          <div className="absolute inset-0 border border-space-cyan/20 rounded-full" />
-          <div className="absolute inset-0 border border-space-cyan/30 rounded-full animate-ping" />
-          <div className="absolute top-1/2 left-1/2 w-2 h-2 bg-space-cyan rounded-full -translate-x-1/2 -translate-y-1/2 shadow-[0_0_20px_rgba(0,255,249,0.8)]" />
-        </div>
-      </div>
-
-      <div
         className="hud-element absolute top-1/2 left-8 -translate-y-1/2"
         style={{ animationDelay: "0.9s" }}
       >
