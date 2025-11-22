@@ -12,7 +12,8 @@ export default function AmbientSound() {
     const initAudio = () => {
       if (audioContextRef.current) return;
 
-      const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+      const AudioContext =
+        window.AudioContext || (window as any).webkitAudioContext;
       audioContextRef.current = new AudioContext();
       gainNodeRef.current = audioContextRef.current.createGain();
       gainNodeRef.current.connect(audioContextRef.current.destination);
@@ -53,13 +54,13 @@ export default function AmbientSound() {
       osc.type = "sine";
       osc.frequency.value = frequency;
       osc.detune.value = detune;
-      
+
       oscGain.gain.value = 0.15;
-      
+
       osc.connect(oscGain);
       oscGain.connect(masterGain);
       osc.start();
-      
+
       return osc;
     };
 
@@ -80,7 +81,7 @@ export default function AmbientSound() {
 
     const createPulse = () => {
       const now = ctx.currentTime;
-      
+
       // Create pulse oscillator
       const pulseOsc = ctx.createOscillator();
       const pulseGain = ctx.createGain();
@@ -88,10 +89,10 @@ export default function AmbientSound() {
 
       pulseOsc.type = "sine";
       pulseOsc.frequency.value = 220 + Math.random() * 440; // Random frequency between 220-660 Hz
-      
+
       pulseFilter.type = "lowpass";
       pulseFilter.frequency.value = 800;
-      
+
       pulseGain.gain.setValueAtTime(0, now);
       pulseGain.gain.linearRampToValueAtTime(0.08, now + 0.02);
       pulseGain.gain.exponentialRampToValueAtTime(0.001, now + 1.2);
@@ -99,7 +100,7 @@ export default function AmbientSound() {
       pulseOsc.connect(pulseFilter);
       pulseFilter.connect(pulseGain);
       pulseGain.connect(masterGain);
-      
+
       pulseOsc.start(now);
       pulseOsc.stop(now + 1.5);
     };
@@ -118,7 +119,7 @@ export default function AmbientSound() {
 
   const stopAmbience = () => {
     // Stop all oscillators
-    oscillatorsRef.current.forEach(osc => {
+    oscillatorsRef.current.forEach((osc) => {
       try {
         osc.stop();
       } catch (e) {
@@ -145,7 +146,8 @@ export default function AmbientSound() {
       stopAmbience();
       setIsPlaying(false);
     } else {
-      const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+      const AudioContext =
+        window.AudioContext || (window as any).webkitAudioContext;
       audioContextRef.current = new AudioContext();
       gainNodeRef.current = audioContextRef.current.createGain();
       gainNodeRef.current.connect(audioContextRef.current.destination);

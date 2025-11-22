@@ -3,12 +3,14 @@ import { useFrame } from "@react-three/fiber";
 import LightCone from "./LightCone";
 import FunnelWireframe from "./FunnelWireframe";
 import ParticleInteraction from "./ParticleInteraction";
+import type { Repository } from "../lib/repositoryData";
 import * as THREE from "three";
 
 interface Scene3DProps {
   searchActive?: boolean;
   searchQuery?: string;
   onParticleClick?: (repo: any, position: { x: number; y: number }) => void;
+  repositories?: Repository[];
 }
 
 function ConeGuides() {
@@ -113,13 +115,14 @@ export default function Scene3D({
   searchActive = false,
   searchQuery = "",
   onParticleClick,
+  repositories = [],
 }: Scene3DProps) {
   const particlesRef = useRef<THREE.Points>(null);
 
   return (
     <group>
       <FunnelWireframe />
-      <LightCone particlesRef={particlesRef} />
+      <LightCone particlesRef={particlesRef} repositories={repositories} />
       <ParticleInteraction
         particlesRef={particlesRef}
         onParticleClick={onParticleClick}

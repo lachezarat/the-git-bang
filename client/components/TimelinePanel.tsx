@@ -14,13 +14,19 @@ export default function TimelinePanel() {
             <div className="flex items-center gap-3 border-l-2 border-space-cyan/30 pl-3">
               <span className="text-space-cyan glow-cyan text-lg">◀</span>
               <span className="font-display font-bold">2008</span>
-              <span className="text-space-cyan/40 uppercase text-xs">Origin</span>
+              <span className="text-space-cyan/40 uppercase text-xs">
+                Origin
+              </span>
             </div>
 
             <div className="flex items-center gap-3 border-l-2 border-space-magenta/30 pl-3">
-              <span className="text-space-magenta glow-magenta text-lg">▶</span>
+              <span className="text-space-magenta glow-magenta text-lg">
+                ▶
+              </span>
               <span className="font-display font-bold">2025</span>
-              <span className="text-space-magenta/60 uppercase text-xs">Present</span>
+              <span className="text-space-magenta/60 uppercase text-xs">
+                Present
+              </span>
             </div>
           </div>
 
@@ -30,19 +36,31 @@ export default function TimelinePanel() {
             </div>
             <div className="space-y-2">
               <div className="flex items-center gap-3">
-                <div className="w-2 h-2 rounded-full" style={{ background: "#4a90e2" }} />
+                <div
+                  className="w-2 h-2 rounded-full"
+                  style={{ background: "#4a90e2" }}
+                />
                 <span className="text-xs text-space-cyan/70">JavaScript</span>
               </div>
               <div className="flex items-center gap-3">
-                <div className="w-2 h-2 rounded-full" style={{ background: "#00d9ff" }} />
+                <div
+                  className="w-2 h-2 rounded-full"
+                  style={{ background: "#00d9ff" }}
+                />
                 <span className="text-xs text-space-cyan/70">Go</span>
               </div>
               <div className="flex items-center gap-3">
-                <div className="w-2 h-2 rounded-full" style={{ background: "#ff6b35" }} />
+                <div
+                  className="w-2 h-2 rounded-full"
+                  style={{ background: "#ff6b35" }}
+                />
                 <span className="text-xs text-space-cyan/70">Rust</span>
               </div>
               <div className="flex items-center gap-3">
-                <div className="w-2 h-2 rounded-full" style={{ background: "#e85d75" }} />
+                <div
+                  className="w-2 h-2 rounded-full"
+                  style={{ background: "#e85d75" }}
+                />
                 <span className="text-xs text-space-cyan/70">Ruby</span>
               </div>
             </div>

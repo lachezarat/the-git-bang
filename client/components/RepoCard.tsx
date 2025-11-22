@@ -44,38 +44,38 @@ export default function RepoCard({ repo, position, onClose }: RepoCardProps) {
         y: 0,
         duration: 0.6,
         ease: "expo.out",
-      }
+      },
     );
 
     gsap.fromTo(
       ".card-header",
       { opacity: 0, x: -20 },
-      { opacity: 1, x: 0, duration: 0.4, delay: 0.2, ease: "power2.out" }
+      { opacity: 1, x: 0, duration: 0.4, delay: 0.2, ease: "power2.out" },
     );
 
     gsap.fromTo(
       ".card-metrics",
       { opacity: 0, scale: 0.8 },
-      { opacity: 1, scale: 1, duration: 0.4, delay: 0.3, ease: "back.out(2)" }
+      { opacity: 1, scale: 1, duration: 0.4, delay: 0.3, ease: "back.out(2)" },
     );
 
     gsap.fromTo(
       ".card-timeline",
       { opacity: 0, y: 10 },
-      { opacity: 1, y: 0, duration: 0.4, delay: 0.4, ease: "power2.out" }
+      { opacity: 1, y: 0, duration: 0.4, delay: 0.4, ease: "power2.out" },
     );
 
     gsap.fromTo(
       ".card-button",
       { opacity: 0, y: 10 },
-      { 
-        opacity: 1, 
-        y: 0, 
-        duration: 0.3, 
-        delay: 0.5, 
-        stagger: 0.1, 
-        ease: "power2.out" 
-      }
+      {
+        opacity: 1,
+        y: 0,
+        duration: 0.3,
+        delay: 0.5,
+        stagger: 0.1,
+        ease: "power2.out",
+      },
     );
 
     return () => {
@@ -133,10 +133,23 @@ export default function RepoCard({ repo, position, onClose }: RepoCardProps) {
         <button
           onClick={onClose}
           className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center border border-space-cyan/30 bg-space-void/50 hover:bg-space-cyan/20 transition-colors z-10"
-          style={{ clipPath: "polygon(20% 0%, 80% 0%, 100% 20%, 100% 80%, 80% 100%, 20% 100%, 0% 80%, 0% 20%)" }}
+          style={{
+            clipPath:
+              "polygon(20% 0%, 80% 0%, 100% 20%, 100% 80%, 80% 100%, 20% 100%, 0% 80%, 0% 20%)",
+          }}
         >
-          <svg className="w-4 h-4 text-space-cyan" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          <svg
+            className="w-4 h-4 text-space-cyan"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M6 18L18 6M6 6l12 12"
+            />
           </svg>
         </button>
 
@@ -151,7 +164,7 @@ export default function RepoCard({ repo, position, onClose }: RepoCardProps) {
                   {repo.owner}
                 </div>
               </div>
-              
+
               <div className="text-right space-y-1 font-mono text-xs">
                 <div className="text-space-amber glow-amber font-bold text-lg tabular-nums">
                   {repo.stars.toLocaleString()}
@@ -222,7 +235,9 @@ export default function RepoCard({ repo, position, onClose }: RepoCardProps) {
               <div className="absolute right-0 top-0 bottom-0 w-px bg-space-cyan/30" />
               <div
                 className="absolute top-2 bottom-2 w-1 bg-space-cyan shadow-[0_0_10px_rgba(0,255,249,0.8)]"
-                style={{ left: `${((repo.year - 2008) / (2025 - 2008)) * 100}%` }}
+                style={{
+                  left: `${((repo.year - 2008) / (2025 - 2008)) * 100}%`,
+                }}
               />
               <div className="flex justify-between text-xs text-space-cyan/40 font-mono mt-8">
                 <span>2008</span>
@@ -234,19 +249,42 @@ export default function RepoCard({ repo, position, onClose }: RepoCardProps) {
           <div className="space-y-3">
             <button
               className="card-button w-full border-beam liquid-glass px-6 py-4 flex items-center justify-between group hover:shadow-[0_0_30px_rgba(0,255,249,0.4)] transition-all hover:scale-[1.02]"
-              onClick={() => window.open(`https://deepwiki.com/${repo.owner}/${repo.name}`, '_blank')}
+              onClick={() =>
+                window.open(
+                  `https://deepwiki.com/${repo.owner}/${repo.name}`,
+                  "_blank",
+                )
+              }
             >
               <div className="flex items-center gap-3">
-                <svg className="w-6 h-6 text-space-cyan" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 2h2v2h-2V5zm0 4h2v2h-2V9zm-4-4h2v2H8V5zm0 4h2v2H8V9zM6 5h2v2H6V5zm0 4h2v2H6V9zm0 4h2v2H6v-2zm0 4h2v2H6v-2zm2 4H6v-2h2v2zm12 0h-2v-2h2v2zm0-4h-2v-2h2v2zm0-4h-2v-2h2v2z"/>
+                <svg
+                  className="w-6 h-6 text-space-cyan"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                >
+                  <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 2h2v2h-2V5zm0 4h2v2h-2V9zm-4-4h2v2H8V5zm0 4h2v2H8V9zM6 5h2v2H6V5zm0 4h2v2H6V9zm0 4h2v2H6v-2zm0 4h2v2H6v-2zm2 4H6v-2h2v2zm12 0h-2v-2h2v2zm0-4h-2v-2h2v2zm0-4h-2v-2h2v2z" />
                 </svg>
                 <div className="text-left">
-                  <div className="text-space-cyan font-display font-bold">DEEP DIVE</div>
-                  <div className="text-space-cyan/50 text-xs font-mono">Explore on DeepWiki</div>
+                  <div className="text-space-cyan font-display font-bold">
+                    DEEP DIVE
+                  </div>
+                  <div className="text-space-cyan/50 text-xs font-mono">
+                    Explore on DeepWiki
+                  </div>
                 </div>
               </div>
-              <svg className="w-5 h-5 text-space-cyan group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              <svg
+                className="w-5 h-5 text-space-cyan group-hover:translate-x-1 transition-transform"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 5l7 7-7 7"
+                />
               </svg>
             </button>
 
@@ -256,18 +294,34 @@ export default function RepoCard({ repo, position, onClose }: RepoCardProps) {
               onClick={handleGenerateVibe}
             >
               <div className="flex items-center gap-3">
-                <svg className="w-6 h-6 text-space-magenta" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M9.4 16.6L4.8 12l4.6-4.6L8 6l-6 6 6 6 1.4-1.4zm5.2 0l4.6-4.6-4.6-4.6L16 6l6 6-6 6-1.4-1.4z"/>
+                <svg
+                  className="w-6 h-6 text-space-magenta"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                >
+                  <path d="M9.4 16.6L4.8 12l4.6-4.6L8 6l-6 6 6 6 1.4-1.4zm5.2 0l4.6-4.6-4.6-4.6L16 6l6 6-6 6-1.4-1.4z" />
                 </svg>
                 <div className="text-left">
                   <div className="text-space-magenta font-display font-bold glow-magenta">
                     USE FOR VIBE CODING
                   </div>
-                  <div className="text-space-magenta/50 text-xs font-mono">AI-Powered App Ideas</div>
+                  <div className="text-space-magenta/50 text-xs font-mono">
+                    AI-Powered App Ideas
+                  </div>
                 </div>
               </div>
-              <svg className="w-5 h-5 text-space-magenta group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              <svg
+                className="w-5 h-5 text-space-magenta group-hover:translate-x-1 transition-transform"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 5l7 7-7 7"
+                />
               </svg>
             </button>
 
@@ -293,9 +347,21 @@ export default function RepoCard({ repo, position, onClose }: RepoCardProps) {
             )}
 
             <button className="card-button w-full px-6 py-3 flex items-center justify-between text-space-cyan/60 hover:text-space-cyan border border-space-cyan/10 hover:border-space-cyan/30 transition-all group">
-              <span className="font-mono text-sm uppercase tracking-wide">View Commits</span>
-              <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              <span className="font-mono text-sm uppercase tracking-wide">
+                View Commits
+              </span>
+              <svg
+                className="w-4 h-4 group-hover:translate-x-1 transition-transform"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 5l7 7-7 7"
+                />
               </svg>
             </button>
           </div>

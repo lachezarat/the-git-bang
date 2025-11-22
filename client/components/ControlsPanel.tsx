@@ -13,17 +13,23 @@ export default function ControlsPanel() {
           <div className="space-y-2 text-xs text-space-cyan/60">
             <div className="flex items-center justify-between border-l-2 border-space-cyan/20 pl-3">
               <span className="uppercase tracking-wide">Pan</span>
-              <span className="text-space-cyan/80 font-semibold">Left Click + Drag</span>
+              <span className="text-space-cyan/80 font-semibold">
+                Left Click + Drag
+              </span>
             </div>
 
             <div className="flex items-center justify-between border-l-2 border-space-amber/20 pl-3">
               <span className="uppercase tracking-wide">Zoom</span>
-              <span className="text-space-amber/80 font-semibold">Scroll Wheel</span>
+              <span className="text-space-amber/80 font-semibold">
+                Scroll Wheel
+              </span>
             </div>
 
             <div className="flex items-center justify-between border-l-2 border-space-magenta/20 pl-3">
               <span className="uppercase tracking-wide">Orbit</span>
-              <span className="text-space-magenta/80 font-semibold">Right Click + Drag</span>
+              <span className="text-space-magenta/80 font-semibold">
+                Right Click + Drag
+              </span>
             </div>
           </div>
 

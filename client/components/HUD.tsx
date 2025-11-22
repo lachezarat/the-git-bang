@@ -4,13 +4,19 @@ import StatsPanel from "./StatsPanel";
 import YearMarker from "./YearMarker";
 import TimelinePanel from "./TimelinePanel";
 import ControlsPanel from "./ControlsPanel";
+import type { Repository } from "../lib/repositoryData";
 
 interface HUDProps {
   onSearchChange?: (query: string, isFocused: boolean) => void;
   onSuggestionSelect?: (repo: any) => void;
+  repositories?: Repository[];
 }
 
-export default function HUD({ onSearchChange, onSuggestionSelect }: HUDProps) {
+export default function HUD({
+  onSearchChange,
+  onSuggestionSelect,
+  repositories = [],
+}: HUDProps) {
   return (
     <div className="hud-container">
       <YearMarker />
@@ -20,6 +26,7 @@ export default function HUD({ onSearchChange, onSuggestionSelect }: HUDProps) {
       <SearchBar
         onSearchChange={onSearchChange}
         onSuggestionSelect={onSuggestionSelect}
+        repositories={repositories}
       />
 
       <div
