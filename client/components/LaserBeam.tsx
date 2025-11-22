@@ -94,13 +94,13 @@ export default function LaserBeam({
     gsap.fromTo(
       uniforms.uIntensity,
       { value: 0 },
-      { 
-        value: intensity, 
-        duration: 0.3, 
+      {
+        value: intensity,
+        duration: 0.3,
         ease: "power2.out",
         onComplete: () => {
-          // Add sound hook
-          meshRef.current?.setAttribute("data-sound", "laser-fire");
+          // Sound hook placeholder for laser-fire sound
+          console.log("[SOUND] laser-fire");
         }
       }
     );

@@ -23,17 +23,18 @@ export default function TargetingReticle({ position, visible = true }: Targeting
     tl.fromTo(
       groupRef.current.scale,
       { x: 0, y: 0, z: 0 },
-      { 
-        x: 1, 
-        y: 1, 
-        z: 1, 
-        duration: 0.3, 
-        ease: "back.out(2)" 
+      {
+        x: 1,
+        y: 1,
+        z: 1,
+        duration: 0.3,
+        ease: "back.out(2)",
+        onComplete: () => {
+          // Sound hook placeholder for target-lock sound
+          console.log("[SOUND] target-lock");
+        }
       }
     );
-
-    // Add sound hook
-    groupRef.current.setAttribute("data-sound", "target-lock");
 
     return () => {
       tl.kill();
