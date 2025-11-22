@@ -1,6 +1,7 @@
-import { useRef, useMemo } from "react";
+import { useRef, useMemo, useEffect, useState } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
+import { generateParticlesFromRepositories, getLanguageColor, calculatePopularity, type Repository } from "../lib/repositoryData";
 
 const PARTICLE_COUNT = 25000;
 const START_YEAR = 2008;
@@ -90,9 +91,10 @@ void main() {
 
 interface LightConeProps {
   particlesRef?: React.RefObject<THREE.Points>;
+  repositories?: Repository[];
 }
 
-export default function LightCone({ particlesRef }: LightConeProps = {}) {
+export default function LightCone({ particlesRef, repositories = [] }: LightConeProps = {}) {
   const pointsRef = useRef<THREE.Points>(null);
   const materialRef = useRef<THREE.ShaderMaterial>(null);
 
@@ -100,6 +102,18 @@ export default function LightCone({ particlesRef }: LightConeProps = {}) {
   const activeRef = particlesRef || pointsRef;
 
   const { geometry, uniforms } = useMemo(() => {
+    // If no repositories provided, return empty geometry
+    if (repositories.length === 0) {
+      const emptyGeometry = new THREE.BufferGeometry();
+      const emptyUniforms = {
+        uTime: { value: 0 },
+        uPixelRatio: { value: Math.min(window.devicePixelRatio, 2) },
+      };
+      return { geometry: emptyGeometry, uniforms: emptyUniforms };
+    }
+
+    // Generate particles from repository data
+    const particleRepos = generateParticlesFromRepositories(repositories, PARTICLE_COUNT);
     const positions = new Float32Array(PARTICLE_COUNT * 3);
     const colors = new Float32Array(PARTICLE_COUNT * 3);
     const sizes = new Float32Array(PARTICLE_COUNT);
@@ -107,22 +121,11 @@ export default function LightCone({ particlesRef }: LightConeProps = {}) {
     const activities = new Float32Array(PARTICLE_COUNT);
     const brightnesses = new Float32Array(PARTICLE_COUNT);
 
-    const languageColors = [
-      new THREE.Color(0x4a90e2),
-      new THREE.Color(0xe85d75),
-      new THREE.Color(0x00d9ff),
-      new THREE.Color(0xff6b35),
-      new THREE.Color(0x3572a5),
-      new THREE.Color(0x2b7489),
-      new THREE.Color(0xb07219),
-      new THREE.Color(0xf34b7d),
-      new THREE.Color(0xf2f2f2),
-    ];
-
     for (let i = 0; i < PARTICLE_COUNT; i++) {
-      // Map year to position along funnel
-      const year = START_YEAR + Math.random() * (END_YEAR - START_YEAR);
-      const logT = mapTimeToLog(year);
+      const repo = particleRepos[i];
+
+      // Map repository year to position along funnel
+      const logT = mapTimeToLog(repo.year);
 
       // X position along funnel length
       const x = logT * 125 - 62.5;
@@ -144,20 +147,22 @@ export default function LightCone({ particlesRef }: LightConeProps = {}) {
       positions[i * 3 + 1] = y;
       positions[i * 3 + 2] = z;
 
-      const languageColor = languageColors[Math.floor(Math.random() * languageColors.length)];
+      // Get language-specific color
+      const languageColor = new THREE.Color(getLanguageColor(repo.language));
       colors[i * 3] = languageColor.r;
       colors[i * 3 + 1] = languageColor.g;
       colors[i * 3 + 2] = languageColor.b;
 
-      const popularity = Math.pow(Math.random(), 3);
+      // Calculate popularity from actual star count
+      const popularity = calculatePopularity(repo.stars);
       sizes[i] = 2.0 + popularity * 8;
 
       // Brightness correlates with popularity (star count)
-      // More stars = brighter, fewer stars = dimmer
       brightnesses[i] = popularity;
 
       pulses[i] = Math.random();
-      activities[i] = 0.5 + Math.random() * 1.5;
+      // Activity from actual repo metrics
+      activities[i] = repo.activity / 100;
     }
 
     const geometry = new THREE.BufferGeometry();
@@ -174,7 +179,7 @@ export default function LightCone({ particlesRef }: LightConeProps = {}) {
     };
 
     return { geometry, uniforms };
-  }, []);
+  }, [repositories]);
 
   useFrame((state) => {
     if (materialRef.current) {

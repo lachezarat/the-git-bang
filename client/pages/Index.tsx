@@ -7,6 +7,7 @@ import HUD from "../components/HUD";
 import ScanlineOverlay from "../components/ScanlineOverlay";
 import RepoCard from "../components/RepoCard";
 import AmbientSound from "../components/AmbientSound";
+import { useRepositoryData } from "../hooks/useRepositoryData";
 import * as THREE from "three";
 
 export default function Index() {
@@ -17,6 +18,10 @@ export default function Index() {
   const [searchActive, setSearchActive] = useState(false);
   const [selectedRepo, setSelectedRepo] = useState<any>(null);
   const [repoCardPos, setRepoCardPos] = useState({ x: 0, y: 0 });
+
+  // Load repository data
+  const { data: repoData, loading: dataLoading, error: dataError } = useRepositoryData();
+  const repositories = repoData?.repositories || [];
 
   const handleSearchChange = (query: string, isFocused: boolean) => {
     setSearchQuery(query);
@@ -43,12 +48,22 @@ export default function Index() {
   }, []);
 
   useEffect(() => {
+    // Wait for both boot sequence and data to load
     const timer = setTimeout(() => {
-      setBootComplete(true);
+      if (!dataLoading) {
+        setBootComplete(true);
+      }
     }, 4000);
 
     return () => clearTimeout(timer);
-  }, []);
+  }, [dataLoading]);
+
+  // Show error if data loading failed
+  useEffect(() => {
+    if (dataError) {
+      console.error('Failed to load repository data:', dataError);
+    }
+  }, [dataError]);
 
   return (
     <div className="relative w-screen h-screen overflow-hidden bg-space-void">
@@ -71,7 +86,7 @@ export default function Index() {
         <pointLight position={[-20, -20, -20]} intensity={0.2} color="#ff006e" />
         <pointLight position={[0, 20, -20]} intensity={0.15} color="#ffba08" />
         
-        <Scene3D searchActive={searchActive} searchQuery={searchQuery} />
+        <Scene3D searchActive={searchActive} searchQuery={searchQuery} repositories={repositories} />
 
         <OrbitControls
           target={[0, 0, 0]}
@@ -94,7 +109,7 @@ export default function Index() {
         />
       </Canvas>
 
-      {bootComplete && <HUD onSearchChange={handleSearchChange} onSuggestionSelect={handleSuggestionSelect} />}
+      {bootComplete && <HUD onSearchChange={handleSearchChange} onSuggestionSelect={handleSuggestionSelect} repositories={repositories} />}
       {bootComplete && <AmbientSound />}
 
       {selectedRepo && (
