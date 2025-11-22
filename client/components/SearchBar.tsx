@@ -165,7 +165,7 @@ export default function SearchBar({ onSearchChange, onSuggestionSelect }: Search
         </div>
 
         {isFocused && suggestions.length > 0 && (
-          <div className="liquid-glass absolute top-full left-0 right-0 mt-2 p-3 space-y-1 max-h-[300px] overflow-y-auto">
+          <div className="liquid-glass absolute bottom-full left-0 right-0 mb-2 p-3 space-y-1 max-h-[300px] overflow-y-auto">
             {suggestions.map((repo) => (
               <div
                 key={`${repo.owner}/${repo.name}`}

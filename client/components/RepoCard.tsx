@@ -125,7 +125,8 @@ export default function RepoCard({ repo, position, onClose }: RepoCardProps) {
           top: `${Math.min(Math.max(position.y, 320), window.innerHeight - 320)}px`,
           transform: "translate(-50%, -50%)",
           width: "420px",
-          height: expanded ? "900px" : "600px",
+          maxHeight: "calc(100vh - 120px)",
+          height: expanded ? "auto" : "auto",
           transition: "height 0.5s cubic-bezier(0.16, 1, 0.3, 1)",
         }}
       >
