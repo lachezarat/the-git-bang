@@ -1,6 +1,7 @@
 import { useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import LightCone from "./LightCone";
+import FunnelWireframe from "./FunnelWireframe";
 import * as THREE from "three";
 
 interface Scene3DProps {
@@ -109,6 +110,7 @@ function ConeGuides() {
 export default function Scene3D({ searchActive = false, searchQuery = "" }: Scene3DProps) {
   return (
     <group>
+      <FunnelWireframe />
       <LightCone />
       {/* <ConeGuides /> */}
     </group>

@@ -103,17 +103,25 @@ export default function LightCone() {
     ];
 
     for (let i = 0; i < PARTICLE_COUNT; i++) {
+      // Map year to position along funnel
       const year = START_YEAR + Math.random() * (END_YEAR - START_YEAR);
       const logT = mapTimeToLog(year);
-      
+
+      // X position along funnel length
       const x = logT * 125 - 62.5;
 
-      const coneRadius = logT * 37.5;
-      const angle = Math.random() * Math.PI * 2;
-      const radiusOffset = Math.random() * coneRadius;
+      // Funnel radius: starts at 2.5 (narrow left) and expands to 37.5 (wide right)
+      const startRadius = 2.5;
+      const endRadius = 37.5;
+      const funnelRadius = startRadius + (endRadius - startRadius) * logT;
 
-      const y = Math.cos(angle) * radiusOffset + (Math.random() - 0.5) * 10;
-      const z = Math.sin(angle) * radiusOffset + (Math.random() - 0.5) * 10;
+      // Random position within circular cross-section
+      const angle = Math.random() * Math.PI * 2;
+      // Use square root for uniform distribution within circle
+      const radiusOffset = Math.sqrt(Math.random()) * funnelRadius;
+
+      const y = Math.cos(angle) * radiusOffset;
+      const z = Math.sin(angle) * radiusOffset;
 
       positions[i * 3] = x;
       positions[i * 3 + 1] = y;
