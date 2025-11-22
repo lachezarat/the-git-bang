@@ -92,9 +92,7 @@ interface LightConeProps {
   particlesRef?: React.RefObject<THREE.Points>;
 }
 
-export default function LightCone({
-  particlesRef,
-}: LightConeProps = {}) {
+export default function LightCone({ particlesRef }: LightConeProps = {}) {
   const pointsRef = useRef<THREE.Points>(null);
   const materialRef = useRef<THREE.ShaderMaterial>(null);
 

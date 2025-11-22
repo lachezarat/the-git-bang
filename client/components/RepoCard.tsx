@@ -39,11 +39,11 @@ export default function RepoCard({ repo, position, onClose }: RepoCardProps) {
   // Constrain position to keep card fully visible
   const safeX = Math.min(
     Math.max(position.x, halfWidth + padding),
-    window.innerWidth - halfWidth - padding
+    window.innerWidth - halfWidth - padding,
   );
   const safeY = Math.min(
     Math.max(position.y, halfHeight + padding),
-    window.innerHeight - halfHeight - padding
+    window.innerHeight - halfHeight - padding,
   );
 
   useEffect(() => {
