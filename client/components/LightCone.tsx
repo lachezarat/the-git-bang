@@ -1,7 +1,6 @@
 import { useRef, useMemo } from "react";
-import { useFrame, extend } from "@react-three/fiber";
+import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
-import { Points, PointMaterial } from "@react-three/drei";
 
 const PARTICLE_COUNT = 50000;
 const START_YEAR = 2008;
@@ -12,12 +11,84 @@ function mapTimeToLog(year: number): number {
   return Math.log(1 + t * 9) / Math.log(10);
 }
 
+const particleVertexShader = `
+uniform float uTime;
+uniform float uPixelRatio;
+
+attribute float size;
+attribute vec3 customColor;
+attribute float pulse;
+attribute float activity;
+
+varying vec3 vColor;
+varying float vPulse;
+
+void main() {
+  vColor = customColor;
+  
+  float pulseIntensity = 0.5 + 0.5 * sin(uTime * activity * 2.0 + pulse * 6.28318);
+  vPulse = pulseIntensity;
+  
+  vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+  
+  gl_Position = projectionMatrix * mvPosition;
+  
+  gl_PointSize = size * uPixelRatio * (300.0 / -mvPosition.z) * (0.8 + 0.4 * pulseIntensity);
+}
+`;
+
+const particleFragmentShader = `
+varying vec3 vColor;
+varying float vPulse;
+
+void main() {
+  vec2 center = gl_PointCoord - vec2(0.5);
+  float dist = length(center);
+  
+  if (dist > 0.5) {
+    discard;
+  }
+  
+  float glow = 1.0 - dist * 2.0;
+  glow = pow(glow, 2.5);
+  
+  float aberration = 0.025;
+  
+  float distR = length(center - vec2(aberration, 0.0));
+  float glowR = 1.0 - distR * 2.0;
+  glowR = pow(max(glowR, 0.0), 2.5);
+  
+  float distB = length(center + vec2(aberration, 0.0));
+  float glowB = 1.0 - distB * 2.0;
+  glowB = pow(max(glowB, 0.0), 2.5);
+  
+  vec3 finalColor = vec3(
+    vColor.r * glowR,
+    vColor.g * glow,
+    vColor.b * glowB
+  );
+  
+  finalColor *= (0.6 + 0.4 * vPulse);
+  
+  float core = 1.0 - smoothstep(0.0, 0.15, dist);
+  finalColor += vec3(1.0) * core * 0.6;
+  
+  float alpha = glow * (0.7 + 0.3 * vPulse);
+  
+  gl_FragColor = vec4(finalColor, alpha);
+}
+`;
+
 export default function LightCone() {
   const pointsRef = useRef<THREE.Points>(null);
+  const materialRef = useRef<THREE.ShaderMaterial>(null);
 
-  const [positions, colors] = useMemo(() => {
+  const particleData = useMemo(() => {
     const positions = new Float32Array(PARTICLE_COUNT * 3);
     const colors = new Float32Array(PARTICLE_COUNT * 3);
+    const sizes = new Float32Array(PARTICLE_COUNT);
+    const pulses = new Float32Array(PARTICLE_COUNT);
+    const activities = new Float32Array(PARTICLE_COUNT);
 
     const languageColors = [
       new THREE.Color(0x4a90e2),
@@ -52,14 +123,28 @@ export default function LightCone() {
       colors[i * 3] = languageColor.r;
       colors[i * 3 + 1] = languageColor.g;
       colors[i * 3 + 2] = languageColor.b;
+
+      const popularity = Math.pow(Math.random(), 3);
+      sizes[i] = 1.5 + popularity * 6;
+
+      pulses[i] = Math.random();
+      activities[i] = 0.5 + Math.random() * 1.5;
     }
 
-    return [positions, colors];
+    return { positions, colors, sizes, pulses, activities };
   }, []);
 
+  const uniforms = useMemo(
+    () => ({
+      uTime: { value: 0 },
+      uPixelRatio: { value: Math.min(window.devicePixelRatio, 2) },
+    }),
+    []
+  );
+
   useFrame((state) => {
-    if (pointsRef.current) {
-      pointsRef.current.rotation.y = state.clock.elapsedTime * 0.02;
+    if (materialRef.current) {
+      materialRef.current.uniforms.uTime.value = state.clock.elapsedTime;
     }
   });
 
@@ -68,23 +153,42 @@ export default function LightCone() {
       <bufferGeometry>
         <bufferAttribute
           attach="attributes-position"
-          count={positions.length / 3}
-          array={positions}
+          count={particleData.positions.length / 3}
+          array={particleData.positions}
           itemSize={3}
         />
         <bufferAttribute
-          attach="attributes-color"
-          count={colors.length / 3}
-          array={colors}
+          attach="attributes-customColor"
+          count={particleData.colors.length / 3}
+          array={particleData.colors}
           itemSize={3}
         />
+        <bufferAttribute
+          attach="attributes-size"
+          count={particleData.sizes.length}
+          array={particleData.sizes}
+          itemSize={1}
+        />
+        <bufferAttribute
+          attach="attributes-pulse"
+          count={particleData.pulses.length}
+          array={particleData.pulses}
+          itemSize={1}
+        />
+        <bufferAttribute
+          attach="attributes-activity"
+          count={particleData.activities.length}
+          array={particleData.activities}
+          itemSize={1}
+        />
       </bufferGeometry>
-      <pointsMaterial
-        size={0.15}
-        vertexColors
+      <shaderMaterial
+        ref={materialRef}
+        vertexShader={particleVertexShader}
+        fragmentShader={particleFragmentShader}
+        uniforms={uniforms}
         transparent
-        opacity={0.8}
-        sizeAttenuation={true}
+        depthWrite={false}
         blending={THREE.AdditiveBlending}
       />
     </points>
