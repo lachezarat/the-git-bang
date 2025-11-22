@@ -2,7 +2,6 @@ import { useState } from "react";
 import SearchBar from "./SearchBar";
 import StatsPanel from "./StatsPanel";
 import YearMarker from "./YearMarker";
-import NavigationControls from "./NavigationControls";
 import TimelinePanel from "./TimelinePanel";
 import ControlsPanel from "./ControlsPanel";
 
@@ -14,7 +13,6 @@ interface HUDProps {
 export default function HUD({ onSearchChange, onSuggestionSelect }: HUDProps) {
   return (
     <div className="hud-container">
-      <NavigationControls />
       <YearMarker />
       <StatsPanel />
       <TimelinePanel />

@@ -8,6 +8,7 @@ import * as THREE from "three";
 interface Scene3DProps {
   searchActive?: boolean;
   searchQuery?: string;
+  onParticleClick?: (repo: any, position: { x: number; y: number }) => void;
 }
 
 function ConeGuides() {
@@ -108,14 +109,14 @@ function ConeGuides() {
   );
 }
 
-export default function Scene3D({ searchActive = false, searchQuery = "" }: Scene3DProps) {
+export default function Scene3D({ searchActive = false, searchQuery = "", onParticleClick }: Scene3DProps) {
   const particlesRef = useRef<THREE.Points>(null);
 
   return (
     <group>
       <FunnelWireframe />
       <LightCone particlesRef={particlesRef} />
-      <ParticleInteraction particlesRef={particlesRef} />
+      <ParticleInteraction particlesRef={particlesRef} onParticleClick={onParticleClick} />
       {/* <ConeGuides /> */}
     </group>
   );

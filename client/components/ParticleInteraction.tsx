@@ -5,9 +5,10 @@ import gsap from "gsap";
 
 interface ParticleInteractionProps {
   particlesRef: React.RefObject<THREE.Points>;
+  onParticleClick?: (repo: any, position: { x: number; y: number }) => void;
 }
 
-export default function ParticleInteraction({ particlesRef }: ParticleInteractionProps) {
+export default function ParticleInteraction({ particlesRef, onParticleClick }: ParticleInteractionProps) {
   const { camera, gl, controls } = useThree();
   const raycaster = useRef(new THREE.Raycaster());
   const mouse = useRef(new THREE.Vector2());
@@ -32,15 +33,52 @@ export default function ParticleInteraction({ particlesRef }: ParticleInteractio
 
       if (intersects.length > 0) {
         const point = intersects[0].point;
-        
+        const index = intersects[0].index || 0;
+
+        // Generate mock repository data for the clicked particle
+        const repoNames = [
+          { name: "react", owner: "facebook", desc: "A declarative, efficient JavaScript library for building user interfaces" },
+          { name: "vue", owner: "vuejs", desc: "The Progressive JavaScript Framework" },
+          { name: "tensorflow", owner: "tensorflow", desc: "An Open Source Machine Learning Framework for Everyone" },
+          { name: "kubernetes", owner: "kubernetes", desc: "Production-Grade Container Orchestration" },
+          { name: "rust", owner: "rust-lang", desc: "Empowering everyone to build reliable and efficient software" },
+          { name: "vscode", owner: "microsoft", desc: "Visual Studio Code" },
+          { name: "pytorch", owner: "pytorch", desc: "Tensors and Dynamic neural networks in Python" },
+          { name: "node", owner: "nodejs", desc: "Node.js JavaScript runtime" },
+          { name: "django", owner: "django", desc: "The Web framework for perfectionists with deadlines" },
+          { name: "rails", owner: "rails", desc: "Ruby on Rails web framework" },
+        ];
+
+        const languages = ["JavaScript", "TypeScript", "Python", "Go", "Rust", "Ruby", "Java"];
+        const selectedRepo = repoNames[index % repoNames.length];
+
+        const mockRepo = {
+          name: selectedRepo.name,
+          owner: selectedRepo.owner,
+          description: selectedRepo.desc,
+          language: languages[index % languages.length],
+          stars: Math.floor(50000 + Math.random() * 200000),
+          forks: Math.floor(10000 + Math.random() * 50000),
+          activity: Math.floor(70 + Math.random() * 30),
+          growth: Math.floor(10 + Math.random() * 40),
+          health: Math.floor(85 + Math.random() * 15),
+          community: Math.floor(500 + Math.random() * 3000),
+          year: 2008 + Math.floor(Math.random() * 17),
+        };
+
+        // Trigger card modal
+        if (onParticleClick) {
+          onParticleClick(mockRepo, { x: event.clientX, y: event.clientY });
+        }
+
         // Calculate camera target position (move camera closer to the particle)
         const direction = new THREE.Vector3().subVectors(point, camera.position).normalize();
         const distance = 30; // Distance from particle to camera
         const newCameraPosition = new THREE.Vector3().copy(point).sub(direction.multiplyScalar(distance));
-        
+
         // Animate camera to new position
         isAnimating.current = true;
-        
+
         gsap.to(camera.position, {
           x: newCameraPosition.x,
           y: newCameraPosition.y,

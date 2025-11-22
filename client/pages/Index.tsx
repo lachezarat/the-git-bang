@@ -29,6 +29,11 @@ export default function Index() {
     setSearchActive(false);
   };
 
+  const handleParticleClick = (repo: any, position: { x: number; y: number }) => {
+    setSelectedRepo(repo);
+    setRepoCardPos(position);
+  };
+
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
       setCursorPos({ x: e.clientX, y: e.clientY });
@@ -71,7 +76,7 @@ export default function Index() {
         <pointLight position={[-20, -20, -20]} intensity={0.2} color="#ff006e" />
         <pointLight position={[0, 20, -20]} intensity={0.15} color="#ffba08" />
         
-        <Scene3D searchActive={searchActive} searchQuery={searchQuery} />
+        <Scene3D searchActive={searchActive} searchQuery={searchQuery} onParticleClick={handleParticleClick} />
 
         <OrbitControls
           target={[0, 0, 0]}
