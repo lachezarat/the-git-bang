@@ -100,12 +100,15 @@ export function generateParticlesFromRepositories(
     });
   }
 
-  // Shuffle the array to distribute languages evenly throughout the cone
-  // Fisher-Yates shuffle algorithm
-  for (let i = particles.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [particles[i], particles[j]] = [particles[j], particles[i]];
-  }
+  // Sort by creation year to show chronological progression
+  particles.sort((a, b) => {
+    // Primary sort: by year
+    if (a.year !== b.year) {
+      return a.year - b.year;
+    }
+    // Secondary sort: by stars (popular repos first within same year)
+    return b.stars - a.stars;
+  });
 
   return particles.slice(0, targetCount);
 }
