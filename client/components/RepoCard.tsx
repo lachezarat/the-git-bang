@@ -1,22 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 import { gsap } from "gsap";
-
-interface RepoData {
-  name: string;
-  owner: string;
-  language: string;
-  stars: number;
-  forks: number;
-  description: string;
-  activity: number;
-  growth: number;
-  health: number;
-  community: number;
-  year: number;
-}
+import {
+  fetchRepositoryDetails,
+  type Repository,
+  type RepositoryDetails,
+} from "../lib/repositoryData";
 
 interface RepoCardProps {
-  repo: RepoData;
+  repo: Repository;
   position: { x: number; y: number };
   onClose: () => void;
 }
@@ -25,6 +16,25 @@ export default function RepoCard({ repo, position, onClose }: RepoCardProps) {
   const cardRef = useRef<HTMLDivElement>(null);
   const [expanded, setExpanded] = useState(false);
   const [vibeIdeas, setVibeIdeas] = useState<string[]>([]);
+  const [details, setDetails] = useState<RepositoryDetails | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch repository details from GitHub API
+  useEffect(() => {
+    async function loadDetails() {
+      setLoading(true);
+      try {
+        const repoDetails = await fetchRepositoryDetails(repo);
+        setDetails(repoDetails);
+      } catch (error) {
+        console.error("Failed to load repository details:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadDetails();
+  }, [repo]);
 
   useEffect(() => {
     if (!cardRef.current) return;
@@ -110,6 +120,18 @@ export default function RepoCard({ repo, position, onClose }: RepoCardProps) {
     Java: "#b07219",
   };
 
+  // Use details if loaded, otherwise show minimal data
+  const displayData = details || {
+    ...repo,
+    forks: 0,
+    description: "Loading...",
+    activity: 0,
+    growth: 0,
+    health: 0,
+    community: 0,
+    url: `https://github.com/${repo.owner}/${repo.name}`,
+  };
+
   return (
     <>
       <div
@@ -154,20 +176,28 @@ export default function RepoCard({ repo, position, onClose }: RepoCardProps) {
         </button>
 
         <div className="p-6 h-full overflow-y-auto">
+          {loading && (
+            <div className="absolute inset-0 bg-space-void/80 backdrop-blur-sm flex items-center justify-center z-50">
+              <div className="text-space-cyan font-mono text-sm animate-pulse">
+                LOADING DATA...
+              </div>
+            </div>
+          )}
+
           <div className="card-header space-y-3 mb-6">
             <div className="flex items-start justify-between gap-4">
               <div className="flex-1">
                 <h2 className="text-2xl font-display font-bold text-white glow-cyan mb-1">
-                  {repo.name}
+                  {displayData.name}
                 </h2>
                 <div className="text-space-cyan/60 font-mono text-sm">
-                  {repo.owner}
+                  {displayData.owner}
                 </div>
               </div>
 
               <div className="text-right space-y-1 font-mono text-xs">
                 <div className="text-space-amber glow-amber font-bold text-lg tabular-nums">
-                  {repo.stars.toLocaleString()}
+                  {displayData.stars.toLocaleString()}
                 </div>
                 <div className="text-space-cyan/50">STARS</div>
               </div>
@@ -177,20 +207,20 @@ export default function RepoCard({ repo, position, onClose }: RepoCardProps) {
               <div
                 className="px-3 py-1 text-xs font-mono font-semibold border angular-clip"
                 style={{
-                  backgroundColor: `${languageColors[repo.language] || "#f2f2f2"}20`,
-                  borderColor: languageColors[repo.language] || "#f2f2f2",
-                  color: languageColors[repo.language] || "#f2f2f2",
+                  backgroundColor: `${languageColors[displayData.language] || "#f2f2f2"}20`,
+                  borderColor: languageColors[displayData.language] || "#f2f2f2",
+                  color: languageColors[displayData.language] || "#f2f2f2",
                 }}
               >
-                {repo.language}
+                {displayData.language}
               </div>
               <div className="text-space-cyan/40 font-mono text-xs">
-                {repo.forks.toLocaleString()} FORKS
+                {displayData.forks.toLocaleString()} FORKS
               </div>
             </div>
 
             <p className="text-space-cyan/70 text-sm font-mono leading-relaxed">
-              {repo.description}
+              {displayData.description}
             </p>
           </div>
 
@@ -202,25 +232,25 @@ export default function RepoCard({ repo, position, onClose }: RepoCardProps) {
               <div className="border-l-2 border-space-cyan/30 pl-3">
                 <div className="text-space-cyan/50 text-xs mb-1">Activity</div>
                 <div className="text-space-cyan font-bold text-lg tabular-nums">
-                  {repo.activity}%
+                  {displayData.activity}%
                 </div>
               </div>
               <div className="border-l-2 border-space-amber/30 pl-3">
                 <div className="text-space-amber/50 text-xs mb-1">Growth</div>
                 <div className="text-space-amber font-bold text-lg tabular-nums glow-amber">
-                  {repo.growth}%
+                  {displayData.growth}%
                 </div>
               </div>
               <div className="border-l-2 border-space-magenta/30 pl-3">
                 <div className="text-space-magenta/50 text-xs mb-1">Health</div>
                 <div className="text-space-magenta font-bold text-lg tabular-nums glow-magenta">
-                  {repo.health}%
+                  {displayData.health}%
                 </div>
               </div>
               <div className="border-l-2 border-space-cyan/30 pl-3">
                 <div className="text-space-cyan/50 text-xs mb-1">Community</div>
                 <div className="text-space-cyan font-bold text-lg tabular-nums">
-                  {repo.community}
+                  {displayData.community}
                 </div>
               </div>
             </div>
@@ -236,7 +266,7 @@ export default function RepoCard({ repo, position, onClose }: RepoCardProps) {
               <div
                 className="absolute top-2 bottom-2 w-1 bg-space-cyan shadow-[0_0_10px_rgba(0,255,249,0.8)]"
                 style={{
-                  left: `${((repo.year - 2008) / (2025 - 2008)) * 100}%`,
+                  left: `${((displayData.year - 2008) / (2025 - 2008)) * 100}%`,
                 }}
               />
               <div className="flex justify-between text-xs text-space-cyan/40 font-mono mt-8">
@@ -251,7 +281,7 @@ export default function RepoCard({ repo, position, onClose }: RepoCardProps) {
               className="card-button w-full border-beam liquid-glass px-6 py-4 flex items-center justify-between group hover:shadow-[0_0_30px_rgba(0,255,249,0.4)] transition-all hover:scale-[1.02]"
               onClick={() =>
                 window.open(
-                  `https://deepwiki.com/${repo.owner}/${repo.name}`,
+                  `https://deepwiki.com/${displayData.owner}/${displayData.name}`,
                   "_blank",
                 )
               }
