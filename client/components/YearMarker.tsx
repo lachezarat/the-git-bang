@@ -16,13 +16,13 @@ export default function YearMarker() {
 
   return (
     <div
-      className="hud-element fixed bottom-12 left-12 pointer-events-none"
+      className="hud-element fixed top-20 left-6 pointer-events-none"
       style={{ animationDelay: "0.6s" }}
     >
       <div
         className="font-display font-bold text-white/10 select-none"
         style={{
-          fontSize: "clamp(48px, 8vw, 120px)",
+          fontSize: "clamp(32px, 5vw, 72px)",
           letterSpacing: "-0.05em",
           lineHeight: 1,
           fontVariantNumeric: "tabular-nums",
@@ -30,7 +30,7 @@ export default function YearMarker() {
       >
         {currentYear}
       </div>
-      <div className="text-space-cyan/40 font-mono text-xs mt-2 tracking-wider">
+      <div className="text-space-cyan/40 font-mono text-xs mt-1 tracking-wider">
         TEMPORAL MARKER
       </div>
     </div>

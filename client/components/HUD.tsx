@@ -2,14 +2,18 @@ import SearchBar from "./SearchBar";
 import StatsPanel from "./StatsPanel";
 import YearMarker from "./YearMarker";
 import NavigationControls from "./NavigationControls";
+import TimelinePanel from "./TimelinePanel";
+import ControlsPanel from "./ControlsPanel";
 
 export default function HUD() {
   return (
     <div className="hud-container">
       <NavigationControls />
-      <StatsPanel />
-      <SearchBar />
       <YearMarker />
+      <StatsPanel />
+      <TimelinePanel />
+      <ControlsPanel />
+      <SearchBar />
 
       <div
         className="hud-element absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none"
