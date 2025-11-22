@@ -11,6 +11,13 @@ export default function Index() {
   const [bootComplete, setBootComplete] = useState(false);
   const [cursorPos, setCursorPos] = useState({ x: 0, y: 0 });
   const cursorRef = useRef<HTMLDivElement>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchActive, setSearchActive] = useState(false);
+
+  const handleSearchChange = (query: string, isFocused: boolean) => {
+    setSearchQuery(query);
+    setSearchActive(isFocused && query.length > 0);
+  };
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
@@ -53,7 +60,7 @@ export default function Index() {
         <pointLight position={[-20, -20, -20]} intensity={0.2} color="#ff006e" />
         <pointLight position={[0, 20, -20]} intensity={0.15} color="#ffba08" />
         
-        <Scene3D />
+        <Scene3D searchActive={searchActive} searchQuery={searchQuery} />
 
         <OrbitControls
           target={[0, 0, 0]}
@@ -76,7 +83,7 @@ export default function Index() {
         />
       </Canvas>
 
-      {bootComplete && <HUD />}
+      {bootComplete && <HUD onSearchChange={handleSearchChange} />}
     </div>
   );
 }

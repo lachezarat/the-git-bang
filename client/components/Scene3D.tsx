@@ -1,6 +1,13 @@
 import { useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import LightCone from "./LightCone";
+import LaserTargeting from "./LaserTargeting";
+import * as THREE from "three";
+
+interface Scene3DProps {
+  searchActive?: boolean;
+  searchQuery?: string;
+}
 
 function ConeGuides() {
   const groupRef = useRef<THREE.Group>(null);
@@ -100,11 +107,16 @@ function ConeGuides() {
   );
 }
 
-export default function Scene3D() {
+export default function Scene3D({ searchActive = false, searchQuery = "" }: Scene3DProps) {
   return (
     <group>
       <LightCone />
       <ConeGuides />
+      <LaserTargeting
+        searchActive={searchActive}
+        searchQuery={searchQuery}
+        hoveredParticle={null}
+      />
     </group>
   );
 }

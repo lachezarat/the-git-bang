@@ -1,8 +1,22 @@
 import { useState } from "react";
 
-export default function SearchBar() {
+interface SearchBarProps {
+  onSearchChange?: (query: string, isFocused: boolean) => void;
+}
+
+export default function SearchBar({ onSearchChange }: SearchBarProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [isFocused, setIsFocused] = useState(false);
+
+  const handleSearchChange = (value: string) => {
+    setSearchQuery(value);
+    onSearchChange?.(value, isFocused);
+  };
+
+  const handleFocus = (focused: boolean) => {
+    setIsFocused(focused);
+    onSearchChange?.(searchQuery, focused);
+  };
 
   return (
     <div
@@ -27,9 +41,9 @@ export default function SearchBar() {
             <input
               type="text"
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              onFocus={() => setIsFocused(true)}
-              onBlur={() => setIsFocused(false)}
+              onChange={(e) => handleSearchChange(e.target.value)}
+              onFocus={() => handleFocus(true)}
+              onBlur={() => handleFocus(false)}
               placeholder="SEARCH REPOSITORIES..."
               className="flex-1 bg-transparent border-none outline-none text-space-cyan placeholder:text-space-cyan/30 font-mono text-sm tracking-wider font-semibold caret-space-cyan"
               style={{ fontVariantNumeric: "tabular-nums" }}
