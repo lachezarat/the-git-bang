@@ -1,62 +1,78 @@
-import { DemoResponse } from "@shared/api";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { Canvas } from "@react-three/fiber";
+import { OrbitControls, Stars, PerspectiveCamera } from "@react-three/drei";
+import Scene3D from "../components/Scene3D";
+import BootSequence from "../components/BootSequence";
+import HUD from "../components/HUD";
 
 export default function Index() {
-  const [exampleFromServer, setExampleFromServer] = useState("");
-  // Fetch users on component mount
+  const [bootComplete, setBootComplete] = useState(false);
+  const [cursorPos, setCursorPos] = useState({ x: 0, y: 0 });
+  const cursorRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
-    fetchDemo();
+    const handleMouseMove = (e: MouseEvent) => {
+      setCursorPos({ x: e.clientX, y: e.clientY });
+      if (cursorRef.current) {
+        cursorRef.current.style.left = `${e.clientX}px`;
+        cursorRef.current.style.top = `${e.clientY}px`;
+      }
+    };
+
+    window.addEventListener("mousemove", handleMouseMove);
+    return () => window.removeEventListener("mousemove", handleMouseMove);
   }, []);
 
-  // Example of how to fetch data from the server (if needed)
-  const fetchDemo = async () => {
-    try {
-      const response = await fetch("/api/demo");
-      const data = (await response.json()) as DemoResponse;
-      setExampleFromServer(data.message);
-    } catch (error) {
-      console.error("Error fetching hello:", error);
-    }
-  };
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setBootComplete(true);
+    }, 4000);
+
+    return () => clearTimeout(timer);
+  }, []);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200">
-      <div className="text-center">
-        {/* TODO: FUSION_GENERATION_APP_PLACEHOLDER replace everything here with the actual app! */}
-        <h1 className="text-2xl font-semibold text-slate-800 flex items-center justify-center gap-3">
-          <svg
-            className="animate-spin h-8 w-8 text-slate-400"
-            viewBox="0 0 50 50"
-          >
-            <circle
-              className="opacity-30"
-              cx="25"
-              cy="25"
-              r="20"
-              stroke="currentColor"
-              strokeWidth="5"
-              fill="none"
-            />
-            <circle
-              className="text-slate-600"
-              cx="25"
-              cy="25"
-              r="20"
-              stroke="currentColor"
-              strokeWidth="5"
-              fill="none"
-              strokeDasharray="100"
-              strokeDashoffset="75"
-            />
-          </svg>
-          Generating your app...
-        </h1>
-        <p className="mt-4 text-slate-600 max-w-md">
-          Watch the chat on the left for updates that might need your attention
-          to finish generating
-        </p>
-        <p className="mt-4 hidden max-w-md">{exampleFromServer}</p>
-      </div>
+    <div className="relative w-screen h-screen overflow-hidden bg-space-void">
+      <div
+        ref={cursorRef}
+        className="custom-cursor"
+        style={{ left: cursorPos.x, top: cursorPos.y }}
+      />
+
+      <div className="noise-overlay" />
+
+      {!bootComplete && <BootSequence />}
+
+      <Canvas className="absolute inset-0">
+        <PerspectiveCamera makeDefault position={[0, 0, 10]} />
+        <ambientLight intensity={0.1} />
+        <pointLight position={[10, 10, 10]} intensity={0.5} color="#00fff9" />
+        <pointLight position={[-10, -10, -10]} intensity={0.3} color="#ff006e" />
+        
+        <Stars
+          radius={300}
+          depth={50}
+          count={5000}
+          factor={7}
+          saturation={0}
+          fade
+          speed={0.5}
+        />
+
+        <Scene3D />
+
+        <OrbitControls
+          enableZoom={true}
+          enablePan={true}
+          enableRotate={true}
+          minDistance={5}
+          maxDistance={50}
+          autoRotate={bootComplete}
+          autoRotateSpeed={0.2}
+        />
+      </Canvas>
+
+      {bootComplete && <HUD />}
     </div>
   );
 }

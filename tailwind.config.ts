@@ -57,6 +57,18 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        space: {
+          deep: "hsl(var(--space-deep))",
+          cyan: "hsl(var(--space-cyan))",
+          magenta: "hsl(var(--space-magenta))",
+          amber: "hsl(var(--space-amber))",
+          void: "hsl(var(--space-void))",
+        },
+      },
+      fontFamily: {
+        display: ["JetBrains Mono", "Azeret Mono", "monospace"],
+        mono: ["Space Mono", "Departure Mono", "monospace"],
+        data: ["IBM Plex Mono", "monospace"],
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -80,10 +92,25 @@ export default {
             height: "0",
           },
         },
+        scanline: {
+          "0%": { transform: "translateY(-100%)" },
+          "100%": { transform: "translateY(100vh)" },
+        },
+        flicker: {
+          "0%, 100%": { opacity: "1" },
+          "50%": { opacity: "0.8" },
+        },
+        typewriter: {
+          "0%": { width: "0" },
+          "100%": { width: "100%" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        scanline: "scanline 2s linear forwards",
+        flicker: "flicker 0.15s infinite",
+        typewriter: "typewriter 2s steps(40) forwards",
       },
     },
   },
