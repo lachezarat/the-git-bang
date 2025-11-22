@@ -1,12 +1,6 @@
 import { useRef, useMemo, useEffect, useState } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
-import {
-  generateParticlesFromRepositories,
-  getLanguageColor,
-  calculatePopularity,
-  type Repository,
-} from "../lib/repositoryData";
 
 const PARTICLE_COUNT = 25000;
 const START_YEAR = 2008;
