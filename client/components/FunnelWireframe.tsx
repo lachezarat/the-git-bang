@@ -9,11 +9,11 @@ export default function FunnelWireframe() {
     const longitudinalGeometries: THREE.BufferGeometry[] = [];
     const ringGeometries: THREE.BufferGeometry[] = [];
 
-    // Funnel parameters
-    const startX = -62.5;
-    const endX = 62.5;
-    const startRadius = 2.5; // Narrow on the left
-    const endRadius = 37.5; // Wide on the right
+    // Funnel parameters (1.5x spacing)
+    const startX = -93.75;
+    const endX = 93.75;
+    const startRadius = 3.75; // Narrow on the left
+    const endRadius = 56.25; // Wide on the right
 
     // Create longitudinal lines (running the length of the funnel)
     for (let i = 0; i < LONGITUDINAL_LINES; i++) {
