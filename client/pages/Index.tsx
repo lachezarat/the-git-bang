@@ -65,6 +65,7 @@ export default function Index() {
           autoRotateSpeed={0.1}
           enableDamping
           dampingFactor={0.05}
+          zoomToCursor={true}
         />
       </Canvas>
 
