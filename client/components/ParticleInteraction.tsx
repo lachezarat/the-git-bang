@@ -14,12 +14,27 @@ export default function ParticleInteraction({ particlesRef, onParticleClick }: P
   const mouse = useRef(new THREE.Vector2());
   const targetPosition = useRef<THREE.Vector3 | null>(null);
   const isAnimating = useRef(false);
+  const mouseDownPos = useRef({ x: 0, y: 0 });
 
   useEffect(() => {
     raycaster.current.params.Points = { threshold: 2.0 };
 
+    const handleMouseDown = (event: MouseEvent) => {
+      mouseDownPos.current = { x: event.clientX, y: event.clientY };
+    };
+
     const handleClick = (event: MouseEvent) => {
       if (!particlesRef.current) return;
+
+      // Check if mouse moved between mousedown and mouseup (drag vs click)
+      const dragThreshold = 5;
+      const deltaX = Math.abs(event.clientX - mouseDownPos.current.x);
+      const deltaY = Math.abs(event.clientY - mouseDownPos.current.y);
+
+      if (deltaX > dragThreshold || deltaY > dragThreshold) {
+        console.log('Drag detected, ignoring click');
+        return; // This was a drag, not a click
+      }
 
       // Calculate mouse position in normalized device coordinates
       mouse.current.x = (event.clientX / window.innerWidth) * 2 - 1;
@@ -112,12 +127,14 @@ export default function ParticleInteraction({ particlesRef, onParticleClick }: P
       }
     };
 
+    gl.domElement.addEventListener("mousedown", handleMouseDown);
     gl.domElement.addEventListener("click", handleClick);
 
     return () => {
+      gl.domElement.removeEventListener("mousedown", handleMouseDown);
       gl.domElement.removeEventListener("click", handleClick);
     };
-  }, [camera, gl, particlesRef, controls]);
+  }, [camera, gl, particlesRef, controls, onParticleClick]);
 
   return null;
 }
