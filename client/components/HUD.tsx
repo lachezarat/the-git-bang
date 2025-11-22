@@ -8,9 +8,10 @@ import ControlsPanel from "./ControlsPanel";
 
 interface HUDProps {
   onSearchChange?: (query: string, isFocused: boolean) => void;
+  onSuggestionSelect?: (repo: any) => void;
 }
 
-export default function HUD({ onSearchChange }: HUDProps) {
+export default function HUD({ onSearchChange, onSuggestionSelect }: HUDProps) {
   return (
     <div className="hud-container">
       <NavigationControls />
@@ -18,7 +19,7 @@ export default function HUD({ onSearchChange }: HUDProps) {
       <StatsPanel />
       <TimelinePanel />
       <ControlsPanel />
-      <SearchBar onSearchChange={onSearchChange} />
+      <SearchBar onSearchChange={onSearchChange} onSuggestionSelect={onSuggestionSelect} />
 
       <div
         className="hud-element absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none"
