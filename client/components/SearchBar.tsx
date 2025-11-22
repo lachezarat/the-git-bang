@@ -24,7 +24,7 @@ export default function SearchBar({
         (repo) =>
           repo.name.toLowerCase().includes(query) ||
           repo.owner.toLowerCase().includes(query) ||
-          repo.description.toLowerCase().includes(query),
+          repo.language.toLowerCase().includes(query),
       )
       .slice(0, 5);
   }, [searchQuery, repositories]);
@@ -95,7 +95,7 @@ export default function SearchBar({
                   {repo.owner}/{repo.name}
                 </div>
                 <div className="text-space-cyan/50 text-xs font-mono mt-0.5">
-                  {repo.description}
+                  {repo.language} • {repo.stars.toLocaleString()} ⭐
                 </div>
               </div>
             ))}

@@ -172,8 +172,8 @@ export default function LightCone({
       brightnesses[i] = popularity;
 
       pulses[i] = Math.random();
-      // Activity from actual repo metrics
-      activities[i] = repo.activity / 100;
+      // Activity based on popularity (since we don't have activity in minimal data)
+      activities[i] = popularity;
     }
 
     const geometry = new THREE.BufferGeometry();
