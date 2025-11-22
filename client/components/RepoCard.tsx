@@ -26,6 +26,25 @@ export default function RepoCard({ repo, position, onClose }: RepoCardProps) {
   const [expanded, setExpanded] = useState(false);
   const [vibeIdeas, setVibeIdeas] = useState<string[]>([]);
 
+  // Calculate safe position within viewport bounds
+  const cardWidth = 420;
+  const cardEstimatedHeight = 600; // Estimated height for positioning
+  const padding = 60; // Padding from viewport edges
+
+  // Account for transform: translate(-50%, -50%)
+  const halfWidth = cardWidth / 2;
+  const halfHeight = cardEstimatedHeight / 2;
+
+  // Constrain position to keep card fully visible
+  const safeX = Math.min(
+    Math.max(position.x, halfWidth + padding),
+    window.innerWidth - halfWidth - padding
+  );
+  const safeY = Math.min(
+    Math.max(position.y, halfHeight + padding),
+    window.innerHeight - halfHeight - padding
+  );
+
   useEffect(() => {
     if (!cardRef.current) return;
 
@@ -121,8 +140,8 @@ export default function RepoCard({ repo, position, onClose }: RepoCardProps) {
         ref={cardRef}
         className="repo-card fixed z-[1001] pointer-events-auto"
         style={{
-          left: `${Math.min(Math.max(position.x, 220), window.innerWidth - 220)}px`,
-          top: `${Math.min(Math.max(position.y, 320), window.innerHeight - 320)}px`,
+          left: `${safeX}px`,
+          top: `${safeY}px`,
           transform: "translate(-50%, -50%)",
           width: "420px",
           maxHeight: "calc(100vh - 120px)",
