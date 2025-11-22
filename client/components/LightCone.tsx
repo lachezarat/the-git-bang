@@ -110,21 +110,6 @@ export default function LightCone({
   const activeRef = particlesRef || pointsRef;
 
   const { geometry, uniforms } = useMemo(() => {
-    // If no repositories provided, return empty geometry
-    if (repositories.length === 0) {
-      const emptyGeometry = new THREE.BufferGeometry();
-      const emptyUniforms = {
-        uTime: { value: 0 },
-        uPixelRatio: { value: Math.min(window.devicePixelRatio, 2) },
-      };
-      return { geometry: emptyGeometry, uniforms: emptyUniforms };
-    }
-
-    // Generate particles from repository data
-    const particleRepos = generateParticlesFromRepositories(
-      repositories,
-      PARTICLE_COUNT,
-    );
     const positions = new Float32Array(PARTICLE_COUNT * 3);
     const colors = new Float32Array(PARTICLE_COUNT * 3);
     const sizes = new Float32Array(PARTICLE_COUNT);
@@ -132,11 +117,23 @@ export default function LightCone({
     const activities = new Float32Array(PARTICLE_COUNT);
     const brightnesses = new Float32Array(PARTICLE_COUNT);
 
-    for (let i = 0; i < PARTICLE_COUNT; i++) {
-      const repo = particleRepos[i];
+    const languageColors = [
+      new THREE.Color("#4a90e2"), // JavaScript blue
+      new THREE.Color("#2b7489"), // TypeScript
+      new THREE.Color("#3572a5"), // Python
+      new THREE.Color("#00d9ff"), // Go
+      new THREE.Color("#ff6b35"), // Rust
+      new THREE.Color("#e85d75"), // Ruby
+      new THREE.Color("#b07219"), // Java
+      new THREE.Color("#00fff9"), // Cyan
+      new THREE.Color("#ff006e"), // Magenta
+      new THREE.Color("#ffba08"), // Amber
+    ];
 
-      // Map repository year to position along funnel
-      const logT = mapTimeToLog(repo.year);
+    for (let i = 0; i < PARTICLE_COUNT; i++) {
+      // Random year between 2008 and 2025 - distributed across entire timeline
+      const year = START_YEAR + Math.random() * (END_YEAR - START_YEAR);
+      const logT = mapTimeToLog(year);
 
       // X position along funnel length (1.5x spacing)
       const x = logT * 187.5 - 93.75;
@@ -158,22 +155,22 @@ export default function LightCone({
       positions[i * 3 + 1] = y;
       positions[i * 3 + 2] = z;
 
-      // Get language-specific color
-      const languageColor = new THREE.Color(getLanguageColor(repo.language));
+      // Random language color
+      const languageColor =
+        languageColors[Math.floor(Math.random() * languageColors.length)];
       colors[i * 3] = languageColor.r;
       colors[i * 3 + 1] = languageColor.g;
       colors[i * 3 + 2] = languageColor.b;
 
-      // Calculate popularity from actual star count
-      const popularity = calculatePopularity(repo.stars);
+      // Random popularity with power distribution (most repos are small, few are huge)
+      const popularity = Math.pow(Math.random(), 3);
       sizes[i] = 2.0 + popularity * 8;
 
       // Brightness correlates with popularity (star count)
       brightnesses[i] = popularity;
 
       pulses[i] = Math.random();
-      // Activity from actual repo metrics
-      activities[i] = repo.activity / 100;
+      activities[i] = 0.5 + Math.random() * 1.5;
     }
 
     const geometry = new THREE.BufferGeometry();
