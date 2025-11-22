@@ -7,19 +7,26 @@ interface SearchBarProps {
   repositories?: Repository[];
 }
 
-export default function SearchBar({ onSearchChange, onSuggestionSelect, repositories = [] }: SearchBarProps) {
+export default function SearchBar({
+  onSearchChange,
+  onSuggestionSelect,
+  repositories = [],
+}: SearchBarProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [isFocused, setIsFocused] = useState(false);
 
   const suggestions = useMemo(() => {
-    if (!searchQuery || searchQuery.length < 2 || repositories.length === 0) return [];
+    if (!searchQuery || searchQuery.length < 2 || repositories.length === 0)
+      return [];
     const query = searchQuery.toLowerCase();
-    return repositories.filter(
-      (repo) =>
-        repo.name.toLowerCase().includes(query) ||
-        repo.owner.toLowerCase().includes(query) ||
-        repo.description.toLowerCase().includes(query)
-    ).slice(0, 5);
+    return repositories
+      .filter(
+        (repo) =>
+          repo.name.toLowerCase().includes(query) ||
+          repo.owner.toLowerCase().includes(query) ||
+          repo.description.toLowerCase().includes(query),
+      )
+      .slice(0, 5);
   }, [searchQuery, repositories]);
 
   const handleSearchChange = (value: string) => {

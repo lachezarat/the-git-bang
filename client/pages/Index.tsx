@@ -20,7 +20,11 @@ export default function Index() {
   const [repoCardPos, setRepoCardPos] = useState({ x: 0, y: 0 });
 
   // Load repository data
-  const { data: repoData, loading: dataLoading, error: dataError } = useRepositoryData();
+  const {
+    data: repoData,
+    loading: dataLoading,
+    error: dataError,
+  } = useRepositoryData();
   const repositories = repoData?.repositories || [];
 
   const handleSearchChange = (query: string, isFocused: boolean) => {
@@ -61,7 +65,7 @@ export default function Index() {
   // Show error if data loading failed
   useEffect(() => {
     if (dataError) {
-      console.error('Failed to load repository data:', dataError);
+      console.error("Failed to load repository data:", dataError);
     }
   }, [dataError]);
 
@@ -79,14 +83,26 @@ export default function Index() {
 
       {!bootComplete && <BootSequence />}
 
-      <Canvas className="absolute inset-0" dpr={[1, 2]} gl={{ antialias: true }}>
+      <Canvas
+        className="absolute inset-0"
+        dpr={[1, 2]}
+        gl={{ antialias: true }}
+      >
         <PerspectiveCamera makeDefault fov={75} position={[0, 0, 150]} />
         <ambientLight intensity={0.05} />
         <pointLight position={[20, 20, 20]} intensity={0.3} color="#00fff9" />
-        <pointLight position={[-20, -20, -20]} intensity={0.2} color="#ff006e" />
+        <pointLight
+          position={[-20, -20, -20]}
+          intensity={0.2}
+          color="#ff006e"
+        />
         <pointLight position={[0, 20, -20]} intensity={0.15} color="#ffba08" />
-        
-        <Scene3D searchActive={searchActive} searchQuery={searchQuery} repositories={repositories} />
+
+        <Scene3D
+          searchActive={searchActive}
+          searchQuery={searchQuery}
+          repositories={repositories}
+        />
 
         <OrbitControls
           target={[0, 0, 0]}
@@ -104,12 +120,18 @@ export default function Index() {
           mouseButtons={{
             LEFT: THREE.MOUSE.PAN,
             MIDDLE: THREE.MOUSE.DOLLY,
-            RIGHT: THREE.MOUSE.ROTATE
+            RIGHT: THREE.MOUSE.ROTATE,
           }}
         />
       </Canvas>
 
-      {bootComplete && <HUD onSearchChange={handleSearchChange} onSuggestionSelect={handleSuggestionSelect} repositories={repositories} />}
+      {bootComplete && (
+        <HUD
+          onSearchChange={handleSearchChange}
+          onSuggestionSelect={handleSuggestionSelect}
+          repositories={repositories}
+        />
+      )}
       {bootComplete && <AmbientSound />}
 
       {selectedRepo && (

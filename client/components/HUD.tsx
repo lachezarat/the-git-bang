@@ -13,7 +13,11 @@ interface HUDProps {
   repositories?: Repository[];
 }
 
-export default function HUD({ onSearchChange, onSuggestionSelect, repositories = [] }: HUDProps) {
+export default function HUD({
+  onSearchChange,
+  onSuggestionSelect,
+  repositories = [],
+}: HUDProps) {
   return (
     <div className="hud-container">
       <NavigationControls />
@@ -21,7 +25,11 @@ export default function HUD({ onSearchChange, onSuggestionSelect, repositories =
       <StatsPanel />
       <TimelinePanel />
       <ControlsPanel />
-      <SearchBar onSearchChange={onSearchChange} onSuggestionSelect={onSuggestionSelect} repositories={repositories} />
+      <SearchBar
+        onSearchChange={onSearchChange}
+        onSuggestionSelect={onSuggestionSelect}
+        repositories={repositories}
+      />
 
       <div
         className="hud-element absolute top-1/2 left-8 -translate-y-1/2"

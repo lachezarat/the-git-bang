@@ -67,12 +67,12 @@ void main() {
 }
 `;
 
-export default function LaserBeam({ 
-  start, 
-  end, 
-  intensity = 1.0, 
+export default function LaserBeam({
+  start,
+  end,
+  intensity = 1.0,
   color = "#00fff9",
-  visible = true 
+  visible = true,
 }: LaserBeamProps) {
   const meshRef = useRef<THREE.Mesh>(null);
   const materialRef = useRef<THREE.ShaderMaterial>(null);
@@ -84,7 +84,7 @@ export default function LaserBeam({
       uIntensity: { value: 0 },
       uColor: { value: new THREE.Color(color) },
     }),
-    [color]
+    [color],
   );
 
   useEffect(() => {
@@ -101,8 +101,8 @@ export default function LaserBeam({
         onComplete: () => {
           // Sound hook placeholder for laser-fire sound
           console.log("[SOUND] laser-fire");
-        }
-      }
+        },
+      },
     );
 
     // Animate beam extension
@@ -110,11 +110,11 @@ export default function LaserBeam({
     gsap.fromTo(
       groupRef.current.scale,
       { y: 0.1 },
-      { 
-        y: initialScale.y, 
-        duration: 0.4, 
-        ease: "elastic.out(1, 0.5)" 
-      }
+      {
+        y: initialScale.y,
+        duration: 0.4,
+        ease: "elastic.out(1, 0.5)",
+      },
     );
 
     return () => {
@@ -134,15 +134,15 @@ export default function LaserBeam({
       // Position and orient the beam
       const direction = new THREE.Vector3().subVectors(end, start);
       const length = direction.length();
-      
+
       groupRef.current.position.copy(start);
       groupRef.current.position.add(direction.clone().multiplyScalar(0.5));
-      
+
       groupRef.current.quaternion.setFromUnitVectors(
         new THREE.Vector3(0, 1, 0),
-        direction.clone().normalize()
+        direction.clone().normalize(),
       );
-      
+
       groupRef.current.scale.y = length;
     }
   });

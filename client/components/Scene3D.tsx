@@ -110,7 +110,11 @@ function ConeGuides() {
   );
 }
 
-export default function Scene3D({ searchActive = false, searchQuery = "", repositories = [] }: Scene3DProps) {
+export default function Scene3D({
+  searchActive = false,
+  searchQuery = "",
+  repositories = [],
+}: Scene3DProps) {
   const particlesRef = useRef<THREE.Points>(null);
 
   return (

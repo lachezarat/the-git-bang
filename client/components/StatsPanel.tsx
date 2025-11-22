@@ -6,7 +6,7 @@ export default function StatsPanel() {
     >
       <div className="liquid-glass px-6 py-4 min-w-[320px] relative overflow-hidden">
         <div className="scanline-overlay absolute inset-0 pointer-events-none opacity-30" />
-        
+
         <div className="relative space-y-3 font-mono text-xs">
           <div className="flex items-center gap-3 mb-4">
             <div className="w-2 h-2 rounded-full bg-space-cyan pulse-dot" />

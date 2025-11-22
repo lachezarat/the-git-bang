@@ -1,7 +1,12 @@
 import { useRef, useMemo, useEffect, useState } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
-import { generateParticlesFromRepositories, getLanguageColor, calculatePopularity, type Repository } from "../lib/repositoryData";
+import {
+  generateParticlesFromRepositories,
+  getLanguageColor,
+  calculatePopularity,
+  type Repository,
+} from "../lib/repositoryData";
 
 const PARTICLE_COUNT = 25000;
 const START_YEAR = 2008;
@@ -94,7 +99,10 @@ interface LightConeProps {
   repositories?: Repository[];
 }
 
-export default function LightCone({ particlesRef, repositories = [] }: LightConeProps = {}) {
+export default function LightCone({
+  particlesRef,
+  repositories = [],
+}: LightConeProps = {}) {
   const pointsRef = useRef<THREE.Points>(null);
   const materialRef = useRef<THREE.ShaderMaterial>(null);
 
@@ -113,7 +121,10 @@ export default function LightCone({ particlesRef, repositories = [] }: LightCone
     }
 
     // Generate particles from repository data
-    const particleRepos = generateParticlesFromRepositories(repositories, PARTICLE_COUNT);
+    const particleRepos = generateParticlesFromRepositories(
+      repositories,
+      PARTICLE_COUNT,
+    );
     const positions = new Float32Array(PARTICLE_COUNT * 3);
     const colors = new Float32Array(PARTICLE_COUNT * 3);
     const sizes = new Float32Array(PARTICLE_COUNT);
@@ -166,12 +177,15 @@ export default function LightCone({ particlesRef, repositories = [] }: LightCone
     }
 
     const geometry = new THREE.BufferGeometry();
-    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-    geometry.setAttribute('customColor', new THREE.BufferAttribute(colors, 3));
-    geometry.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
-    geometry.setAttribute('pulse', new THREE.BufferAttribute(pulses, 1));
-    geometry.setAttribute('activity', new THREE.BufferAttribute(activities, 1));
-    geometry.setAttribute('brightness', new THREE.BufferAttribute(brightnesses, 1));
+    geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+    geometry.setAttribute("customColor", new THREE.BufferAttribute(colors, 3));
+    geometry.setAttribute("size", new THREE.BufferAttribute(sizes, 1));
+    geometry.setAttribute("pulse", new THREE.BufferAttribute(pulses, 1));
+    geometry.setAttribute("activity", new THREE.BufferAttribute(activities, 1));
+    geometry.setAttribute(
+      "brightness",
+      new THREE.BufferAttribute(brightnesses, 1),
+    );
 
     const uniforms = {
       uTime: { value: 0 },

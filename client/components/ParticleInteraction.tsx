@@ -7,7 +7,9 @@ interface ParticleInteractionProps {
   particlesRef: React.RefObject<THREE.Points>;
 }
 
-export default function ParticleInteraction({ particlesRef }: ParticleInteractionProps) {
+export default function ParticleInteraction({
+  particlesRef,
+}: ParticleInteractionProps) {
   const { camera, gl, controls } = useThree();
   const raycaster = useRef(new THREE.Raycaster());
   const mouse = useRef(new THREE.Vector2());
@@ -28,19 +30,25 @@ export default function ParticleInteraction({ particlesRef }: ParticleInteractio
       raycaster.current.setFromCamera(mouse.current, camera);
 
       // Calculate objects intersecting the picking ray
-      const intersects = raycaster.current.intersectObject(particlesRef.current);
+      const intersects = raycaster.current.intersectObject(
+        particlesRef.current,
+      );
 
       if (intersects.length > 0) {
         const point = intersects[0].point;
-        
+
         // Calculate camera target position (move camera closer to the particle)
-        const direction = new THREE.Vector3().subVectors(point, camera.position).normalize();
+        const direction = new THREE.Vector3()
+          .subVectors(point, camera.position)
+          .normalize();
         const distance = 30; // Distance from particle to camera
-        const newCameraPosition = new THREE.Vector3().copy(point).sub(direction.multiplyScalar(distance));
-        
+        const newCameraPosition = new THREE.Vector3()
+          .copy(point)
+          .sub(direction.multiplyScalar(distance));
+
         // Animate camera to new position
         isAnimating.current = true;
-        
+
         gsap.to(camera.position, {
           x: newCameraPosition.x,
           y: newCameraPosition.y,
@@ -55,7 +63,7 @@ export default function ParticleInteraction({ particlesRef }: ParticleInteractio
           },
           onComplete: () => {
             isAnimating.current = false;
-          }
+          },
         });
 
         // Animate orbit controls target
@@ -65,7 +73,7 @@ export default function ParticleInteraction({ particlesRef }: ParticleInteractio
             y: point.y,
             z: point.z,
             duration: 1.5,
-            ease: "power2.inOut"
+            ease: "power2.inOut",
           });
         }
       }

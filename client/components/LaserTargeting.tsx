@@ -10,13 +10,15 @@ interface LaserTargetingProps {
   hoveredParticle: THREE.Vector3 | null;
 }
 
-export default function LaserTargeting({ 
-  searchActive, 
+export default function LaserTargeting({
+  searchActive,
   searchQuery,
-  hoveredParticle 
+  hoveredParticle,
 }: LaserTargetingProps) {
   const { camera } = useThree();
-  const [targetPosition, setTargetPosition] = useState<THREE.Vector3 | null>(null);
+  const [targetPosition, setTargetPosition] = useState<THREE.Vector3 | null>(
+    null,
+  );
   const [startPosition, setStartPosition] = useState(new THREE.Vector3());
 
   useFrame(() => {
@@ -33,7 +35,7 @@ export default function LaserTargeting({
       const randomTarget = new THREE.Vector3(
         (Math.random() - 0.5) * 80,
         (Math.random() - 0.5) * 50,
-        (Math.random() - 0.5) * 80
+        (Math.random() - 0.5) * 80,
       );
       setTargetPosition(randomTarget);
     } else if (hoveredParticle) {
@@ -57,12 +59,9 @@ export default function LaserTargeting({
             color={isSearching ? "#00fff9" : "#00fff980"}
             visible={true}
           />
-          
+
           {isSearching && (
-            <TargetingReticle
-              position={targetPosition}
-              visible={true}
-            />
+            <TargetingReticle position={targetPosition} visible={true} />
           )}
         </>
       )}
