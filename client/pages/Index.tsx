@@ -67,6 +67,7 @@ export default function Index() {
           enableDamping
           dampingFactor={0.05}
           zoomToCursor={true}
+          screenSpacePanning={true}
           mouseButtons={{
             LEFT: THREE.MOUSE.PAN,
             MIDDLE: THREE.MOUSE.DOLLY,
