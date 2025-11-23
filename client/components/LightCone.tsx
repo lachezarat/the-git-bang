@@ -107,18 +107,25 @@ export default function LightCone({ particlesRef }: LightConeProps = {}) {
     const activities = new Float32Array(PARTICLE_COUNT);
     const brightnesses = new Float32Array(PARTICLE_COUNT);
 
-    const languageColors = [
-      new THREE.Color("#4a90e2"), // JavaScript blue
-      new THREE.Color("#2b7489"), // TypeScript
-      new THREE.Color("#3572a5"), // Python
-      new THREE.Color("#00d9ff"), // Go
-      new THREE.Color("#ff6b35"), // Rust
-      new THREE.Color("#e85d75"), // Ruby
-      new THREE.Color("#b07219"), // Java
-      new THREE.Color("#00fff9"), // Cyan
-      new THREE.Color("#ff006e"), // Magenta
-      new THREE.Color("#ffba08"), // Amber
-    ];
+    // Function to get color based on star count (like real stars in the universe)
+    // Blue (cool/dim stars) → Cyan → White → Yellow → Orange → Red (hot/bright stars)
+    const getColorFromStars = (stars: number): THREE.Color => {
+      const logStars = Math.log10(stars + 1);
+
+      // Color stops based on logarithmic star scale
+      if (logStars < 1) { // 0-10 stars - Blue (cool, dim stars)
+        return new THREE.Color("#4a90e2").lerp(new THREE.Color("#00d9ff"), logStars);
+      } else if (logStars < 2) { // 10-100 stars - Cyan to White
+        return new THREE.Color("#00d9ff").lerp(new THREE.Color("#ffffff"), logStars - 1);
+      } else if (logStars < 3) { // 100-1000 stars - White to Yellow
+        return new THREE.Color("#ffffff").lerp(new THREE.Color("#ffeb3b"), logStars - 2);
+      } else if (logStars < 4) { // 1000-10000 stars - Yellow to Orange
+        return new THREE.Color("#ffeb3b").lerp(new THREE.Color("#ff9800"), logStars - 3);
+      } else { // 10000+ stars - Orange to Red (hot, bright giants)
+        const t = Math.min((logStars - 4) / 1.5, 1);
+        return new THREE.Color("#ff9800").lerp(new THREE.Color("#ff3d00"), t);
+      }
+    };
 
     for (let i = 0; i < PARTICLE_COUNT; i++) {
       // Random year between 2008 and 2025 - distributed across entire timeline
@@ -145,19 +152,25 @@ export default function LightCone({ particlesRef }: LightConeProps = {}) {
       positions[i * 3 + 1] = y;
       positions[i * 3 + 2] = z;
 
-      // Random language color
-      const languageColor =
-        languageColors[Math.floor(Math.random() * languageColors.length)];
-      colors[i * 3] = languageColor.r;
-      colors[i * 3 + 1] = languageColor.g;
-      colors[i * 3 + 2] = languageColor.b;
+      // Generate star count with power law distribution (most repos are small, few are huge)
+      // This creates a realistic distribution like real repositories
+      const randomBase = Math.pow(Math.random(), 3); // Power distribution
+      const stars = Math.floor(randomBase * 250000); // Max ~250k stars (like React/Vue)
 
-      // Random popularity with power distribution (most repos are small, few are huge)
-      const popularity = Math.pow(Math.random(), 3);
-      sizes[i] = 2.0 + popularity * 8;
+      // Get color based on star count (mimics real star temperature/brightness)
+      const starColor = getColorFromStars(stars);
+      colors[i * 3] = starColor.r;
+      colors[i * 3 + 1] = starColor.g;
+      colors[i * 3 + 2] = starColor.b;
 
-      // Brightness correlates with popularity (star count)
-      brightnesses[i] = popularity;
+      // Logarithmic size scaling based on star count (prevents huge repos from being too large)
+      // Like real stars: size correlates with luminosity, but logarithmically
+      const logStars = Math.log10(stars + 1);
+      sizes[i] = 2.0 + logStars * 1.2; // Base 2.0, scales with log10(stars)
+
+      // Brightness correlates with star count (normalized logarithmically)
+      const maxLogStars = Math.log10(250000);
+      brightnesses[i] = Math.min(logStars / maxLogStars, 1.0);
 
       pulses[i] = Math.random();
       activities[i] = 0.5 + Math.random() * 1.5;
