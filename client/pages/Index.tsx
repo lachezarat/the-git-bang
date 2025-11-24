@@ -122,7 +122,8 @@ export default function Index() {
           dpr={[1, 2]}
           gl={{ antialias: true }}
         >
-          <PerspectiveCamera makeDefault fov={75} position={[0, 0, 225]} />
+          {/* Increased Z position to fit the larger cone (length 800) */}
+          <PerspectiveCamera makeDefault fov={75} position={[0, 0, 600]} />
           <ambientLight intensity={0.05} />
           <pointLight position={[20, 20, 20]} intensity={0.3} color="#00fff9" />
           <pointLight
@@ -149,19 +150,15 @@ export default function Index() {
             enableZoom={true}
             enablePan={true}
             enableRotate={true}
-            minDistance={37.5}
-            maxDistance={300}
+            minDistance={5} // Allow zooming very close
+            maxDistance={2000} // Allow zooming far out
             autoRotate={false}
             autoRotateSpeed={0.1}
             enableDamping
             dampingFactor={0.05}
             zoomToCursor={true}
             screenSpacePanning={true}
-            mouseButtons={{
-              LEFT: THREE.MOUSE.PAN,
-              MIDDLE: THREE.MOUSE.DOLLY,
-              RIGHT: THREE.MOUSE.ROTATE,
-            }}
+            // Removed custom mouseButtons to restore default behavior (Left: Rotate, Right: Pan)
           />
         </Canvas>
 

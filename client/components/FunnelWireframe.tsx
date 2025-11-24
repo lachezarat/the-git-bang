@@ -1,5 +1,11 @@
 import { useMemo } from "react";
 import * as THREE from "three";
+import {
+  FUNNEL_START_X,
+  FUNNEL_END_X,
+  FUNNEL_START_RADIUS,
+  FUNNEL_END_RADIUS
+} from "../lib/funnelUtils";
 
 const LONGITUDINAL_LINES = 16;
 const RING_COUNT = 16;
@@ -9,11 +15,11 @@ export default function FunnelWireframe() {
     const longitudinalGeometries: THREE.BufferGeometry[] = [];
     const ringGeometries: THREE.BufferGeometry[] = [];
 
-    // Funnel parameters (1.5x spacing, scaled down by 1.083 to match cone, extended 1.5x horizontally)
-    const startX = (-93.75 / 1.083) * 1.5;
-    const endX = (93.75 / 1.083) * 1.5;
-    const startRadius = (3.75 * 1.5) / 1.083; // Narrow on the left
-    const endRadius = (56.25 * 1.5) / 1.083; // Wide on the right
+    // Use constants from funnelUtils to ensure wireframe matches particles
+    const startX = FUNNEL_START_X;
+    const endX = FUNNEL_END_X;
+    const startRadius = FUNNEL_START_RADIUS;
+    const endRadius = FUNNEL_END_RADIUS;
 
     // Create longitudinal lines (running the length of the funnel)
     for (let i = 0; i < LONGITUDINAL_LINES; i++) {

@@ -2,9 +2,9 @@ import { useRef, useMemo } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { type Repository, calculatePopularity } from "../lib/repositoryData";
+import { getStartTime, calculatePositionFromParams, END_TIME } from "../lib/funnelUtils";
 
 const DEFAULT_PARTICLE_COUNT = 25000;
-const END_TIME = new Date("2025-12-31").getTime();
 
 const particleVertexShader = `
 uniform float uTime;
@@ -145,16 +145,15 @@ export default function LightCone({
     const ids = new Float32Array(count);
 
     // Calculate start time based on earliest repository
-    const startTime =
-      repositories.length > 0
-        ? Math.min(...repositories.map((r) => r.createdAt))
-        : new Date("2011-01-01").getTime();
+    const startTime = getStartTime(repositories);
 
     // Reusable color object
     const tempColor = new THREE.Color();
 
     for (let i = 0; i < count; i++) {
       let timestamp, popularity, normalizedSize;
+      let angle = 0;
+      let radiusRatio = 0; // repo.positionRadius
 
       // Set ID attribute (just the index)
       ids[i] = i;
@@ -163,6 +162,8 @@ export default function LightCone({
         const repo = repositories[i];
         timestamp = repo.createdAt;
         popularity = calculatePopularity(repo.stars);
+        angle = repo.positionAngle;
+        radiusRatio = repo.positionRadius;
 
         // Set color from repo data
         tempColor.setHex(repo.color);
@@ -181,6 +182,8 @@ export default function LightCone({
         // Fallback random generation (should not happen with loaded data)
         timestamp = startTime + Math.random() * (END_TIME - startTime);
         popularity = Math.pow(Math.random(), 3);
+        angle = Math.random() * Math.PI * 2;
+        radiusRatio = Math.sqrt(Math.random());
 
         tempColor.setHSL(Math.random(), 0.8, 0.5);
         colors[i * 3] = tempColor.r;
@@ -190,50 +193,21 @@ export default function LightCone({
         normalizedSize = Math.pow(Math.random(), 4);
       }
 
-      // Map time to log scale
-      const t = (timestamp - startTime) / (END_TIME - startTime);
-      const clampedT = Math.max(0, Math.min(1, t));
-      const logT = Math.log(1 + clampedT * 9) / Math.log(10);
+      // Calculate position using shared helper
+      const pos = calculatePositionFromParams(timestamp, angle, radiusRatio, startTime);
 
-      // X position along funnel length (scaled down by 1.083, extended 1.5x horizontally to match wireframe)
-      // Original range: -93.75 to +93.75 (total 187.5)
-      // After 1.083 scaling: -86.57 to +86.57 (total 173.15)
-      // After 1.5x extension: -129.86 to +129.86 (total 259.72)
-      const x = ((logT * 187.5 - 93.75) / 1.083) * 1.5;
+      positions[i * 3] = pos.x;
+      positions[i * 3 + 1] = pos.y;
+      positions[i * 3 + 2] = pos.z;
 
-      // Funnel radius: starts at 3.75 (narrow left) and expands to 56.25 (wide right)
-      // Increased by 1.5x then scaled down by 1.083
-      const startRadius = (3.75 * 1.5) / 1.083;
-      const endRadius = (56.25 * 1.5) / 1.083;
-      const funnelRadius = startRadius + (endRadius - startRadius) * logT;
+      // Map to size range: min 2.0, max 20.0 (Was 25.0)
+      // Use power 2.5 (was 4.0) to make the curve less steep so more repos look "large"
+      // User request: "repositories with more stars to be visibly more brighter and larger"
+      sizes[i] = 2.0 + Math.pow(normalizedSize, 2.5) * 20.0;
 
-      // Random position within circular cross-section
-      // Use pre-calculated deterministic values from repo data if available
-      let angle, radiusOffset;
-
-      if (repositories.length > 0) {
-        const repo = repositories[i];
-        angle = repo.positionAngle;
-        radiusOffset = repo.positionRadius * funnelRadius;
-      } else {
-        angle = Math.random() * Math.PI * 2;
-        radiusOffset = Math.sqrt(Math.random()) * funnelRadius;
-      }
-
-      const y = Math.cos(angle) * radiusOffset;
-      const z = Math.sin(angle) * radiusOffset;
-
-      positions[i * 3] = x;
-      positions[i * 3 + 1] = y;
-      positions[i * 3 + 2] = z;
-
-      // Map to size range: min 1.5, max 8.0 (reduced from 12.0)
-      // We use a power function to make the very largest ones pop more, but capped
-      sizes[i] = 1.5 + Math.pow(normalizedSize, 2.5) * 6.5;
-
-      // Brightness correlates with popularity (star count)
-      // Also use log scale for brightness so small repos aren't too dim
-      brightnesses[i] = 0.2 + normalizedSize * 0.8;
+      // Brightness correlates with popularity
+      // Steeper curve for brightness too
+      brightnesses[i] = 0.3 + Math.pow(normalizedSize, 2.0) * 1.5;
 
       pulses[i] = Math.random();
       activities[i] = 0.5 + Math.random() * 1.5;
