@@ -67,8 +67,8 @@ export default function RepoCard({ repo, position, onClose }: RepoCardProps) {
     // Animate the card itself
     tl.fromTo(
       card,
-      { opacity: 0, scale: 0.8, y: 20 },
-      { opacity: 1, scale: 1, y: 0, duration: 0.6, ease: "expo.out" },
+      { opacity: 0, scale: 0.8 },
+      { opacity: 1, scale: 1, duration: 0.6, ease: "expo.out" },
     );
 
     // Animate elements only if they exist
