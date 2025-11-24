@@ -26,10 +26,6 @@ The following steps have been completed for local development:
 
 The following environment variables are configured in `.env`:
 
-```bash
-TURSO_DATABASE_URL=libsql://the-git-bang-lachezarat.aws-eu-west-1.turso.io
-TURSO_AUTH_TOKEN=eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9...
-```
 
 ## Netlify Deployment Setup
 
