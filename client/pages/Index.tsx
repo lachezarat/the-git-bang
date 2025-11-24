@@ -22,8 +22,17 @@ export default function Index() {
   const [selectedRepo, setSelectedRepo] = useState<any>(null);
   const [repoCardPos, setRepoCardPos] = useState({ x: 0, y: 0 });
   const [currentYear, setCurrentYear] = useState(2025);
+  const controlsRef = useRef<any>(null);
 
   const [selectedLanguage, setSelectedLanguage] = useState<string | null>(null);
+
+  // Reset camera when repo is deselected
+  useEffect(() => {
+    if (!selectedRepo && controlsRef.current) {
+      // Optional: Reset to initial view
+      // controlsRef.current.reset(); 
+    }
+  }, [selectedRepo]);
 
   // Load repository data
   const {
@@ -128,11 +137,14 @@ export default function Index() {
             searchQuery={searchQuery}
             onParticleClick={handleParticleClick}
             repositories={filteredRepositories}
+            focusedRepo={selectedRepo}
+            cardPosition={repoCardPos}
           />
 
           <CameraTracker onYearChange={setCurrentYear} />
 
           <OrbitControls
+            ref={controlsRef}
             target={[0, 0, 0]}
             enableZoom={true}
             enablePan={true}

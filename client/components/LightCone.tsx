@@ -15,14 +15,17 @@ attribute vec3 customColor;
 attribute float pulse;
 attribute float activity;
 attribute float brightness;
+attribute float id;
 
 varying vec3 vColor;
 varying float vPulse;
 varying float vBrightness;
+varying float vId;
 
 void main() {
   vColor = customColor;
   vBrightness = brightness;
+  vId = id;
 
   float pulseIntensity = 0.5 + 0.5 * sin(uTime * activity * 2.0 + pulse * 6.28318);
   vPulse = pulseIntensity;
@@ -36,9 +39,12 @@ void main() {
 `;
 
 const particleFragmentShader = `
+uniform float uFocusedId; // -1.0 if none focused
+
 varying vec3 vColor;
 varying float vPulse;
 varying float vBrightness;
+varying float vId;
 
 void main() {
   vec2 center = gl_PointCoord - vec2(0.5);
@@ -46,6 +52,16 @@ void main() {
 
   if (dist > 0.5) {
     discard;
+  }
+
+  // Check focus state
+  bool isFocused = (uFocusedId > -0.5);
+  bool isTarget = (abs(vId - uFocusedId) < 0.1); // Float comparison
+
+  // Dimming factor
+  float dimFactor = 1.0;
+  if (isFocused && !isTarget) {
+    dimFactor = 0.1; // Dim non-selected particles to 10%
   }
 
   // Sharper glow, less blur
@@ -79,9 +95,15 @@ void main() {
   float core = 1.0 - smoothstep(0.0, 0.1, dist);
   finalColor += vec3(1.0) * core * (0.4 + 0.4 * brightnessFactor);
 
+  // Apply dimming
+  finalColor *= dimFactor;
+
   // Alpha also affected by brightness - dimmer stars are more transparent
   // Make small stars much more transparent to reduce noise
   float alpha = glow * (0.6 + 0.4 * vPulse) * (0.3 + 0.7 * brightnessFactor);
+  
+  // Apply dimming to alpha too
+  alpha *= dimFactor;
 
   gl_FragColor = vec4(finalColor, alpha);
 }
@@ -90,17 +112,26 @@ void main() {
 interface LightConeProps {
   particlesRef?: React.RefObject<THREE.Points>;
   repositories?: Repository[];
+  focusedId?: string | null;
 }
 
 export default function LightCone({
   particlesRef,
   repositories = [],
+  focusedId = null,
 }: LightConeProps = {}) {
   const pointsRef = useRef<THREE.Points>(null);
   const materialRef = useRef<THREE.ShaderMaterial>(null);
 
   // Use provided ref or internal ref
   const activeRef = particlesRef || pointsRef;
+
+  // Find the numeric index of the focused repo to pass as ID
+  // We'll use the index in the array as the ID for simplicity in the shader
+  const focusedIndex = useMemo(() => {
+    if (!focusedId || repositories.length === 0) return -1.0;
+    return repositories.findIndex(r => r.id === focusedId);
+  }, [focusedId, repositories]);
 
   const { geometry, uniforms } = useMemo(() => {
     const count =
@@ -111,6 +142,7 @@ export default function LightCone({
     const pulses = new Float32Array(count);
     const activities = new Float32Array(count);
     const brightnesses = new Float32Array(count);
+    const ids = new Float32Array(count);
 
     // Calculate start time based on earliest repository
     const startTime =
@@ -123,6 +155,9 @@ export default function LightCone({
 
     for (let i = 0; i < count; i++) {
       let timestamp, popularity, normalizedSize;
+
+      // Set ID attribute (just the index)
+      ids[i] = i;
 
       if (repositories.length > 0) {
         const repo = repositories[i];
@@ -192,9 +227,9 @@ export default function LightCone({
       positions[i * 3 + 1] = y;
       positions[i * 3 + 2] = z;
 
-      // Map to size range: min 1.5, max 12.0
-      // We use a power function to make the very largest ones pop more
-      sizes[i] = 1.5 + Math.pow(normalizedSize, 2) * 15.0;
+      // Map to size range: min 1.5, max 8.0 (reduced from 12.0)
+      // We use a power function to make the very largest ones pop more, but capped
+      sizes[i] = 1.5 + Math.pow(normalizedSize, 2.5) * 6.5;
 
       // Brightness correlates with popularity (star count)
       // Also use log scale for brightness so small repos aren't too dim
@@ -214,10 +249,12 @@ export default function LightCone({
       "brightness",
       new THREE.BufferAttribute(brightnesses, 1),
     );
+    geometry.setAttribute("id", new THREE.BufferAttribute(ids, 1));
 
     const uniforms = {
       uTime: { value: 0 },
       uPixelRatio: { value: Math.min(window.devicePixelRatio, 2) },
+      uFocusedId: { value: -1.0 },
     };
 
     return { geometry, uniforms };
@@ -226,6 +263,8 @@ export default function LightCone({
   useFrame((state) => {
     if (materialRef.current) {
       materialRef.current.uniforms.uTime.value = state.clock.elapsedTime;
+      // Update focused ID uniform
+      materialRef.current.uniforms.uFocusedId.value = focusedIndex;
     }
   });
 

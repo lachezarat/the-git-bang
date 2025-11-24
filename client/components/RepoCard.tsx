@@ -141,13 +141,13 @@ export default function RepoCard({ repo, position, onClose }: RepoCardProps) {
 
       <div
         ref={cardRef}
-        className="repo-card fixed z-[1001] pointer-events-auto"
+        className="repo-card fixed z-[1001] pointer-events-auto flex flex-col"
         style={{
           left: `${safeX}px`,
-          top: `${safeY}px`,
+          top: "50%",
           transform: "translate(-50%, -50%)",
           width: "420px",
-          maxHeight: "calc(100vh - 120px)",
+          maxHeight: "80vh",
           height: expanded ? "auto" : "auto",
           transition: "height 0.5s cubic-bezier(0.16, 1, 0.3, 1)",
         }}

@@ -7,11 +7,15 @@ const url = process.env.TURSO_DATABASE_URL;
 const authToken = process.env.TURSO_AUTH_TOKEN;
 
 console.log("Initializing Turso DB...");
-console.log("URL:", url ? "Set" : "Missing");
-console.log("Token:", authToken ? "Set" : "Missing");
+console.log("URL:", url ? "Set (Length: " + url.length + ")" : "Missing");
+console.log("Token:", authToken ? "Set (Length: " + authToken.length + ")" : "Missing");
 
 if (!url || !authToken) {
   console.error("❌ Missing Turso environment variables!");
+} else {
+  if (!url.startsWith("libsql://") && !url.startsWith("https://") && !url.startsWith("file:")) {
+    console.warn("⚠️ Warning: TURSO_DATABASE_URL should start with libsql://, https://, or file:");
+  }
 }
 
 const db = createClient({
@@ -19,7 +23,7 @@ const db = createClient({
   authToken: authToken,
 });
 
-console.log("✅ Connected to Turso database (client created)");
+console.log("✅ Turso client created");
 
 export async function handleGetRepository(req: Request, res: Response) {
   const { owner, name } = req.params;
