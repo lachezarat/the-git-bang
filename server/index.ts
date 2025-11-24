@@ -20,7 +20,7 @@ export function createServer() {
 
   app.get("/api/demo", handleDemo);
 
-  // Repository details from SQLite
+  // Repository details from Turso
   app.get("/api/repo/:owner/:name", handleGetRepository);
 
   return app;

@@ -11,6 +11,8 @@ interface HUDProps {
   onSuggestionSelect?: (repo: any) => void;
   repositories?: Repository[];
   currentYear?: number;
+  onLanguageSelect?: (language: string | null) => void;
+  selectedLanguage?: string | null;
 }
 
 export default function HUD({
@@ -18,12 +20,20 @@ export default function HUD({
   onSuggestionSelect,
   repositories = [],
   currentYear = 2025,
+  onLanguageSelect,
+  selectedLanguage,
 }: HUDProps) {
   return (
     <div className="hud-container">
       <YearMarker year={currentYear} />
-      <StatsPanel />
-      <TimelinePanel />
+      <StatsPanel
+        repositoryCount={repositories.length}
+        activeLanguage={selectedLanguage}
+      />
+      <TimelinePanel
+        onLanguageSelect={onLanguageSelect}
+        selectedLanguage={selectedLanguage}
+      />
       <ControlsPanel />
       <SearchBar
         onSearchChange={onSearchChange}

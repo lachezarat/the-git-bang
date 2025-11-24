@@ -1,4 +1,12 @@
-export default function StatsPanel() {
+interface StatsPanelProps {
+  repositoryCount?: number;
+  activeLanguage?: string | null;
+}
+
+export default function StatsPanel({
+  repositoryCount = 55414,
+  activeLanguage = "JavaScript",
+}: StatsPanelProps) {
   return (
     <div
       className="hud-element absolute top-6 right-6 pointer-events-auto"
@@ -23,7 +31,7 @@ export default function StatsPanel() {
               Repositories Indexed
             </span>
             <span className="text-space-amber glow-amber font-bold text-base tabular-nums">
-              55,414
+              {repositoryCount.toLocaleString()}
             </span>
           </div>
 
@@ -47,7 +55,7 @@ export default function StatsPanel() {
               Active Cluster
             </span>
             <span className="text-space-cyan glow-cyan font-bold text-base">
-              JavaScript
+              {activeLanguage || "All Systems"}
             </span>
           </div>
 

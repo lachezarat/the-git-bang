@@ -9,6 +9,8 @@ export interface Repository {
   createdAt: number; // timestamp
   primaryLanguage: string;
   color: number; // Hex color for visualization
+  positionAngle: number;
+  positionRadius: number;
 }
 
 export interface RepositoryDetails {
@@ -31,7 +33,7 @@ let cachedData: RepositoryDataset | null = null;
 let cachedDetails: Map<string, RepositoryDetails> | null = null;
 
 // Language color mapping
-const LANGUAGE_COLORS: Record<string, number> = {
+export const LANGUAGE_COLORS: Record<string, number> = {
   JavaScript: 0x4a90e2,
   TypeScript: 0x2b7489,
   Python: 0x3572a5,
@@ -91,7 +93,9 @@ export async function loadRepositories(): Promise<RepositoryDataset> {
         stars: starCount,
         createdAt: timestamp,
         primaryLanguage: language,
-        color: getLanguageColor(language)
+        color: getLanguageColor(language),
+        positionAngle: Math.random() * Math.PI * 2,
+        positionRadius: Math.sqrt(Math.random())
       });
     }
 
@@ -105,43 +109,48 @@ export async function loadRepositories(): Promise<RepositoryDataset> {
   }
 }
 
-// Fetch details from local SQLite API
+// Fetch details from Turso API
 export async function fetchRepositoryDetails(repoId: string): Promise<RepositoryDetails | null> {
   // Check memory cache first
   if (cachedDetails?.has(repoId)) {
     return cachedDetails.get(repoId)!;
   }
 
+  // Initialize cache if needed
+  if (!cachedDetails) {
+    cachedDetails = new Map();
+  }
+
   try {
-    // Load all repository details if not already cached
-    if (!cachedDetails) {
-      const response = await fetch("/repositories_details.json");
+    const [owner, name] = repoId.split('/');
+    if (!owner || !name) return null;
 
-      if (!response.ok) {
-        throw new Error(`Failed to load repository details: ${response.statusText}`);
+    const response = await fetch(`/api/repo/${owner}/${name}`);
+
+    if (!response.ok) {
+      if (response.status === 404) {
+        return null; // Repo not found
       }
-
-      const allDetails = await response.json();
-      cachedDetails = new Map();
-
-      // Convert to Map for efficient lookup
-      Object.entries(allDetails).forEach(([id, data]: [string, any]) => {
-        const details: RepositoryDetails = {
-          id: data.id,
-          description: data.description || "",
-          topics: data.topics || [],
-          languages: data.languages || [],
-          forks: data.forks || 0,
-          commits: data.activity_commits || 0,
-          watchers: data.growth_watchers || 0,
-          openPrs: data.health_prs || 0,
-          contributors: data.community_contributors || 0
-        };
-        cachedDetails!.set(id, details);
-      });
+      throw new Error(`Failed to load repository details: ${response.statusText}`);
     }
 
-    return cachedDetails.get(repoId) || null;
+    const data = await response.json();
+
+    // Map DB columns to interface
+    const details: RepositoryDetails = {
+      id: data.id,
+      description: data.description || "",
+      topics: data.topics || [],
+      languages: data.languages || [],
+      forks: data.forks || 0,
+      commits: data.activity_commits || 0,
+      watchers: data.growth_watchers || 0,
+      openPrs: data.health_prs || 0,
+      contributors: data.community_contributors || 0
+    };
+
+    cachedDetails.set(repoId, details);
+    return details;
 
   } catch (error) {
     console.error("Error fetching repository details:", error);

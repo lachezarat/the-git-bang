@@ -21,6 +21,7 @@
     "typecheck": "tsc"
   },
   "dependencies": {
+    "@libsql/client": "^0.15.15",
     "@react-three/postprocessing": "^3.0.4",
     "@types/better-sqlite3": "^7.6.13",
     "@types/papaparse": "^5.5.0",

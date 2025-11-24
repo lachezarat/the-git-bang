@@ -1,7 +1,37 @@
-export default function TimelinePanel() {
+import { LANGUAGE_COLORS } from "../lib/repositoryData";
+
+interface TimelinePanelProps {
+  onLanguageSelect?: (language: string | null) => void;
+  selectedLanguage?: string | null;
+}
+
+const TOP_LANGUAGES = [
+  "JavaScript",
+  "TypeScript",
+  "Python",
+  "Go",
+  "Rust",
+  "Ruby",
+  "Java",
+  "C++",
+  "C#",
+  "PHP",
+];
+
+export default function TimelinePanel({
+  onLanguageSelect,
+  selectedLanguage,
+}: TimelinePanelProps) {
+  const handleLanguageClick = (language: string) => {
+    if (onLanguageSelect) {
+      // Toggle off if already selected
+      onLanguageSelect(selectedLanguage === language ? null : language);
+    }
+  };
+
   return (
     <div
-      className="hud-element absolute bottom-6 left-6 pointer-events-none"
+      className="hud-element absolute bottom-6 left-6 pointer-events-auto"
       style={{ animationDelay: "0.7s" }}
     >
       <div className="liquid-glass px-6 py-4 min-w-[280px]">
@@ -35,76 +65,35 @@ export default function TimelinePanel() {
               Stellar Classification
             </div>
             <div className="grid grid-cols-2 gap-x-4 gap-y-2">
-              <div className="flex items-center gap-3">
-                <div
-                  className="w-2 h-2 rounded-full"
-                  style={{ background: "#4a90e2" }}
-                />
-                <span className="text-xs text-space-cyan/70">JavaScript</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <div
-                  className="w-2 h-2 rounded-full"
-                  style={{ background: "#2b7489" }}
-                />
-                <span className="text-xs text-space-cyan/70">TypeScript</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <div
-                  className="w-2 h-2 rounded-full"
-                  style={{ background: "#3572a5" }}
-                />
-                <span className="text-xs text-space-cyan/70">Python</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <div
-                  className="w-2 h-2 rounded-full"
-                  style={{ background: "#00d9ff" }}
-                />
-                <span className="text-xs text-space-cyan/70">Go</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <div
-                  className="w-2 h-2 rounded-full"
-                  style={{ background: "#ff6b35" }}
-                />
-                <span className="text-xs text-space-cyan/70">Rust</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <div
-                  className="w-2 h-2 rounded-full"
-                  style={{ background: "#e85d75" }}
-                />
-                <span className="text-xs text-space-cyan/70">Ruby</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <div
-                  className="w-2 h-2 rounded-full"
-                  style={{ background: "#b07219" }}
-                />
-                <span className="text-xs text-space-cyan/70">Java</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <div
-                  className="w-2 h-2 rounded-full"
-                  style={{ background: "#f34b7d" }}
-                />
-                <span className="text-xs text-space-cyan/70">C++</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <div
-                  className="w-2 h-2 rounded-full"
-                  style={{ background: "#178600" }}
-                />
-                <span className="text-xs text-space-cyan/70">C#</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <div
-                  className="w-2 h-2 rounded-full"
-                  style={{ background: "#4f5d95" }}
-                />
-                <span className="text-xs text-space-cyan/70">PHP</span>
-              </div>
+              {TOP_LANGUAGES.map((lang) => {
+                const colorHex = LANGUAGE_COLORS[lang]
+                  .toString(16)
+                  .padStart(6, "0");
+                const isSelected = selectedLanguage === lang;
+
+                return (
+                  <div
+                    key={lang}
+                    className={`flex items-center gap-3 cursor-pointer transition-opacity hover:opacity-100 ${selectedLanguage && !isSelected ? "opacity-30" : "opacity-80"
+                      }`}
+                    onClick={() => handleLanguageClick(lang)}
+                  >
+                    <div
+                      className={`w-2 h-2 rounded-full transition-transform ${isSelected ? "scale-150 ring-2 ring-white/50" : ""
+                        }`}
+                      style={{ background: `#${colorHex}` }}
+                    />
+                    <span
+                      className={`text-xs transition-colors ${isSelected
+                          ? "text-white font-bold"
+                          : "text-space-cyan/70"
+                        }`}
+                    >
+                      {lang}
+                    </span>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </div>

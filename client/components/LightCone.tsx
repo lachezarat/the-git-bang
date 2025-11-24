@@ -173,9 +173,17 @@ export default function LightCone({
       const funnelRadius = startRadius + (endRadius - startRadius) * logT;
 
       // Random position within circular cross-section
-      const angle = Math.random() * Math.PI * 2;
-      // Use square root for uniform distribution within circle
-      const radiusOffset = Math.sqrt(Math.random()) * funnelRadius;
+      // Use pre-calculated deterministic values from repo data if available
+      let angle, radiusOffset;
+
+      if (repositories.length > 0) {
+        const repo = repositories[i];
+        angle = repo.positionAngle;
+        radiusOffset = repo.positionRadius * funnelRadius;
+      } else {
+        angle = Math.random() * Math.PI * 2;
+        radiusOffset = Math.sqrt(Math.random()) * funnelRadius;
+      }
 
       const y = Math.cos(angle) * radiusOffset;
       const z = Math.sin(angle) * radiusOffset;

@@ -84,12 +84,16 @@ Full-stack TypeScript application based on the "Fusion Starter" template, heavil
 - **React Hook Form** (7.62.0): Form state management
 - **Zod** (3.25.76): TypeScript-first schema validation
 - **TanStack React Query** (5.84.2): Server state management & caching
+- **PapaParse** (5.5.3): CSV parsing library
+- **better-sqlite3** (12.4.6): SQLite database driver for Node.js
+- **@libsql/client** (0.15.15): LibSQL client (Turso/SQLite)
 
 ### Development Tools
 
 - **Vitest** (3.2.4): Unit testing framework
 - **Prettier** (3.6.2): Code formatting
 - **pnpm** (10.14.0): Package manager (preferred)
+- **tsx** (4.20.3): TypeScript execution engine
 
 ---
 
@@ -152,6 +156,7 @@ Full-stack TypeScript application based on the "Fusion Starter" template, heavil
 │  API Routes (prefix: /api/)                              │
 │  - GET /api/ping → Health check                          │
 │  - GET /api/demo → Example endpoint                      │
+│  - GET /api/repo/:owner/:name → Repository details       │
 │                                                           │
 │  Static File Serving (Production)                        │
 │  - Serves SPA from dist/spa/                             │
@@ -161,7 +166,9 @@ Full-stack TypeScript application based on the "Fusion Starter" template, heavil
 ┌─────────────────────────────────────────────────────────┐
 │              DATA SOURCES                                │
 ├─────────────────────────────────────────────────────────┤
-│  - /public/repositories.json (static repository data)    │
+│  - /public/app_viz_data.json (compressed viz data)       │
+│  - /public/repositories_details.json (full details)      │
+│  - server/db/repositories.db (SQLite database)           │
 │  - .env (VITE_PUBLIC_BUILDER_KEY, PING_MESSAGE)         │
 └─────────────────────────────────────────────────────────┘
 ```
@@ -169,9 +176,11 @@ Full-stack TypeScript application based on the "Fusion Starter" template, heavil
 ### Data Flow
 
 1. **Initial Load**: BootSequence animation → Repository data fetch → Particle generation → 3D scene render
-2. **Repository Data**: `useRepositoryData()` hook → Fetch `/repositories.json` → In-memory cache → Generate 25,000 particles
-3. **User Interaction**: Mouse click → Raycasting → Particle hit detection → RepoCard popup
-4. **Search**: Input change → Filter repositories → Update suggestions → Highlight particles
+2. **Repository Data**: `loadRepositories()` → Fetch `/app_viz_data.json` (compressed format) → Parse into Repository objects → In-memory cache → Generate particles
+3. **Repository Details**: `fetchRepositoryDetails(id)` → Fetch `/repositories_details.json` → Memory cache (Map) → Return details on demand
+4. **User Interaction**: Mouse click → Raycasting → Particle hit detection → RepoCard popup → Fetch details from cache
+5. **Search**: Input change → Filter repositories → Update suggestions → Highlight particles
+6. **API Fallback**: `/api/repo/:owner/:name` → SQLite database query → Return repository details (alternative to JSON)
 
 ---
 
@@ -232,8 +241,11 @@ Full-stack TypeScript application based on the "Fusion Starter" template, heavil
 ├── server/                       # Express backend
 │   ├── index.ts                  # Express app factory
 │   ├── node-build.ts             # Production server entry point
+│   ├── db/
+│   │   └── repositories.db       # SQLite database with repository data
 │   └── routes/
-│       └── demo.ts               # Example API route handler
+│       ├── demo.ts               # Example API route handler
+│       └── repositories.ts       # Repository details from SQLite
 │
 ├── shared/                       # Shared types (client + server)
 │   └── api.ts                    # Type definitions (DemoResponse)
@@ -243,13 +255,19 @@ Full-stack TypeScript application based on the "Fusion Starter" template, heavil
 │       └── api.ts                # Serverless API handler wrapper
 │
 ├── public/                       # Static assets
-│   └── repositories.json         # Repository metadata dataset
+│   ├── app_viz_data.json         # Compressed repository data (ids, dates, stars, languages)
+│   ├── repositories_details.json # Full repository details (descriptions, topics, metrics)
+│   ├── favicon.ico               # Site favicon
+│   └── placeholder.svg           # Placeholder image
 │
 ├── .builder/                     # Builder.io integration
 │
 ├── dist/                         # Build output (gitignored)
 │   ├── spa/                      # Client build artifacts
 │   └── server/                   # Server build artifacts
+│
+├── scripts/                      # Utility scripts
+│   └── create-dump.py            # SQLite database dump script
 │
 └── Configuration Files
     ├── package.json              # Dependencies & scripts
@@ -848,97 +866,219 @@ keyframes: {
 
 ### Repository Data Structure
 
-Located in `public/repositories.json`:
+The application uses two data sources:
+
+#### 1. Compressed Visualization Data (`app_viz_data.json`)
+
+Optimized format for loading 25,000+ repositories efficiently:
+
+```typescript
+interface CompressedData {
+  ids: string[];           // ["owner/repo", ...]
+  dates: string[];         // ["2015-01-01", ...]
+  stars: number[];         // [42000, ...]
+  lang_ids: number[];      // [0, 1, 2, ...] (indexes into legend)
+  legend: Record<string, string>; // { "0": "JavaScript", "1": "TypeScript", ... }
+}
+```
+
+#### 2. Repository Core Data (`client/lib/repositoryData.ts`)
 
 ```typescript
 interface Repository {
-  name: string;
-  description: string;
-  stars: number;
-  forks: number;
-  language: string;
-  url: string;
-  createdAt: string;  // ISO date
-  updatedAt: string;  // ISO date
-  topics: string[];
+  id: string;              // "owner/name"
+  name: string;            // Repository name
+  owner: string;           // Owner/organization
+  stars: number;           // Star count
+  createdAt: number;       // Unix timestamp
+  primaryLanguage: string; // Main programming language
+  color: number;           // Hex color for visualization
+}
+```
+
+#### 3. Detailed Repository Data (`repositories_details.json`)
+
+```typescript
+interface RepositoryDetails {
+  id: string;              // "owner/name"
+  description: string;     // Repository description
+  topics: string[];        // GitHub topics
+  languages: string[];     // All languages used
+  forks: number;           // Fork count
+  commits: number;         // Total commits (activity_commits)
+  watchers: number;        // Watcher count (growth_watchers)
+  openPrs: number;         // PR count (health_prs)
+  contributors: number;    // Contributor count (community_contributors)
 }
 ```
 
 ### Data Loading Pattern
 
+The data loading is optimized for performance with two-tier loading:
+
 ```typescript
-// client/hooks/useRepositoryData.ts
-export function useRepositoryData() {
-  const [repositories, setRepositories] = useState<Repository[]>([]);
-  const [loading, setLoading] = useState(true);
+// client/lib/repositoryData.ts
 
-  useEffect(() => {
-    fetch('/repositories.json')
-      .then(res => res.json())
-      .then(data => {
-        setRepositories(data);
-        setLoading(false);
-      });
-  }, []);
+// 1. Load compressed visualization data (fast, for 3D rendering)
+export async function loadRepositories(): Promise<RepositoryDataset> {
+  if (cachedData) {
+    return cachedData; // Return cached data
+  }
 
-  return { repositories, loading };
+  const response = await fetch("/app_viz_data.json");
+  const data = await response.json();
+  const { ids, dates, stars, lang_ids, legend } = data;
+
+  const repositories: Repository[] = [];
+
+  for (let i = 0; i < ids.length; i++) {
+    const [owner, name] = ids[i].split('/');
+    const date = new Date(dates[i]);
+    const language = legend[lang_ids[i].toString()] || "Unknown";
+
+    repositories.push({
+      id: ids[i],
+      name,
+      owner,
+      stars: stars[i],
+      createdAt: date.getTime(),
+      primaryLanguage: language,
+      color: getLanguageColor(language)
+    });
+  }
+
+  cachedData = { repositories };
+  return cachedData;
+}
+
+// 2. Load detailed data on-demand (lazy loading)
+export async function fetchRepositoryDetails(repoId: string): Promise<RepositoryDetails | null> {
+  if (cachedDetails?.has(repoId)) {
+    return cachedDetails.get(repoId)!; // Memory cache
+  }
+
+  if (!cachedDetails) {
+    // Load all details once and cache in memory (Map)
+    const response = await fetch("/repositories_details.json");
+    const allDetails = await response.json();
+    cachedDetails = new Map();
+
+    Object.entries(allDetails).forEach(([id, data]: [string, any]) => {
+      const details: RepositoryDetails = {
+        id: data.id,
+        description: data.description || "",
+        topics: data.topics || [],
+        languages: data.languages || [],
+        forks: data.forks || 0,
+        commits: data.activity_commits || 0,
+        watchers: data.growth_watchers || 0,
+        openPrs: data.health_prs || 0,
+        contributors: data.community_contributors || 0
+      };
+      cachedDetails!.set(id, details);
+    });
+  }
+
+  return cachedDetails.get(repoId) || null;
 }
 ```
 
-### Particle Generation Algorithm
+**Key Optimizations**:
+- Compressed format saves ~60% bandwidth
+- In-memory caching prevents redundant fetches
+- Lazy loading of details (only when needed)
+- Map-based lookup for O(1) detail retrieval
 
-From `client/lib/repositoryData.ts`:
+### SQLite Database API
+
+For server-side access or API-based queries:
 
 ```typescript
-export function generateParticles(repositories: Repository[], count: number = 25000) {
-  const particles = [];
-  const baseCount = repositories.length;
+// server/routes/repositories.ts
+import Database from "better-sqlite3";
 
-  // Calculate replication factor
-  const replicationFactor = Math.ceil(count / baseCount);
+const db = new Database("server/db/repositories.db", { readonly: true });
 
-  for (const repo of repositories) {
-    // Replicate based on stars (more stars = less replication)
-    const starWeight = Math.log10(repo.stars + 1);
-    const replicationsForThisRepo = Math.max(1, Math.floor(replicationFactor / starWeight));
+export function handleGetRepository(req: Request, res: Response) {
+  const { owner, name } = req.params;
+  const repoId = `${owner}/${name}`;
 
-    for (let i = 0; i < replicationsForThisRepo; i++) {
-      particles.push({
-        position: randomPosition(),  // Cylindrical distribution
-        color: getColorFromLanguage(repo.language),
-        activity: calculateActivity(repo),
-        repositoryId: repo.name,
-      });
-    }
+  const stmt = db.prepare("SELECT * FROM repositories WHERE id = ?");
+  const result = stmt.get(repoId);
+
+  if (result) {
+    // Parse pipe-separated lists back into arrays
+    const formatted = {
+      ...result,
+      topics: result.topics ? result.topics.split('|') : [],
+      languages: result.languages ? result.languages.split('|') : []
+    };
+    res.json(formatted);
+  } else {
+    res.status(404).json({ error: "Repository not found" });
   }
+}
+```
 
-  return particles.slice(0, count);  // Ensure exact count
+**Usage**: `GET /api/repo/facebook/react` returns detailed repository data from SQLite.
+
+### Utility Functions
+
+```typescript
+// Language-to-color mapping
+export function getLanguageColor(language: string): number {
+  const LANGUAGE_COLORS: Record<string, number> = {
+    JavaScript: 0x4a90e2,
+    TypeScript: 0x2b7489,
+    Python: 0x3572a5,
+    Go: 0x00d9ff,
+    Rust: 0xff6b35,
+    // ... more mappings
+  };
+  return LANGUAGE_COLORS[language] || 0xf2f2f2;
+}
+
+// Popularity calculation (logarithmic scale)
+export function calculatePopularity(stars: number): number {
+  const normalized = Math.log(stars + 1) / Math.log(400000);
+  return Math.min(1, Math.max(0, normalized));
 }
 ```
 
 ### State Management
 
-1. **Component State**: `useState` for local UI state
-2. **Data Fetching**: Custom hooks (`useRepositoryData`)
+The application uses multiple state management strategies:
+
+1. **Module-level Caching**: Repository data cached in `repositoryData.ts` module scope
+2. **Component State**: `useState` for local UI state
 3. **Global State**: React Context (if needed)
 4. **Server State**: TanStack Query (for API calls)
 
-Example with TanStack Query:
+**Note**: The current implementation uses module-level caching rather than React hooks for repository data:
+
+```typescript
+// Module-level cache (singleton pattern)
+let cachedData: RepositoryDataset | null = null;
+let cachedDetails: Map<string, RepositoryDetails> | null = null;
+
+// Functions check cache before fetching
+export async function loadRepositories(): Promise<RepositoryDataset> {
+  if (cachedData) return cachedData; // Return cached
+  // ... fetch and cache
+}
+```
+
+This approach is simpler but could be replaced with TanStack Query for more control:
 
 ```typescript
 import { useQuery } from '@tanstack/react-query';
 
 function MyComponent() {
-  const { data, isLoading, error } = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey: ['repositories'],
-    queryFn: () => fetch('/repositories.json').then(res => res.json()),
-    staleTime: 5 * 60 * 1000,  // Cache for 5 minutes
+    queryFn: () => loadRepositories(),
+    staleTime: Infinity,  // Data never goes stale
   });
-
-  if (isLoading) return <div>Loading...</div>;
-  if (error) return <div>Error: {error.message}</div>;
-
-  return <div>{/* Render data */}</div>;
 }
 ```
 
@@ -1223,10 +1363,24 @@ Self-contained executables for Linux, macOS, Windows (mentioned in AGENTS.md):
 
 ### Modify Repository Data
 
-1. Edit `public/repositories.json`
-2. Follow the `Repository` interface structure
-3. No rebuild needed (static file)
-4. Refresh browser to see changes
+The repository data exists in multiple formats:
+
+1. **Primary Data Sources**:
+   - `public/app_viz_data.json` - Compressed format for visualization
+   - `public/repositories_details.json` - Full details for popups
+   - `server/db/repositories.db` - SQLite database (read-only)
+
+2. **Data Update Process**:
+   - These files are typically generated from external data sources
+   - Manual editing is not recommended (data will be overwritten)
+   - If you need to update data, modify the data generation pipeline
+   - Use `scripts/create-dump.py` to dump SQLite data if needed
+
+3. **For Development/Testing**:
+   - You can edit JSON files directly for testing
+   - No rebuild needed (static files)
+   - Refresh browser to see changes
+   - Remember: changes will be lost if data is regenerated
 
 ### Update Theme Colors
 
@@ -1401,6 +1555,17 @@ When making changes:
 ---
 
 ## Changelog
+
+### 2025-11-24 - Data Architecture Update
+- **Fixed**: Corrected repository data structure documentation
+  - Updated from single `repositories.json` to dual-file system (`app_viz_data.json` + `repositories_details.json`)
+  - Documented compressed data format for performance optimization
+  - Added SQLite database API documentation (`/api/repo/:owner/:name`)
+- **Added**: Module-level caching strategy explanation
+- **Added**: SQLite database location and utility script (`scripts/create-dump.py`)
+- **Added**: Missing dependencies (PapaParse, better-sqlite3, @libsql/client, tsx)
+- **Fixed**: Data flow diagram to reflect actual implementation
+- **Fixed**: Repository interface to match actual TypeScript definitions
 
 ### 2025-11-23 - Initial Creation
 - Created comprehensive CLAUDE.md

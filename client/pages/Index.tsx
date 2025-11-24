@@ -23,6 +23,8 @@ export default function Index() {
   const [repoCardPos, setRepoCardPos] = useState({ x: 0, y: 0 });
   const [currentYear, setCurrentYear] = useState(2025);
 
+  const [selectedLanguage, setSelectedLanguage] = useState<string | null>(null);
+
   // Load repository data
   const {
     data: repoData,
@@ -30,6 +32,10 @@ export default function Index() {
     error: dataError,
   } = useRepositoryData();
   const repositories = repoData?.repositories || [];
+
+  const filteredRepositories = selectedLanguage
+    ? repositories.filter((repo) => repo.primaryLanguage === selectedLanguage)
+    : repositories;
 
   const handleSearchChange = (query: string, isFocused: boolean) => {
     setSearchQuery(query);
@@ -121,7 +127,7 @@ export default function Index() {
             searchActive={searchActive}
             searchQuery={searchQuery}
             onParticleClick={handleParticleClick}
-            repositories={repositories}
+            repositories={filteredRepositories}
           />
 
           <CameraTracker onYearChange={setCurrentYear} />
@@ -151,8 +157,10 @@ export default function Index() {
           <HUD
             onSearchChange={handleSearchChange}
             onSuggestionSelect={handleSuggestionSelect}
-            repositories={repositories}
+            repositories={filteredRepositories}
             currentYear={currentYear}
+            onLanguageSelect={setSelectedLanguage}
+            selectedLanguage={selectedLanguage}
           />
         )}
         {bootComplete && <AmbientSound />}
