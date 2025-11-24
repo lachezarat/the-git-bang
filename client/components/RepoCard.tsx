@@ -22,23 +22,6 @@ export default function RepoCard({ repo, position, onClose }: RepoCardProps) {
   const [details, setDetails] = useState<RepositoryDetails | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Calculate safe position within viewport bounds
-  const cardWidth = 420;
-  const maxCardHeight = window.innerHeight - 120;
-  const padding = 20;
-
-  const halfWidth = cardWidth / 2;
-  const halfHeight = maxCardHeight / 2;
-
-  const safeX = Math.min(
-    Math.max(position.x, halfWidth + padding),
-    window.innerWidth - halfWidth - padding,
-  );
-  const safeY = Math.min(
-    Math.max(position.y, halfHeight + padding),
-    window.innerHeight - halfHeight - padding,
-  );
-
   useEffect(() => {
     let mounted = true;
 
@@ -65,6 +48,9 @@ export default function RepoCard({ repo, position, onClose }: RepoCardProps) {
     const tl = gsap.timeline();
 
     // Animate the card itself
+    // Use xPercent/yPercent for centering to ensure GSAP doesn't overwrite the transform during scale
+    gsap.set(card, { xPercent: -50, yPercent: -50 });
+
     tl.fromTo(
       card,
       { opacity: 0, scale: 0.8 },
@@ -143,9 +129,9 @@ export default function RepoCard({ repo, position, onClose }: RepoCardProps) {
         ref={cardRef}
         className="repo-card fixed z-[1001] pointer-events-auto flex flex-col"
         style={{
-          left: `${safeX}px`,
+          left: "50%",
           top: "50%",
-          transform: "translate(-50%, -50%)",
+          // transform is handled by GSAP (xPercent/yPercent)
           width: "420px",
           maxHeight: "80vh",
           height: expanded ? "auto" : "auto",

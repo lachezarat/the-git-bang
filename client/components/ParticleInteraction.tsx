@@ -21,6 +21,23 @@ export default function ParticleInteraction({
   const targetPosition = useRef<THREE.Vector3 | null>(null);
   const isAnimating = useRef(false);
   const mouseDownPos = useRef({ x: 0, y: 0 });
+  const isLocked = useRef(false);
+  const lastDistance = useRef(0);
+
+  useFrame(() => {
+    if (!controls) return;
+    const ctrl = controls as any;
+
+    if (isLocked.current && !isAnimating.current) {
+      const currentDist = camera.position.distanceTo(ctrl.target);
+      // If distance changes significantly (user zoom), unlock
+      if (Math.abs(currentDist - lastDistance.current) > 2.0) {
+        ctrl.enablePan = true;
+        isLocked.current = false;
+        console.log("Zoom detected, unlocking pan");
+      }
+    }
+  });
 
   useEffect(() => {
     raycaster.current.params.Points = { threshold: 2.0 };
@@ -74,10 +91,16 @@ export default function ParticleInteraction({
           const direction = new THREE.Vector3()
             .subVectors(point, camera.position)
             .normalize();
-          const distance = 30; // Distance from particle to camera
+          const distance = 40; // Fixed distance from particle to camera
           const newCameraPosition = new THREE.Vector3()
             .copy(point)
             .sub(direction.multiplyScalar(distance));
+
+          // Lock controls
+          if (controls) {
+            (controls as any).enablePan = false;
+            isLocked.current = true;
+          }
 
           // Animate camera to new position
           isAnimating.current = true;
@@ -96,6 +119,12 @@ export default function ParticleInteraction({
             },
             onComplete: () => {
               isAnimating.current = false;
+              // Record distance after animation settles
+              if (controls) {
+                lastDistance.current = camera.position.distanceTo(
+                  (controls as any).target,
+                );
+              }
             },
           });
 

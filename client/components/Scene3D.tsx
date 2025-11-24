@@ -3,6 +3,7 @@ import { useFrame } from "@react-three/fiber";
 import LightCone from "./LightCone";
 import FunnelWireframe from "./FunnelWireframe";
 import ParticleInteraction from "./ParticleInteraction";
+import SelectionHalo from "./SelectionHalo";
 import ConnectionLine from "./ConnectionLine";
 import type { Repository } from "../lib/repositoryData";
 import * as THREE from "three";
@@ -133,6 +134,9 @@ export default function Scene3D({
         focusedId={focusedRepo?.id}
       />
       <ConnectionLine repo={focusedRepo} cardPosition={cardPosition} />
+      {focusedRepo && (
+        <SelectionHalo repo={focusedRepo} repositories={repositories} />
+      )}
       <ParticleInteraction
         particlesRef={particlesRef}
         onParticleClick={onParticleClick}
