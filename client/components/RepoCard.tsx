@@ -1,42 +1,35 @@
 import { useEffect, useRef, useState } from "react";
 import { gsap } from "gsap";
-
-interface RepoData {
-  name: string;
-  owner: string;
-  language: string;
-  stars: number;
-  forks: number;
-  description: string;
-  activity: number;
-  growth: number;
-  health: number;
-  community: number;
-  year: number;
-}
+import {
+  type Repository,
+  type RepositoryDetails,
+  fetchRepositoryDetails,
+  getLanguageColor
+} from "../lib/repositoryData";
 
 interface RepoCardProps {
-  repo: RepoData;
+  repo: Repository;
   position: { x: number; y: number };
   onClose: () => void;
 }
+
+
 
 export default function RepoCard({ repo, position, onClose }: RepoCardProps) {
   const cardRef = useRef<HTMLDivElement>(null);
   const [expanded, setExpanded] = useState(false);
   const [vibeIdeas, setVibeIdeas] = useState<string[]>([]);
+  const [details, setDetails] = useState<RepositoryDetails | null>(null);
+  const [loading, setLoading] = useState(true);
 
   // Calculate safe position within viewport bounds
   const cardWidth = 420;
-  // Use maxHeight from style (100vh - 120px = viewport height - 120)
   const maxCardHeight = window.innerHeight - 120;
-  const padding = 20; // Minimal padding from viewport edges
+  const padding = 20;
 
-  // Account for transform: translate(-50%, -50%)
   const halfWidth = cardWidth / 2;
   const halfHeight = maxCardHeight / 2;
 
-  // Constrain position to keep card fully visible
   const safeX = Math.min(
     Math.max(position.x, halfWidth + padding),
     window.innerWidth - halfWidth - padding,
@@ -47,56 +40,73 @@ export default function RepoCard({ repo, position, onClose }: RepoCardProps) {
   );
 
   useEffect(() => {
+    let mounted = true;
+
+    const loadDetails = async () => {
+      setLoading(true);
+      const data = await fetchRepositoryDetails(repo.id);
+      if (mounted) {
+        setDetails(data);
+        setLoading(false);
+      }
+    };
+
+    loadDetails();
+
+    return () => {
+      mounted = false;
+    };
+  }, [repo.id]);
+
+  useEffect(() => {
     if (!cardRef.current) return;
 
+    const card = cardRef.current;
     const tl = gsap.timeline();
 
+    // Animate the card itself
     tl.fromTo(
-      cardRef.current,
-      {
-        opacity: 0,
-        scale: 0.8,
-        y: 20,
-      },
-      {
-        opacity: 1,
-        scale: 1,
-        y: 0,
-        duration: 0.6,
-        ease: "expo.out",
-      },
+      card,
+      { opacity: 0, scale: 0.8, y: 20 },
+      { opacity: 1, scale: 1, y: 0, duration: 0.6, ease: "expo.out" },
     );
 
-    gsap.fromTo(
-      ".card-header",
-      { opacity: 0, x: -20 },
-      { opacity: 1, x: 0, duration: 0.4, delay: 0.2, ease: "power2.out" },
-    );
+    // Animate elements only if they exist
+    const header = card.querySelector(".card-header");
+    if (header) {
+      gsap.fromTo(
+        header,
+        { opacity: 0, x: -20 },
+        { opacity: 1, x: 0, duration: 0.4, delay: 0.2, ease: "power2.out" },
+      );
+    }
 
-    gsap.fromTo(
-      ".card-metrics",
-      { opacity: 0, scale: 0.8 },
-      { opacity: 1, scale: 1, duration: 0.4, delay: 0.3, ease: "back.out(2)" },
-    );
+    const metrics = card.querySelector(".card-metrics");
+    if (metrics) {
+      gsap.fromTo(
+        metrics,
+        { opacity: 0, scale: 0.8 },
+        { opacity: 1, scale: 1, duration: 0.4, delay: 0.3, ease: "back.out(2)" },
+      );
+    }
 
-    gsap.fromTo(
-      ".card-timeline",
-      { opacity: 0, y: 10 },
-      { opacity: 1, y: 0, duration: 0.4, delay: 0.4, ease: "power2.out" },
-    );
+    const timeline = card.querySelector(".card-timeline");
+    if (timeline) {
+      gsap.fromTo(
+        timeline,
+        { opacity: 0, y: 10 },
+        { opacity: 1, y: 0, duration: 0.4, delay: 0.4, ease: "power2.out" },
+      );
+    }
 
-    gsap.fromTo(
-      ".card-button",
-      { opacity: 0, y: 10 },
-      {
-        opacity: 1,
-        y: 0,
-        duration: 0.3,
-        delay: 0.5,
-        stagger: 0.1,
-        ease: "power2.out",
-      },
-    );
+    const buttons = card.querySelectorAll(".card-button");
+    if (buttons.length > 0) {
+      gsap.fromTo(
+        buttons,
+        { opacity: 0, y: 10 },
+        { opacity: 1, y: 0, duration: 0.3, delay: 0.5, stagger: 0.1, ease: "power2.out" },
+      );
+    }
 
     return () => {
       tl.kill();
@@ -120,15 +130,7 @@ export default function RepoCard({ repo, position, onClose }: RepoCardProps) {
     }
   };
 
-  const languageColors: Record<string, string> = {
-    JavaScript: "#4a90e2",
-    TypeScript: "#2b7489",
-    Python: "#3572a5",
-    Go: "#00d9ff",
-    Rust: "#ff6b35",
-    Ruby: "#e85d75",
-    Java: "#b07219",
-  };
+  const year = new Date(repo.createdAt).getFullYear();
 
   return (
     <>
@@ -177,7 +179,7 @@ export default function RepoCard({ repo, position, onClose }: RepoCardProps) {
           <div className="card-header space-y-3 mb-6">
             <div className="flex items-start justify-between gap-4">
               <div className="flex-1">
-                <h2 className="text-2xl font-display font-bold text-white glow-cyan mb-1">
+                <h2 className="text-2xl font-display font-bold text-white glow-cyan mb-1 break-all">
                   {repo.name}
                 </h2>
                 <div className="text-space-cyan/60 font-mono text-sm">
@@ -197,54 +199,92 @@ export default function RepoCard({ repo, position, onClose }: RepoCardProps) {
               <div
                 className="px-3 py-1 text-xs font-mono font-semibold border angular-clip"
                 style={{
-                  backgroundColor: `${languageColors[repo.language] || "#f2f2f2"}20`,
-                  borderColor: languageColors[repo.language] || "#f2f2f2",
-                  color: languageColors[repo.language] || "#f2f2f2",
+                  backgroundColor: `#${repo.color.toString(16)}20`,
+                  borderColor: `#${repo.color.toString(16)}`,
+                  color: `#${repo.color.toString(16)}`,
                 }}
               >
-                {repo.language}
+                {repo.primaryLanguage}
               </div>
-              <div className="text-space-cyan/40 font-mono text-xs">
-                {repo.forks.toLocaleString()} FORKS
-              </div>
+              {details && (
+                <div className="text-space-cyan/40 font-mono text-xs">
+                  {details.forks.toLocaleString()} FORKS
+                </div>
+              )}
             </div>
 
             <p className="text-space-cyan/70 text-sm font-mono leading-relaxed">
-              {repo.description}
+              {loading ? "Loading details..." : details?.description}
             </p>
           </div>
 
-          <div className="card-metrics mb-6">
-            <div className="text-space-cyan/80 font-display text-xs uppercase tracking-wider mb-4">
-              Intelligence Metrics
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="border-l-2 border-space-cyan/30 pl-3">
-                <div className="text-space-cyan/50 text-xs mb-1">Activity</div>
-                <div className="text-space-cyan font-bold text-lg tabular-nums">
-                  {repo.activity}%
+          {!loading && details && (
+            <>
+              <div className="card-metrics mb-6">
+                <div className="text-space-cyan/80 font-display text-xs uppercase tracking-wider mb-4">
+                  Intelligence Metrics
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="border-l-2 border-space-cyan/30 pl-3">
+                    <div className="text-space-cyan/50 text-xs mb-1">Commits</div>
+                    <div className="text-space-cyan font-bold text-lg tabular-nums">
+                      {details.commits.toLocaleString()}
+                    </div>
+                  </div>
+                  <div className="border-l-2 border-space-amber/30 pl-3">
+                    <div className="text-space-amber/50 text-xs mb-1">Watchers</div>
+                    <div className="text-space-amber font-bold text-lg tabular-nums glow-amber">
+                      {details.watchers.toLocaleString()}
+                    </div>
+                  </div>
+                  <div className="border-l-2 border-space-magenta/30 pl-3">
+                    <div className="text-space-magenta/50 text-xs mb-1">Open PRs</div>
+                    <div className="text-space-magenta font-bold text-lg tabular-nums glow-magenta">
+                      {details.openPrs.toLocaleString()}
+                    </div>
+                  </div>
+                  <div className="border-l-2 border-space-cyan/30 pl-3">
+                    <div className="text-space-cyan/50 text-xs mb-1">Contributors</div>
+                    <div className="text-space-cyan font-bold text-lg tabular-nums">
+                      {details.contributors.toLocaleString()}
+                    </div>
+                  </div>
                 </div>
               </div>
-              <div className="border-l-2 border-space-amber/30 pl-3">
-                <div className="text-space-amber/50 text-xs mb-1">Growth</div>
-                <div className="text-space-amber font-bold text-lg tabular-nums glow-amber">
-                  {repo.growth}%
+
+              {details.languages.length > 0 && (
+                <div className="card-metrics mb-6">
+                  <div className="text-space-cyan/80 font-display text-xs uppercase tracking-wider mb-4">
+                    Language Breakdown
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    {details.languages.slice(0, 9).map((lang, i) => {
+                      const color = getLanguageColor(lang);
+                      return (
+                        <div key={i} className="flex items-center gap-2">
+                          <div
+                            className="w-2 h-2 rounded-full"
+                            style={{ backgroundColor: `#${color.toString(16)}` }}
+                          />
+                          <span className="text-space-cyan/70 text-xs font-mono truncate">
+                            {lang}
+                          </span>
+                        </div>
+                      );
+                    })}
+                    {details.languages.length > 9 && (
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 rounded-full bg-space-cyan/30" />
+                        <span className="text-space-cyan/70 text-xs font-mono">
+                          Others ({details.languages.length - 9})
+                        </span>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
-              <div className="border-l-2 border-space-magenta/30 pl-3">
-                <div className="text-space-magenta/50 text-xs mb-1">Health</div>
-                <div className="text-space-magenta font-bold text-lg tabular-nums glow-magenta">
-                  {repo.health}%
-                </div>
-              </div>
-              <div className="border-l-2 border-space-cyan/30 pl-3">
-                <div className="text-space-cyan/50 text-xs mb-1">Community</div>
-                <div className="text-space-cyan font-bold text-lg tabular-nums">
-                  {repo.community}
-                </div>
-              </div>
-            </div>
-          </div>
+              )}
+            </>
+          )}
 
           <div className="card-timeline mb-6">
             <div className="text-space-cyan/80 font-display text-xs uppercase tracking-wider mb-3">
@@ -256,7 +296,7 @@ export default function RepoCard({ repo, position, onClose }: RepoCardProps) {
               <div
                 className="absolute top-2 bottom-2 w-1 bg-space-cyan shadow-[0_0_10px_rgba(0,255,249,0.8)]"
                 style={{
-                  left: `${((repo.year - 2008) / (2025 - 2008)) * 100}%`,
+                  left: `${Math.max(0, Math.min(100, ((year - 2008) / (2025 - 2008)) * 100))}%`,
                 }}
               />
               <div className="flex justify-between text-xs text-space-cyan/40 font-mono mt-8">
@@ -271,7 +311,7 @@ export default function RepoCard({ repo, position, onClose }: RepoCardProps) {
               className="card-button w-full border-beam liquid-glass px-6 py-4 flex items-center justify-between group hover:shadow-[0_0_30px_rgba(0,255,249,0.4)] transition-all hover:scale-[1.02]"
               onClick={() =>
                 window.open(
-                  `https://deepwiki.com/${repo.owner}/${repo.name}`,
+                  `https://github.com/${repo.id}`,
                   "_blank",
                 )
               }
@@ -282,14 +322,14 @@ export default function RepoCard({ repo, position, onClose }: RepoCardProps) {
                   viewBox="0 0 24 24"
                   fill="currentColor"
                 >
-                  <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 2h2v2h-2V5zm0 4h2v2h-2V9zm-4-4h2v2H8V5zm0 4h2v2H8V9zM6 5h2v2H6V5zm0 4h2v2H6V9zm0 4h2v2H6v-2zm0 4h2v2H6v-2zm2 4H6v-2h2v2zm12 0h-2v-2h2v2zm0-4h-2v-2h2v2zm0-4h-2v-2h2v2z" />
+                  <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
                 </svg>
                 <div className="text-left">
                   <div className="text-space-cyan font-display font-bold">
-                    DEEP DIVE
+                    GITHUB
                   </div>
                   <div className="text-space-cyan/50 text-xs font-mono">
-                    Explore on DeepWiki
+                    View Repository
                   </div>
                 </div>
               </div>
@@ -365,25 +405,6 @@ export default function RepoCard({ repo, position, onClose }: RepoCardProps) {
                 ))}
               </div>
             )}
-
-            <button className="card-button w-full px-6 py-3 flex items-center justify-between text-space-cyan/60 hover:text-space-cyan border border-space-cyan/10 hover:border-space-cyan/30 transition-all group">
-              <span className="font-mono text-sm uppercase tracking-wide">
-                View Commits
-              </span>
-              <svg
-                className="w-4 h-4 group-hover:translate-x-1 transition-transform"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 5l7 7-7 7"
-                />
-              </svg>
-            </button>
           </div>
         </div>
       </div>

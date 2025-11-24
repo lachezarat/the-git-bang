@@ -23,7 +23,7 @@ export default function StatsPanel() {
               Repositories Indexed
             </span>
             <span className="text-space-amber glow-amber font-bold text-base tabular-nums">
-              47,293
+              55,414
             </span>
           </div>
 
@@ -35,7 +35,7 @@ export default function StatsPanel() {
               Timeline Range
             </span>
             <span className="text-space-magenta glow-magenta font-bold text-base tabular-nums">
-              2008-2025
+              2011-2025
             </span>
           </div>
 
@@ -53,9 +53,9 @@ export default function StatsPanel() {
 
           <div className="pt-3 mt-3 border-t border-space-cyan/10">
             <div className="flex items-center gap-2 text-space-cyan/40">
-              <div className="w-1 h-1 rounded-full bg-space-cyan animate-pulse" />
+              <div className="w-1 h-1 rounded-full bg-space-amber/60" />
               <span className="text-xs">
-                LIVE RENDERING • {new Date().getFullYear()}
+                DATA UPDATED OCT 2025 • BETA
               </span>
             </div>
           </div>

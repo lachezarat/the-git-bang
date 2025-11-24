@@ -1,15 +1,10 @@
-import { useRef, useMemo, useEffect, useState } from "react";
+import { useRef, useMemo } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
+import { type Repository, calculatePopularity } from "../lib/repositoryData";
 
-const PARTICLE_COUNT = 25000;
-const START_YEAR = 2008;
-const END_YEAR = 2025;
-
-function mapTimeToLog(year: number): number {
-  const t = (year - START_YEAR) / (END_YEAR - START_YEAR);
-  return Math.log(1 + t * 9) / Math.log(10);
-}
+const DEFAULT_PARTICLE_COUNT = 25000;
+const END_TIME = new Date("2025-12-31").getTime();
 
 const particleVertexShader = `
 uniform float uTime;
@@ -53,18 +48,19 @@ void main() {
     discard;
   }
 
+  // Sharper glow, less blur
   float glow = 1.0 - dist * 2.0;
-  glow = pow(glow, 2.5);
+  glow = pow(glow, 3.5); // Increased power for sharper falloff
 
-  float aberration = 0.025;
+  float aberration = 0.015; // Reduced aberration for cleaner look
 
   float distR = length(center - vec2(aberration, 0.0));
   float glowR = 1.0 - distR * 2.0;
-  glowR = pow(max(glowR, 0.0), 2.5);
+  glowR = pow(max(glowR, 0.0), 2.0);
 
   float distB = length(center + vec2(aberration, 0.0));
   float glowB = 1.0 - distB * 2.0;
-  glowB = pow(max(glowB, 0.0), 2.5);
+  glowB = pow(max(glowB, 0.0), 2.0);
 
   vec3 finalColor = vec3(
     vColor.r * glowR,
@@ -73,16 +69,19 @@ void main() {
   );
 
   // Apply brightness based on star count (popularity)
-  // Popular repos (high brightness) shine brighter, less popular are dimmer
-  finalColor *= (0.3 + 0.7 * vBrightness);
+  // High contrast: Popular repos shine very bright, small ones are dim
+  float brightnessFactor = pow(vBrightness, 1.5); // Non-linear brightness curve
+  finalColor *= (0.2 + 2.0 * brightnessFactor) / 1.5; // Reduced brightness by 20%
 
-  finalColor *= (0.6 + 0.4 * vPulse);
+  finalColor *= (0.8 + 0.2 * vPulse); // Subtle pulse
 
-  float core = 1.0 - smoothstep(0.0, 0.15, dist);
-  finalColor += vec3(1.0) * core * 0.6 * vBrightness;
+  // Solid core for better visibility
+  float core = 1.0 - smoothstep(0.0, 0.1, dist);
+  finalColor += vec3(1.0) * core * (0.4 + 0.4 * brightnessFactor);
 
   // Alpha also affected by brightness - dimmer stars are more transparent
-  float alpha = glow * (0.7 + 0.3 * vPulse) * (0.4 + 0.6 * vBrightness);
+  // Make small stars much more transparent to reduce noise
+  float alpha = glow * (0.6 + 0.4 * vPulse) * (0.3 + 0.7 * brightnessFactor);
 
   gl_FragColor = vec4(finalColor, alpha);
 }
@@ -90,9 +89,13 @@ void main() {
 
 interface LightConeProps {
   particlesRef?: React.RefObject<THREE.Points>;
+  repositories?: Repository[];
 }
 
-export default function LightCone({ particlesRef }: LightConeProps = {}) {
+export default function LightCone({
+  particlesRef,
+  repositories = [],
+}: LightConeProps = {}) {
   const pointsRef = useRef<THREE.Points>(null);
   const materialRef = useRef<THREE.ShaderMaterial>(null);
 
@@ -100,37 +103,73 @@ export default function LightCone({ particlesRef }: LightConeProps = {}) {
   const activeRef = particlesRef || pointsRef;
 
   const { geometry, uniforms } = useMemo(() => {
-    const positions = new Float32Array(PARTICLE_COUNT * 3);
-    const colors = new Float32Array(PARTICLE_COUNT * 3);
-    const sizes = new Float32Array(PARTICLE_COUNT);
-    const pulses = new Float32Array(PARTICLE_COUNT);
-    const activities = new Float32Array(PARTICLE_COUNT);
-    const brightnesses = new Float32Array(PARTICLE_COUNT);
+    const count =
+      repositories.length > 0 ? repositories.length : DEFAULT_PARTICLE_COUNT;
+    const positions = new Float32Array(count * 3);
+    const colors = new Float32Array(count * 3);
+    const sizes = new Float32Array(count);
+    const pulses = new Float32Array(count);
+    const activities = new Float32Array(count);
+    const brightnesses = new Float32Array(count);
 
-    const languageColors = [
-      new THREE.Color("#4a90e2"), // JavaScript blue
-      new THREE.Color("#2b7489"), // TypeScript
-      new THREE.Color("#3572a5"), // Python
-      new THREE.Color("#00d9ff"), // Go
-      new THREE.Color("#ff6b35"), // Rust
-      new THREE.Color("#e85d75"), // Ruby
-      new THREE.Color("#b07219"), // Java
-      new THREE.Color("#00fff9"), // Cyan
-      new THREE.Color("#ff006e"), // Magenta
-      new THREE.Color("#ffba08"), // Amber
-    ];
+    // Calculate start time based on earliest repository
+    const startTime =
+      repositories.length > 0
+        ? Math.min(...repositories.map((r) => r.createdAt))
+        : new Date("2011-01-01").getTime();
 
-    for (let i = 0; i < PARTICLE_COUNT; i++) {
-      // Random year between 2008 and 2025 - distributed across entire timeline
-      const year = START_YEAR + Math.random() * (END_YEAR - START_YEAR);
-      const logT = mapTimeToLog(year);
+    // Reusable color object
+    const tempColor = new THREE.Color();
 
-      // X position along funnel length (1.5x spacing)
-      const x = logT * 187.5 - 93.75;
+    for (let i = 0; i < count; i++) {
+      let timestamp, popularity, normalizedSize;
 
-      // Funnel radius: starts at 3.75 (narrow left) and expands to 56.25 (wide right) - 1.5x spacing
-      const startRadius = 3.75;
-      const endRadius = 56.25;
+      if (repositories.length > 0) {
+        const repo = repositories[i];
+        timestamp = repo.createdAt;
+        popularity = calculatePopularity(repo.stars);
+
+        // Set color from repo data
+        tempColor.setHex(repo.color);
+        colors[i * 3] = tempColor.r;
+        colors[i * 3 + 1] = tempColor.g;
+        colors[i * 3 + 2] = tempColor.b;
+
+        // Calculate size based on stars using logarithmic scale
+        // Max stars is around 400k
+        const logStars = Math.log10(repo.stars + 1);
+        const maxLogStars = 5.6; // log10(400000) approx 5.6
+
+        // Normalize to 0-1 range
+        normalizedSize = Math.max(0, Math.min(1, logStars / maxLogStars));
+      } else {
+        // Fallback random generation (should not happen with loaded data)
+        timestamp = startTime + Math.random() * (END_TIME - startTime);
+        popularity = Math.pow(Math.random(), 3);
+
+        tempColor.setHSL(Math.random(), 0.8, 0.5);
+        colors[i * 3] = tempColor.r;
+        colors[i * 3 + 1] = tempColor.g;
+        colors[i * 3 + 2] = tempColor.b;
+
+        normalizedSize = Math.pow(Math.random(), 4);
+      }
+
+      // Map time to log scale
+      const t = (timestamp - startTime) / (END_TIME - startTime);
+      const clampedT = Math.max(0, Math.min(1, t));
+      const logT = Math.log(1 + clampedT * 9) / Math.log(10);
+
+      // X position along funnel length (scaled down by 1.083, extended 1.5x horizontally to match wireframe)
+      // Original range: -93.75 to +93.75 (total 187.5)
+      // After 1.083 scaling: -86.57 to +86.57 (total 173.15)
+      // After 1.5x extension: -129.86 to +129.86 (total 259.72)
+      const x = ((logT * 187.5 - 93.75) / 1.083) * 1.5;
+
+      // Funnel radius: starts at 3.75 (narrow left) and expands to 56.25 (wide right)
+      // Increased by 1.5x then scaled down by 1.083
+      const startRadius = (3.75 * 1.5) / 1.083;
+      const endRadius = (56.25 * 1.5) / 1.083;
       const funnelRadius = startRadius + (endRadius - startRadius) * logT;
 
       // Random position within circular cross-section
@@ -145,19 +184,13 @@ export default function LightCone({ particlesRef }: LightConeProps = {}) {
       positions[i * 3 + 1] = y;
       positions[i * 3 + 2] = z;
 
-      // Random language color
-      const languageColor =
-        languageColors[Math.floor(Math.random() * languageColors.length)];
-      colors[i * 3] = languageColor.r;
-      colors[i * 3 + 1] = languageColor.g;
-      colors[i * 3 + 2] = languageColor.b;
-
-      // Random popularity with power distribution (most repos are small, few are huge)
-      const popularity = Math.pow(Math.random(), 3);
-      sizes[i] = 2.0 + popularity * 8;
+      // Map to size range: min 1.5, max 12.0
+      // We use a power function to make the very largest ones pop more
+      sizes[i] = 1.5 + Math.pow(normalizedSize, 2) * 15.0;
 
       // Brightness correlates with popularity (star count)
-      brightnesses[i] = popularity;
+      // Also use log scale for brightness so small repos aren't too dim
+      brightnesses[i] = 0.2 + normalizedSize * 0.8;
 
       pulses[i] = Math.random();
       activities[i] = 0.5 + Math.random() * 1.5;
@@ -180,7 +213,7 @@ export default function LightCone({ particlesRef }: LightConeProps = {}) {
     };
 
     return { geometry, uniforms };
-  }, []);
+  }, [repositories]);
 
   useFrame((state) => {
     if (materialRef.current) {

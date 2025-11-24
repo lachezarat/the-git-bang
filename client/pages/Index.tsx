@@ -7,8 +7,11 @@ import HUD from "../components/HUD";
 import ScanlineOverlay from "../components/ScanlineOverlay";
 import RepoCard from "../components/RepoCard";
 import AmbientSound from "../components/AmbientSound";
+import ErrorBoundary from "../components/ErrorBoundary";
 import { useRepositoryData } from "../hooks/useRepositoryData";
 import * as THREE from "three";
+
+import CameraTracker from "../components/CameraTracker";
 
 export default function Index() {
   const [bootComplete, setBootComplete] = useState(false);
@@ -18,6 +21,7 @@ export default function Index() {
   const [searchActive, setSearchActive] = useState(false);
   const [selectedRepo, setSelectedRepo] = useState<any>(null);
   const [repoCardPos, setRepoCardPos] = useState({ x: 0, y: 0 });
+  const [currentYear, setCurrentYear] = useState(2025);
 
   // Load repository data
   const {
@@ -84,78 +88,83 @@ export default function Index() {
   }, [dataError]);
 
   return (
-    <div className="relative w-screen h-screen overflow-hidden bg-space-void">
-      <div
-        ref={cursorRef}
-        className="custom-cursor"
-        style={{ left: cursorPos.x, top: cursorPos.y }}
-      />
-
-      <div className="blue-noise-overlay" />
-      <div className="noise-overlay" />
-      <ScanlineOverlay />
-
-      {!bootComplete && <BootSequence />}
-
-      <Canvas
-        className="absolute inset-0"
-        dpr={[1, 2]}
-        gl={{ antialias: true }}
-      >
-        <PerspectiveCamera makeDefault fov={75} position={[0, 0, 150]} />
-        <ambientLight intensity={0.05} />
-        <pointLight position={[20, 20, 20]} intensity={0.3} color="#00fff9" />
-        <pointLight
-          position={[-20, -20, -20]}
-          intensity={0.2}
-          color="#ff006e"
-        />
-        <pointLight position={[0, 20, -20]} intensity={0.15} color="#ffba08" />
-
-        <Scene3D
-          searchActive={searchActive}
-          searchQuery={searchQuery}
-          onParticleClick={handleParticleClick}
-          repositories={repositories}
+    <ErrorBoundary>
+      <div className="relative w-screen h-screen overflow-hidden bg-space-void">
+        <div
+          ref={cursorRef}
+          className="custom-cursor"
+          style={{ left: cursorPos.x, top: cursorPos.y }}
         />
 
-        <OrbitControls
-          target={[0, 0, 0]}
-          enableZoom={true}
-          enablePan={true}
-          enableRotate={true}
-          minDistance={25}
-          maxDistance={200}
-          autoRotate={false}
-          autoRotateSpeed={0.1}
-          enableDamping
-          dampingFactor={0.05}
-          zoomToCursor={true}
-          screenSpacePanning={true}
-          mouseButtons={{
-            LEFT: THREE.MOUSE.PAN,
-            MIDDLE: THREE.MOUSE.DOLLY,
-            RIGHT: THREE.MOUSE.ROTATE,
-          }}
-        />
-      </Canvas>
+        <div className="blue-noise-overlay" />
+        <div className="noise-overlay" />
+        <ScanlineOverlay />
 
-      {bootComplete && (
-        <HUD
-          onSearchChange={handleSearchChange}
-          onSuggestionSelect={handleSuggestionSelect}
-          repositories={repositories}
-        />
-      )}
-      {bootComplete && <AmbientSound />}
+        {!bootComplete && <BootSequence />}
 
-      {selectedRepo && (
-        <RepoCard
-          repo={selectedRepo}
-          position={repoCardPos}
-          onClose={() => setSelectedRepo(null)}
-        />
-      )}
-    </div>
+        <Canvas
+          className="absolute inset-0"
+          dpr={[1, 2]}
+          gl={{ antialias: true }}
+        >
+          <PerspectiveCamera makeDefault fov={75} position={[0, 0, 225]} />
+          <ambientLight intensity={0.05} />
+          <pointLight position={[20, 20, 20]} intensity={0.3} color="#00fff9" />
+          <pointLight
+            position={[-20, -20, -20]}
+            intensity={0.2}
+            color="#ff006e"
+          />
+          <pointLight position={[0, 20, -20]} intensity={0.15} color="#ffba08" />
+
+          <Scene3D
+            searchActive={searchActive}
+            searchQuery={searchQuery}
+            onParticleClick={handleParticleClick}
+            repositories={repositories}
+          />
+
+          <CameraTracker onYearChange={setCurrentYear} />
+
+          <OrbitControls
+            target={[0, 0, 0]}
+            enableZoom={true}
+            enablePan={true}
+            enableRotate={true}
+            minDistance={37.5}
+            maxDistance={300}
+            autoRotate={false}
+            autoRotateSpeed={0.1}
+            enableDamping
+            dampingFactor={0.05}
+            zoomToCursor={true}
+            screenSpacePanning={true}
+            mouseButtons={{
+              LEFT: THREE.MOUSE.PAN,
+              MIDDLE: THREE.MOUSE.DOLLY,
+              RIGHT: THREE.MOUSE.ROTATE,
+            }}
+          />
+        </Canvas>
+
+        {bootComplete && (
+          <HUD
+            onSearchChange={handleSearchChange}
+            onSuggestionSelect={handleSuggestionSelect}
+            repositories={repositories}
+            currentYear={currentYear}
+          />
+        )}
+        {bootComplete && <AmbientSound />}
+
+        {selectedRepo && (
+          <RepoCard
+            repo={selectedRepo}
+            position={repoCardPos}
+            onClose={() => setSelectedRepo(null)}
+          />
+        )}
+      </div>
+    </ErrorBoundary>
   );
 }

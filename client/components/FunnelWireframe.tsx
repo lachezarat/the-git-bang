@@ -9,11 +9,11 @@ export default function FunnelWireframe() {
     const longitudinalGeometries: THREE.BufferGeometry[] = [];
     const ringGeometries: THREE.BufferGeometry[] = [];
 
-    // Funnel parameters (1.5x spacing)
-    const startX = -93.75;
-    const endX = 93.75;
-    const startRadius = 3.75; // Narrow on the left
-    const endRadius = 56.25; // Wide on the right
+    // Funnel parameters (1.5x spacing, scaled down by 1.083 to match cone, extended 1.5x horizontally)
+    const startX = (-93.75 / 1.083) * 1.5;
+    const endX = (93.75 / 1.083) * 1.5;
+    const startRadius = (3.75 * 1.5) / 1.083; // Narrow on the left
+    const endRadius = (56.25 * 1.5) / 1.083; // Wide on the right
 
     // Create longitudinal lines (running the length of the funnel)
     for (let i = 0; i < LONGITUDINAL_LINES; i++) {
@@ -64,6 +64,7 @@ export default function FunnelWireframe() {
     <group>
       {/* Longitudinal lines */}
       {longitudinalGeometries.map((geometry, i) => (
+        // @ts-ignore
         <line key={`long-${i}`} geometry={geometry}>
           <lineBasicMaterial
             color="#00fff9"
@@ -76,6 +77,7 @@ export default function FunnelWireframe() {
 
       {/* Ring cross-sections */}
       {ringGeometries.map((geometry, i) => (
+        // @ts-ignore
         <line key={`ring-${i}`} geometry={geometry}>
           <lineBasicMaterial
             color="#00fff9"
@@ -88,6 +90,7 @@ export default function FunnelWireframe() {
 
       {/* Add glowing meshes for enhanced visibility */}
       {longitudinalGeometries.map((geometry, i) => (
+        // @ts-ignore
         <line key={`glow-long-${i}`} geometry={geometry}>
           <lineBasicMaterial
             color="#00fff9"

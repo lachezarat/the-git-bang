@@ -122,10 +122,11 @@ export default function Scene3D({
   return (
     <group>
       <FunnelWireframe />
-      <LightCone particlesRef={particlesRef} />
+      <LightCone particlesRef={particlesRef} repositories={repositories} />
       <ParticleInteraction
         particlesRef={particlesRef}
         onParticleClick={onParticleClick}
+        repositories={repositories}
       />
       {/* <ConeGuides /> */}
     </group>

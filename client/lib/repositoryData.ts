@@ -1,17 +1,26 @@
+import Papa from "papaparse";
+
+
 export interface Repository {
-  id: string;
+  id: string; // owner/name
   name: string;
   owner: string;
-  language: string;
   stars: number;
-  forks: number;
+  createdAt: number; // timestamp
+  primaryLanguage: string;
+  color: number; // Hex color for visualization
+}
+
+export interface RepositoryDetails {
+  id: string;
   description: string;
-  activity: number;
-  growth: number;
-  health: number;
-  community: number;
-  year: number;
-  url: string;
+  topics: string[];
+  languages: string[];
+  forks: number;
+  commits: number;
+  watchers: number;
+  openPrs: number;
+  contributors: number;
 }
 
 export interface RepositoryDataset {
@@ -19,104 +28,130 @@ export interface RepositoryDataset {
 }
 
 let cachedData: RepositoryDataset | null = null;
+let cachedDetails: Map<string, RepositoryDetails> | null = null;
+
+// Language color mapping
+const LANGUAGE_COLORS: Record<string, number> = {
+  JavaScript: 0x4a90e2,
+  TypeScript: 0x2b7489,
+  Python: 0x3572a5,
+  Go: 0x00d9ff,
+  Rust: 0xff6b35,
+  Ruby: 0xe85d75,
+  Java: 0xb07219,
+  "C++": 0xf34b7d,
+  "C#": 0x178600,
+  PHP: 0x4f5d95,
+  Swift: 0xffac45,
+  Kotlin: 0xf18e33,
+  HTML: 0xe34c26,
+  CSS: 0x563d7c,
+  Shell: 0x89e051,
+  C: 0x555555,
+  Unknown: 0xf2f2f2
+};
+
+export function getLanguageColor(language: string): number {
+  return LANGUAGE_COLORS[language] || 0xf2f2f2; // Default to grey/white
+}
 
 export async function loadRepositories(): Promise<RepositoryDataset> {
-  // Return cached data if available
   if (cachedData) {
     return cachedData;
   }
 
   try {
-    const response = await fetch("/repositories.json");
+    const response = await fetch("/app_viz_data.json");
     if (!response.ok) {
       throw new Error(`Failed to load repositories: ${response.statusText}`);
     }
 
-    const data: RepositoryDataset = await response.json();
+    const data = await response.json();
+    const { ids, dates, stars, lang_ids, legend } = data;
 
-    // Validate data structure
-    if (!data.repositories || !Array.isArray(data.repositories)) {
-      throw new Error("Invalid repository data format");
+    const repositories: Repository[] = [];
+    const count = ids.length;
+
+    for (let i = 0; i < count; i++) {
+      const fullId = ids[i];
+      const [owner, name] = fullId.split('/');
+      const dateStr = dates[i];
+      const starCount = stars[i];
+      const langId = lang_ids[i];
+      const language = legend[langId.toString()] || "Unknown";
+
+      // Parse date
+      const date = new Date(dateStr);
+      const timestamp = date.getTime();
+
+      repositories.push({
+        id: fullId,
+        name: name || fullId,
+        owner: owner || "Unknown",
+        stars: starCount,
+        createdAt: timestamp,
+        primaryLanguage: language,
+        color: getLanguageColor(language)
+      });
     }
 
-    // Cache the data
-    cachedData = data;
+    const dataset: RepositoryDataset = { repositories };
+    cachedData = dataset;
+    return dataset;
 
-    return data;
   } catch (error) {
     console.error("Error loading repository data:", error);
     throw error;
   }
 }
 
-export function generateParticlesFromRepositories(
-  repositories: Repository[],
-  targetCount: number = 25000,
-): Repository[] {
-  // If we have fewer repos than particles, replicate with variation
-  const particles: Repository[] = [];
-
-  // Calculate how many times to replicate each repo
-  const replicationFactor = Math.ceil(targetCount / repositories.length);
-
-  repositories.forEach((repo) => {
-    // Add the original
-    particles.push(repo);
-
-    // Add variations for smaller repos to reach target count
-    const basePopularity = Math.pow(repo.stars / 250000, 0.33);
-    const replicationsNeeded = Math.max(
-      1,
-      Math.floor(replicationFactor * (1 - basePopularity)),
-    );
-
-    for (
-      let i = 0;
-      i < replicationsNeeded && particles.length < targetCount;
-      i++
-    ) {
-      particles.push({
-        ...repo,
-        id: `${repo.id}-var-${i}`,
-      });
-    }
-  });
-
-  // Fill remaining slots if needed
-  while (particles.length < targetCount) {
-    const randomRepo =
-      repositories[Math.floor(Math.random() * repositories.length)];
-    particles.push({
-      ...randomRepo,
-      id: `${randomRepo.id}-fill-${particles.length}`,
-    });
+// Fetch details from local SQLite API
+export async function fetchRepositoryDetails(repoId: string): Promise<RepositoryDetails | null> {
+  // Check memory cache first
+  if (cachedDetails?.has(repoId)) {
+    return cachedDetails.get(repoId)!;
   }
 
-  return particles.slice(0, targetCount);
-}
+  try {
+    const response = await fetch(`/api/repo/${repoId}`);
 
-export function getLanguageColor(language: string): number {
-  const colorMap: Record<string, number> = {
-    JavaScript: 0x4a90e2,
-    TypeScript: 0x2b7489,
-    Python: 0x3572a5,
-    Go: 0x00d9ff,
-    Rust: 0xff6b35,
-    Ruby: 0xe85d75,
-    Java: 0xb07219,
-    "C++": 0xf34b7d,
-    "C#": 0x178600,
-    PHP: 0x4f5d95,
-    Swift: 0xffac45,
-    Kotlin: 0xf18e33,
-  };
+    if (!response.ok) {
+      if (response.status === 404) return null;
+      throw new Error(`API Error: ${response.statusText}`);
+    }
 
-  return colorMap[language] || 0xf2f2f2;
+    const data = await response.json();
+
+    const details: RepositoryDetails = {
+      id: data.id,
+      description: data.description || "",
+      topics: data.topics || [],
+      languages: data.languages || [],
+      forks: data.forks || 0,
+      commits: data.activity_commits || 0,
+      watchers: data.growth_watchers || 0,
+      openPrs: data.health_prs || 0,
+      contributors: data.community_contributors || 0
+    };
+
+    // Initialize cache if needed
+    if (!cachedDetails) {
+      cachedDetails = new Map();
+    }
+
+    cachedDetails.set(repoId, details);
+    return details;
+
+  } catch (error) {
+    console.error("Error fetching repository details:", error);
+    return null;
+  }
 }
 
 export function calculatePopularity(stars: number): number {
   // Normalize stars to 0-1 range using logarithmic scale
-  // Max stars ~250k (React/Vue level)
-  const normalized = Math.log(stars + 1) / Math.log(250000);
+  // Max stars ~400k
+  const normalized = Math.log(stars + 1) / Math.log(400000);
   return Math.min(1, Math.max(0, normalized));
 }
+

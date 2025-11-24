@@ -10,16 +10,18 @@ interface HUDProps {
   onSearchChange?: (query: string, isFocused: boolean) => void;
   onSuggestionSelect?: (repo: any) => void;
   repositories?: Repository[];
+  currentYear?: number;
 }
 
 export default function HUD({
   onSearchChange,
   onSuggestionSelect,
   repositories = [],
+  currentYear = 2025,
 }: HUDProps) {
   return (
     <div className="hud-container">
-      <YearMarker />
+      <YearMarker year={currentYear} />
       <StatsPanel />
       <TimelinePanel />
       <ControlsPanel />

@@ -2,15 +2,18 @@ import { useRef, useEffect } from "react";
 import { useThree, useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import gsap from "gsap";
+import type { Repository } from "../lib/repositoryData";
 
 interface ParticleInteractionProps {
   particlesRef: React.RefObject<THREE.Points>;
   onParticleClick?: (repo: any, position: { x: number; y: number }) => void;
+  repositories?: Repository[];
 }
 
 export default function ParticleInteraction({
   particlesRef,
   onParticleClick,
+  repositories = [],
 }: ParticleInteractionProps) {
   const { camera, gl, controls } = useThree();
   const raycaster = useRef(new THREE.Raycaster());
@@ -58,120 +61,54 @@ export default function ParticleInteraction({
         const point = intersects[0].point;
         const index = intersects[0].index || 0;
 
-        // Generate mock repository data for the clicked particle
-        const repoNames = [
-          {
-            name: "react",
-            owner: "facebook",
-            desc: "A declarative, efficient JavaScript library for building user interfaces",
-          },
-          {
-            name: "vue",
-            owner: "vuejs",
-            desc: "The Progressive JavaScript Framework",
-          },
-          {
-            name: "tensorflow",
-            owner: "tensorflow",
-            desc: "An Open Source Machine Learning Framework for Everyone",
-          },
-          {
-            name: "kubernetes",
-            owner: "kubernetes",
-            desc: "Production-Grade Container Orchestration",
-          },
-          {
-            name: "rust",
-            owner: "rust-lang",
-            desc: "Empowering everyone to build reliable and efficient software",
-          },
-          { name: "vscode", owner: "microsoft", desc: "Visual Studio Code" },
-          {
-            name: "pytorch",
-            owner: "pytorch",
-            desc: "Tensors and Dynamic neural networks in Python",
-          },
-          { name: "node", owner: "nodejs", desc: "Node.js JavaScript runtime" },
-          {
-            name: "django",
-            owner: "django",
-            desc: "The Web framework for perfectionists with deadlines",
-          },
-          {
-            name: "rails",
-            owner: "rails",
-            desc: "Ruby on Rails web framework",
-          },
-        ];
+        // Get the actual repository data
+        const repo = repositories[index];
 
-        const languages = [
-          "JavaScript",
-          "TypeScript",
-          "Python",
-          "Go",
-          "Rust",
-          "Ruby",
-          "Java",
-        ];
-        const selectedRepo = repoNames[index % repoNames.length];
+        if (repo) {
+          // Trigger card modal
+          if (onParticleClick) {
+            onParticleClick(repo, { x: event.clientX, y: event.clientY });
+          }
 
-        const mockRepo = {
-          name: selectedRepo.name,
-          owner: selectedRepo.owner,
-          description: selectedRepo.desc,
-          language: languages[index % languages.length],
-          stars: Math.floor(50000 + Math.random() * 200000),
-          forks: Math.floor(10000 + Math.random() * 50000),
-          activity: Math.floor(70 + Math.random() * 30),
-          growth: Math.floor(10 + Math.random() * 40),
-          health: Math.floor(85 + Math.random() * 15),
-          community: Math.floor(500 + Math.random() * 3000),
-          year: 2008 + Math.floor(Math.random() * 17),
-        };
+          // Calculate camera target position (move camera closer to the particle)
+          const direction = new THREE.Vector3()
+            .subVectors(point, camera.position)
+            .normalize();
+          const distance = 30; // Distance from particle to camera
+          const newCameraPosition = new THREE.Vector3()
+            .copy(point)
+            .sub(direction.multiplyScalar(distance));
 
-        // Trigger card modal
-        if (onParticleClick) {
-          onParticleClick(mockRepo, { x: event.clientX, y: event.clientY });
-        }
+          // Animate camera to new position
+          isAnimating.current = true;
 
-        // Calculate camera target position (move camera closer to the particle)
-        const direction = new THREE.Vector3()
-          .subVectors(point, camera.position)
-          .normalize();
-        const distance = 30; // Distance from particle to camera
-        const newCameraPosition = new THREE.Vector3()
-          .copy(point)
-          .sub(direction.multiplyScalar(distance));
-
-        // Animate camera to new position
-        isAnimating.current = true;
-
-        gsap.to(camera.position, {
-          x: newCameraPosition.x,
-          y: newCameraPosition.y,
-          z: newCameraPosition.z,
-          duration: 1.5,
-          ease: "power2.inOut",
-          onUpdate: () => {
-            if (controls) {
-              (controls as any).target.copy(point);
-              (controls as any).update();
-            }
-          },
-          onComplete: () => {
-            isAnimating.current = false;
-          },
-        });
-
-        // Animate orbit controls target
-        if (controls) {
-          gsap.to((controls as any).target, {
-            x: point.x,
-            y: point.y,
-            z: point.z,
+          gsap.to(camera.position, {
+            x: newCameraPosition.x,
+            y: newCameraPosition.y,
+            z: newCameraPosition.z,
             duration: 1.5,
             ease: "power2.inOut",
+            onUpdate: () => {
+              if (controls) {
+                (controls as any).target.copy(point);
+                (controls as any).update();
+              }
+            },
+            onComplete: () => {
+              isAnimating.current = false;
+            },
           });
+
+          // Animate orbit controls target
+          if (controls) {
+            gsap.to((controls as any).target, {
+              x: point.x,
+              y: point.y,
+              z: point.z,
+              duration: 1.5,
+              ease: "power2.inOut",
+            });
+          }
         }
       }
     };
@@ -183,7 +120,7 @@ export default function ParticleInteraction({
       gl.domElement.removeEventListener("mousedown", handleMouseDown);
       gl.domElement.removeEventListener("click", handleClick);
     };
-  }, [camera, gl, particlesRef, controls, onParticleClick]);
+  }, [camera, gl, particlesRef, controls, onParticleClick, repositories]);
 
   return null;
 }

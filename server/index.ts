@@ -2,6 +2,7 @@ import "dotenv/config";
 import express from "express";
 import cors from "cors";
 import { handleDemo } from "./routes/demo";
+import { handleGetRepository } from "./routes/repositories";
 
 export function createServer() {
   const app = express();
@@ -18,6 +19,9 @@ export function createServer() {
   });
 
   app.get("/api/demo", handleDemo);
+
+  // Repository details from SQLite
+  app.get("/api/repo/:owner/:name", handleGetRepository);
 
   return app;
 }

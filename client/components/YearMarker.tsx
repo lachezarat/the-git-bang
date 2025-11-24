@@ -1,19 +1,8 @@
-import { useState, useEffect } from "react";
+interface YearMarkerProps {
+  year?: number;
+}
 
-export default function YearMarker() {
-  const [currentYear, setCurrentYear] = useState(2025);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentYear((prev) => {
-        if (prev >= 2025) return 2008;
-        return prev + 1;
-      });
-    }, 3000);
-
-    return () => clearInterval(interval);
-  }, []);
-
+export default function YearMarker({ year = 2025 }: YearMarkerProps) {
   return (
     <div
       className="hud-element fixed top-20 left-6 pointer-events-none"
@@ -28,7 +17,7 @@ export default function YearMarker() {
           fontVariantNumeric: "tabular-nums",
         }}
       >
-        {currentYear}
+        {year}
       </div>
       <div className="text-space-cyan/40 font-mono text-xs mt-1 tracking-wider">
         TEMPORAL MARKER

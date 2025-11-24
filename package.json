@@ -22,9 +22,13 @@
   },
   "dependencies": {
     "@react-three/postprocessing": "^3.0.4",
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/papaparse": "^5.5.0",
+    "better-sqlite3": "^12.4.6",
     "dotenv": "^17.2.1",
     "express": "^5.1.0",
     "gsap": "^3.13.0",
+    "papaparse": "^5.5.3",
     "zod": "^3.25.76"
   },
   "devDependencies": {

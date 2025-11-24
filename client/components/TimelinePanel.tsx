@@ -13,7 +13,7 @@ export default function TimelinePanel() {
           <div className="space-y-2">
             <div className="flex items-center gap-3 border-l-2 border-space-cyan/30 pl-3">
               <span className="text-space-cyan glow-cyan text-lg">◀</span>
-              <span className="font-display font-bold">2008</span>
+              <span className="font-display font-bold">2011</span>
               <span className="text-space-cyan/40 uppercase text-xs">
                 Origin
               </span>
@@ -34,13 +34,27 @@ export default function TimelinePanel() {
             <div className="text-space-cyan/50 text-xs mb-3 uppercase tracking-wider">
               Stellar Classification
             </div>
-            <div className="space-y-2">
+            <div className="grid grid-cols-2 gap-x-4 gap-y-2">
               <div className="flex items-center gap-3">
                 <div
                   className="w-2 h-2 rounded-full"
                   style={{ background: "#4a90e2" }}
                 />
                 <span className="text-xs text-space-cyan/70">JavaScript</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <div
+                  className="w-2 h-2 rounded-full"
+                  style={{ background: "#2b7489" }}
+                />
+                <span className="text-xs text-space-cyan/70">TypeScript</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <div
+                  className="w-2 h-2 rounded-full"
+                  style={{ background: "#3572a5" }}
+                />
+                <span className="text-xs text-space-cyan/70">Python</span>
               </div>
               <div className="flex items-center gap-3">
                 <div
@@ -62,6 +76,34 @@ export default function TimelinePanel() {
                   style={{ background: "#e85d75" }}
                 />
                 <span className="text-xs text-space-cyan/70">Ruby</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <div
+                  className="w-2 h-2 rounded-full"
+                  style={{ background: "#b07219" }}
+                />
+                <span className="text-xs text-space-cyan/70">Java</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <div
+                  className="w-2 h-2 rounded-full"
+                  style={{ background: "#f34b7d" }}
+                />
+                <span className="text-xs text-space-cyan/70">C++</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <div
+                  className="w-2 h-2 rounded-full"
+                  style={{ background: "#178600" }}
+                />
+                <span className="text-xs text-space-cyan/70">C#</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <div
+                  className="w-2 h-2 rounded-full"
+                  style={{ background: "#4f5d95" }}
+                />
+                <span className="text-xs text-space-cyan/70">PHP</span>
               </div>
             </div>
           </div>
