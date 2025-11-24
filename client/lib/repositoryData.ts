@@ -113,34 +113,35 @@ export async function fetchRepositoryDetails(repoId: string): Promise<Repository
   }
 
   try {
-    const response = await fetch(`/api/repo/${repoId}`);
-
-    if (!response.ok) {
-      if (response.status === 404) return null;
-      throw new Error(`API Error: ${response.statusText}`);
-    }
-
-    const data = await response.json();
-
-    const details: RepositoryDetails = {
-      id: data.id,
-      description: data.description || "",
-      topics: data.topics || [],
-      languages: data.languages || [],
-      forks: data.forks || 0,
-      commits: data.activity_commits || 0,
-      watchers: data.growth_watchers || 0,
-      openPrs: data.health_prs || 0,
-      contributors: data.community_contributors || 0
-    };
-
-    // Initialize cache if needed
+    // Load all repository details if not already cached
     if (!cachedDetails) {
+      const response = await fetch("/repositories_details.json");
+
+      if (!response.ok) {
+        throw new Error(`Failed to load repository details: ${response.statusText}`);
+      }
+
+      const allDetails = await response.json();
       cachedDetails = new Map();
+
+      // Convert to Map for efficient lookup
+      Object.entries(allDetails).forEach(([id, data]: [string, any]) => {
+        const details: RepositoryDetails = {
+          id: data.id,
+          description: data.description || "",
+          topics: data.topics || [],
+          languages: data.languages || [],
+          forks: data.forks || 0,
+          commits: data.activity_commits || 0,
+          watchers: data.growth_watchers || 0,
+          openPrs: data.health_prs || 0,
+          contributors: data.community_contributors || 0
+        };
+        cachedDetails!.set(id, details);
+      });
     }
 
-    cachedDetails.set(repoId, details);
-    return details;
+    return cachedDetails.get(repoId) || null;
 
   } catch (error) {
     console.error("Error fetching repository details:", error);
