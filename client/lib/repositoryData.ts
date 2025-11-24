@@ -30,7 +30,6 @@ export interface RepositoryDataset {
 }
 
 let cachedData: RepositoryDataset | null = null;
-let cachedDetails: Map<string, RepositoryDetails> | null = null;
 
 // Language color mapping
 export const LANGUAGE_COLORS: Record<string, number> = {
@@ -109,53 +108,28 @@ export async function loadRepositories(): Promise<RepositoryDataset> {
   }
 }
 
-// Fetch details from Turso API
+// Load repository details from static JSON file
+let repoDetailsData: Record<string, RepositoryDetails> | null = null;
+
 export async function fetchRepositoryDetails(repoId: string): Promise<RepositoryDetails | null> {
-  // Check memory cache first
-  if (cachedDetails?.has(repoId)) {
-    return cachedDetails.get(repoId)!;
-  }
-
-  // Initialize cache if needed
-  if (!cachedDetails) {
-    cachedDetails = new Map();
-  }
-
-  try {
-    const [owner, name] = repoId.split('/');
-    if (!owner || !name) return null;
-
-    const response = await fetch(`/api/repo/${owner}/${name}`);
-
-    if (!response.ok) {
-      if (response.status === 404) {
-        return null; // Repo not found
+  // Load the entire JSON file once and cache it
+  if (!repoDetailsData) {
+    try {
+      const response = await fetch('/repo-details.json');
+      if (!response.ok) {
+        console.error('Failed to load repository details JSON');
+        return null;
       }
-      throw new Error(`Failed to load repository details: ${response.statusText}`);
+      repoDetailsData = await response.json();
+      console.log(`✅ Loaded ${Object.keys(repoDetailsData).length} repository details`);
+    } catch (error) {
+      console.error('Error loading repository details:', error);
+      return null;
     }
-
-    const data = await response.json();
-
-    // Map DB columns to interface
-    const details: RepositoryDetails = {
-      id: data.id,
-      description: data.description || "",
-      topics: data.topics || [],
-      languages: data.languages || [],
-      forks: data.forks || 0,
-      commits: data.activity_commits || 0,
-      watchers: data.growth_watchers || 0,
-      openPrs: data.health_prs || 0,
-      contributors: data.community_contributors || 0
-    };
-
-    cachedDetails.set(repoId, details);
-    return details;
-
-  } catch (error) {
-    console.error("Error fetching repository details:", error);
-    return null;
   }
+
+  // Return the specific repo data
+  return repoDetailsData[repoId] || null;
 }
 
 export function calculatePopularity(stars: number): number {
