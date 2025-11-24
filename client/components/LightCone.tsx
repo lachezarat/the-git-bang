@@ -21,6 +21,7 @@ varying vec3 vColor;
 varying float vPulse;
 varying float vBrightness;
 varying float vId;
+varying float vViewZ;
 
 void main() {
   vColor = customColor;
@@ -31,6 +32,7 @@ void main() {
   vPulse = pulseIntensity;
 
   vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+  vViewZ = mvPosition.z;
 
   gl_Position = projectionMatrix * mvPosition;
 
@@ -45,6 +47,7 @@ varying vec3 vColor;
 varying float vPulse;
 varying float vBrightness;
 varying float vId;
+varying float vViewZ;
 
 void main() {
   vec2 center = gl_PointCoord - vec2(0.5);
@@ -64,19 +67,20 @@ void main() {
     dimFactor = 0.1; // Dim non-selected particles to 10%
   }
 
-  // Sharper glow, less blur
+  // Sharper glow, less blur (40% less blurred means tighter falloff)
+  // Increased exponent from 3.5 to ~5.0
   float glow = 1.0 - dist * 2.0;
-  glow = pow(glow, 3.5); // Increased power for sharper falloff
+  glow = pow(glow, 5.0);
 
   float aberration = 0.015; // Reduced aberration for cleaner look
 
   float distR = length(center - vec2(aberration, 0.0));
   float glowR = 1.0 - distR * 2.0;
-  glowR = pow(max(glowR, 0.0), 2.0);
+  glowR = pow(max(glowR, 0.0), 3.0); // Sharpened chromatic aberration too
 
   float distB = length(center + vec2(aberration, 0.0));
   float glowB = 1.0 - distB * 2.0;
-  glowB = pow(max(glowB, 0.0), 2.0);
+  glowB = pow(max(glowB, 0.0), 3.0); // Sharpened chromatic aberration too
 
   vec3 finalColor = vec3(
     vColor.r * glowR,
@@ -95,15 +99,29 @@ void main() {
   float core = 1.0 - smoothstep(0.0, 0.1, dist);
   finalColor += vec3(1.0) * core * (0.4 + 0.4 * brightnessFactor);
 
-  // Apply dimming
+  // Apply selection dimming
   finalColor *= dimFactor;
 
   // Alpha also affected by brightness - dimmer stars are more transparent
   // Make small stars much more transparent to reduce noise
   float alpha = glow * (0.6 + 0.4 * vPulse) * (0.3 + 0.7 * brightnessFactor);
   
-  // Apply dimming to alpha too
+  // Apply selection dimming to alpha too
   alpha *= dimFactor;
+
+  // Global reduction (30% dimmer)
+  finalColor *= 0.7;
+  alpha *= 0.7;
+
+  // Depth-based clarity (Global Depth-Based Clarity)
+  // -vViewZ is distance from camera. Range ~40 to ~300.
+  // We want closer particles to be less transparent (restore some alpha).
+  float viewDist = -vViewZ;
+  float depthClarity = 1.0 - smoothstep(50.0, 250.0, viewDist); // 1.0 when close, 0.0 when far
+
+  // Boost alpha back up for closer particles to increase clarity
+  // This effectively reduces the "30% dimmer" effect when up close
+  alpha *= (1.0 + depthClarity * 0.4);
 
   gl_FragColor = vec4(finalColor, alpha);
 }
