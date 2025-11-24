@@ -200,10 +200,9 @@ export default function LightCone({
       positions[i * 3 + 1] = pos.y;
       positions[i * 3 + 2] = pos.z;
 
-      // Map to size range: min 2.0, max 20.0 (Was 25.0)
-      // Use power 2.5 (was 4.0) to make the curve less steep so more repos look "large"
-      // User request: "repositories with more stars to be visibly more brighter and larger"
-      sizes[i] = 2.0 + Math.pow(normalizedSize, 2.5) * 20.0;
+      // Map to size range: min 2.0, max 25.0 (Huge for top repos)
+      // Use power 4.0 to make the curve very steep (only top 1% get huge)
+      sizes[i] = 2.0 + Math.pow(normalizedSize, 4.0) * 23.0;
 
       // Brightness correlates with popularity
       // Steeper curve for brightness too
