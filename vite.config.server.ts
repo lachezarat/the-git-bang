@@ -32,6 +32,10 @@ export default defineConfig({
         // External dependencies that should not be bundled
         "express",
         "cors",
+        "better-sqlite3",
+        "@libsql/client",
+        "@google/generative-ai",
+        "dotenv",
       ],
       output: {
         format: "es",

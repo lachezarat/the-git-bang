@@ -10,3 +10,13 @@
 export interface DemoResponse {
   message: string;
 }
+
+export interface AppIdea {
+  title: string;
+  description: string;
+  builder_angle: string;
+}
+
+export interface GenerateIdeasResponse {
+  ideas: AppIdea[];
+}

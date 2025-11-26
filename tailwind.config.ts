@@ -58,11 +58,11 @@ export default {
           ring: "hsl(var(--sidebar-ring))",
         },
         space: {
-          deep: "hsl(var(--space-deep))",
-          cyan: "hsl(var(--space-cyan))",
-          magenta: "hsl(var(--space-magenta))",
-          amber: "hsl(var(--space-amber))",
-          void: "hsl(var(--space-void))",
+          deep: "hsl(var(--space-deep) / <alpha-value>)",
+          cyan: "hsl(var(--space-cyan) / <alpha-value>)",
+          magenta: "hsl(var(--space-magenta) / <alpha-value>)",
+          amber: "hsl(var(--space-amber) / <alpha-value>)",
+          void: "hsl(var(--space-void) / <alpha-value>)",
         },
       },
       fontFamily: {

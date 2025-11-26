@@ -1,11 +1,12 @@
-import { useState } from "react";
+import { AppIdea } from "@shared/api";
 import { type Repository } from "../../lib/repositoryData";
 
 interface CardActionsProps {
   repo: Repository;
-  onExpand: () => void;
+  onExpand: () => void | Promise<void>;
   expanded: boolean;
-  vibeIdeas: string[];
+  vibeIdeas: AppIdea[];
+  isGenerating: boolean;
 }
 
 export function CardActions({
@@ -13,6 +14,7 @@ export function CardActions({
   onExpand,
   expanded,
   vibeIdeas,
+  isGenerating,
 }: CardActionsProps) {
   return (
     <div className="space-y-3">
@@ -89,24 +91,45 @@ export function CardActions({
         </svg>
       </button>
 
-      {expanded && vibeIdeas.length > 0 && (
+      {expanded && (
         <div className="mt-6 space-y-3 animate-in fade-in slide-in-from-bottom-4 duration-500">
           <div className="text-space-cyan/80 font-display text-xs uppercase tracking-wider mb-3">
             Generated App Ideas
           </div>
-          {vibeIdeas.map((idea, i) => (
-            <div
-              key={i}
-              className="liquid-glass p-4 border border-space-magenta/20 hover:border-space-magenta/50 hover:shadow-[0_0_20px_rgba(255,0,110,0.3)] transition-all cursor-pointer group"
-            >
-              <div className="text-space-magenta font-mono text-sm font-semibold mb-2 group-hover:glow-magenta">
-                {idea}
-              </div>
-              <div className="text-space-cyan/40 text-xs font-mono">
-                Click to build with Builder.io
+
+          {isGenerating ? (
+            <div className="liquid-glass p-6 border border-space-magenta/20 flex flex-col items-center justify-center gap-3">
+              <div className="w-6 h-6 border-2 border-space-magenta border-t-transparent rounded-full animate-spin" />
+              <div className="text-space-magenta/80 text-xs font-mono animate-pulse">
+                CONSULTING MACHINE SPIRITS...
               </div>
             </div>
-          ))}
+          ) : (
+            vibeIdeas.map((idea, i) => (
+              <div
+                key={i}
+                className="liquid-glass p-4 border border-space-magenta/20 hover:border-space-magenta/50 hover:shadow-[0_0_20px_rgba(255,0,110,0.3)] transition-all cursor-pointer group"
+                onClick={() =>
+                  window.open("https://builder.io/c/docs/developers", "_blank")
+                }
+              >
+                <div className="text-space-magenta font-display font-bold text-sm mb-1 group-hover:glow-magenta">
+                  {idea.title}
+                </div>
+                <div className="text-gray-300 text-xs font-sans mb-3 leading-relaxed">
+                  {idea.description}
+                </div>
+                <div className="bg-space-magenta/10 border border-space-magenta/30 p-2 rounded">
+                  <div className="text-space-magenta/80 text-[10px] font-mono uppercase mb-1">
+                    Builder.io Acceleration
+                  </div>
+                  <div className="text-space-cyan/80 text-xs font-mono leading-tight">
+                    {idea.builder_angle}
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
         </div>
       )}
     </div>

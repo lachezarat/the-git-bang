@@ -3,6 +3,7 @@ import express from "express";
 import cors from "cors";
 import { handleDemo } from "./routes/demo";
 import { handleGetRepository } from "./routes/repositories";
+import { handleGenerateIdeas } from "./routes/ai";
 
 export function createServer() {
   const app = express();
@@ -22,6 +23,9 @@ export function createServer() {
 
   // Repository details from Turso
   app.get("/api/repo/:owner/:name", handleGetRepository);
+
+  // AI Generation
+  app.post("/api/ai/generate", handleGenerateIdeas);
 
   return app;
 }

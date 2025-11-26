@@ -1,3 +1,4 @@
+import { AppIdea } from "@shared/api";
 import { useEffect, useRef, useState } from "react";
 import { gsap } from "gsap";
 import { type Repository } from "../lib/repositoryData";
@@ -16,7 +17,8 @@ interface RepoCardProps {
 export default function RepoCard({ repo, position, onClose }: RepoCardProps) {
   const cardRef = useRef<HTMLDivElement>(null);
   const [expanded, setExpanded] = useState(false);
-  const [vibeIdeas, setVibeIdeas] = useState<string[]>([]);
+  const [vibeIdeas, setVibeIdeas] = useState<AppIdea[]>([]);
+  const [isGenerating, setIsGenerating] = useState(false);
 
   const { details, loading } = useRepoDetails(repo.id);
 
@@ -90,20 +92,53 @@ export default function RepoCard({ repo, position, onClose }: RepoCardProps) {
     };
   }, []); // Run only on mount
 
-  const handleGenerateVibe = () => {
+  const handleGenerateVibe = async () => {
+    if (expanded) return;
     setExpanded(true);
-    setVibeIdeas([
-      "AI-Powered Code Review Dashboard",
-      "Real-Time Collaboration Workspace",
-      "Developer Analytics Platform",
-    ]);
+    setIsGenerating(true);
 
     if (cardRef.current) {
       gsap.to(cardRef.current, {
-        height: 900,
+        height: 800,
         duration: 0.5,
         ease: "power2.inOut",
       });
+    }
+
+    try {
+      const response = await fetch("/api/ai/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: repo.name,
+          description: details?.description || "",
+          topics: details?.topics || [],
+          languages: details?.languages || [repo.primaryLanguage],
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || "Failed to generate ideas");
+      }
+
+      const data = (await response.json()) as { ideas: AppIdea[] };
+      setVibeIdeas(data.ideas);
+    } catch (error) {
+      console.error("Error generating ideas:", error);
+      // Fallback in case of error
+      setVibeIdeas([
+        {
+          title: "Error Generating Ideas",
+          description:
+            error instanceof Error
+              ? error.message
+              : "Could not connect to the AI mainframe.",
+          builder_angle: "Try again later.",
+        },
+      ]);
+    } finally {
+      setIsGenerating(false);
     }
   };
 
@@ -146,6 +181,7 @@ export default function RepoCard({ repo, position, onClose }: RepoCardProps) {
             onExpand={handleGenerateVibe}
             expanded={expanded}
             vibeIdeas={vibeIdeas}
+            isGenerating={isGenerating}
           />
         </div>
       </div>

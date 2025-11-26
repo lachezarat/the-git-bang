@@ -21,6 +21,7 @@
     "typecheck": "tsc"
   },
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
     "@libsql/client": "^0.15.15",
     "@react-three/postprocessing": "^3.0.4",
     "@types/better-sqlite3": "^7.6.13",
