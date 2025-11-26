@@ -9,6 +9,7 @@ import type { Repository } from "../lib/repositoryData";
 interface HUDProps {
   onSearchChange?: (query: string, isFocused: boolean) => void;
   onSuggestionSelect?: (repo: any) => void;
+  onSuggestionHover?: (repo: any) => void;
   repositories?: Repository[];
   currentYear?: number;
   onLanguageSelect?: (language: string | null) => void;
@@ -18,6 +19,7 @@ interface HUDProps {
 export default function HUD({
   onSearchChange,
   onSuggestionSelect,
+  onSuggestionHover,
   repositories = [],
   currentYear = 2025,
   onLanguageSelect,
@@ -38,6 +40,7 @@ export default function HUD({
       <SearchBar
         onSearchChange={onSearchChange}
         onSuggestionSelect={onSuggestionSelect}
+        onSuggestionHover={onSuggestionHover}
         repositories={repositories}
       />
 

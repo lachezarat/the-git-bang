@@ -102,6 +102,17 @@
     font-variant-numeric: tabular-nums;
   }
 
+  /* Enforce no cursor on all interactive elements to let custom cursor take over */
+  a,
+  button,
+  input,
+  select,
+  textarea,
+  [role="button"],
+  .cursor-pointer {
+    cursor: none !important;
+  }
+
   /* Thematic Scrollbar Styling */
   ::-webkit-scrollbar {
     width: 8px;
@@ -159,6 +170,7 @@
     pointer-events: none;
     z-index: 10000;
     mix-blend-mode: difference;
+    transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   }
 
   .custom-cursor::before {
@@ -171,6 +183,7 @@
     height: 1px;
     background: #00fff9;
     box-shadow: 0 0 8px #00fff9;
+    transition: all 0.2s ease;
   }
 
   .custom-cursor::after {
@@ -183,6 +196,24 @@
     height: 16px;
     background: #00fff9;
     box-shadow: 0 0 8px #00fff9;
+    transition: all 0.2s ease;
+  }
+
+  /* Hover State for Cursor */
+  .custom-cursor.hovering {
+    transform: rotate(45deg) scale(1.2);
+  }
+
+  .custom-cursor.hovering::before {
+    width: 24px;
+    background: #ff006e;
+    box-shadow: 0 0 8px #ff006e;
+  }
+
+  .custom-cursor.hovering::after {
+    height: 24px;
+    background: #ff006e;
+    box-shadow: 0 0 8px #ff006e;
   }
 
   .noise-overlay {

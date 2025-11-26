@@ -4,12 +4,14 @@ import type { Repository } from "../lib/repositoryData";
 interface SearchBarProps {
   onSearchChange?: (query: string, isFocused: boolean) => void;
   onSuggestionSelect?: (repo: Repository) => void;
+  onSuggestionHover?: (repo: Repository | null) => void;
   repositories?: Repository[];
 }
 
 export default function SearchBar({
   onSearchChange,
   onSuggestionSelect,
+  onSuggestionHover,
   repositories = [],
 }: SearchBarProps) {
   const [searchQuery, setSearchQuery] = useState("");
@@ -26,10 +28,11 @@ export default function SearchBar({
     const matches = repositories.filter(
       (repo) =>
         repo.name.toLowerCase().includes(query) ||
-        repo.owner.toLowerCase().includes(query),
+        repo.owner.toLowerCase().includes(query) ||
+        `${repo.owner}/${repo.name}`.toLowerCase().includes(query),
     );
 
-    // Sort by priority: 
+    // Sort by priority:
     // 1. Name starts with query
     // 2. Owner starts with query
     // 3. Name contains query
@@ -72,16 +75,23 @@ export default function SearchBar({
 
     if (e.key === "ArrowDown") {
       e.preventDefault();
-      setSelectedIndex((prev) =>
-        prev < suggestions.length - 1 ? prev + 1 : prev
-      );
+      setSelectedIndex((prev) => {
+        const newIndex = prev < suggestions.length - 1 ? prev + 1 : prev;
+        onSuggestionHover?.(suggestions[newIndex]);
+        return newIndex;
+      });
     } else if (e.key === "ArrowUp") {
       e.preventDefault();
-      setSelectedIndex((prev) => (prev > 0 ? prev - 1 : -1));
+      setSelectedIndex((prev) => {
+        const newIndex = prev > 0 ? prev - 1 : -1;
+        onSuggestionHover?.(newIndex >= 0 ? suggestions[newIndex] : null);
+        return newIndex;
+      });
     } else if (e.key === "Enter" && selectedIndex >= 0) {
       e.preventDefault();
       const selectedRepo = suggestions[selectedIndex];
       onSuggestionSelect?.(selectedRepo);
+      onSuggestionHover?.(null);
       setSearchQuery(`${selectedRepo.owner}/${selectedRepo.name}`);
       setIsFocused(false);
       setSelectedIndex(-1);
@@ -89,6 +99,7 @@ export default function SearchBar({
       e.preventDefault();
       setIsFocused(false);
       setSelectedIndex(-1);
+      onSuggestionHover?.(null);
     }
   };
 
@@ -99,38 +110,49 @@ export default function SearchBar({
         <div
           className="fixed left-1/2 -translate-x-1/2 pointer-events-auto"
           style={{
-            bottom: 'calc(10rem + 20px)', // Position above the search bar
+            bottom: "calc(10rem + 20px)", // Position above the search bar
             zIndex: 10001, // Higher than search bar
-            minWidth: '500px',
-            maxWidth: '700px',
+            minWidth: "500px",
+            maxWidth: "700px",
           }}
         >
           <div
             className="liquid-glass p-4 space-y-1 max-h-[400px] overflow-y-auto rounded-sm"
             style={{
-              animation: 'geometricReveal 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+              animation:
+                "geometricReveal 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards",
             }}
           >
             <div className="text-space-cyan/60 text-xs mb-3 font-mono uppercase tracking-wider border-b border-space-cyan/20 pb-2">
-              {suggestions.length} {suggestions.length === 1 ? 'Repository' : 'Repositories'} Found
+              {suggestions.length}{" "}
+              {suggestions.length === 1 ? "Repository" : "Repositories"} Found
             </div>
             {suggestions.map((repo, index) => (
               <div
                 key={`${repo.owner}/${repo.name}`}
-                className={`px-4 py-3 cursor-pointer transition-all duration-200 border-l-2 rounded-sm ${index === selectedIndex
-                  ? "bg-space-cyan/20 border-space-cyan shadow-lg shadow-space-cyan/20"
-                  : "border-transparent hover:bg-space-cyan/10 hover:border-space-cyan/50 hover:shadow-md hover:shadow-space-cyan/10"
-                  }`}
+                className={`px-4 py-3 cursor-pointer transition-all duration-200 border-l-2 rounded-sm ${
+                  index === selectedIndex
+                    ? "bg-space-cyan/20 border-space-cyan shadow-lg shadow-space-cyan/20"
+                    : "border-transparent hover:bg-space-cyan/10 hover:border-space-cyan/50 hover:shadow-md hover:shadow-space-cyan/10"
+                }`}
                 onMouseDown={(e) => {
                   e.preventDefault();
                   onSuggestionSelect?.(repo);
+                  onSuggestionHover?.(null);
                   setSearchQuery(`${repo.owner}/${repo.name}`);
                 }}
-                onMouseEnter={() => setSelectedIndex(index)}
+                onMouseEnter={() => {
+                  setSelectedIndex(index);
+                  onSuggestionHover?.(repo);
+                }}
+                onMouseLeave={() => {
+                  onSuggestionHover?.(null);
+                }}
               >
                 <div className="flex items-center justify-between gap-4">
                   <div className="text-space-cyan font-mono text-sm font-bold tracking-wide">
-                    {repo.owner}/<span className="text-space-cyan/90">{repo.name}</span>
+                    {repo.owner}/
+                    <span className="text-space-cyan/90">{repo.name}</span>
                   </div>
                   <div className="flex items-center gap-1.5 text-space-amber/80 text-xs font-mono font-semibold">
                     <svg

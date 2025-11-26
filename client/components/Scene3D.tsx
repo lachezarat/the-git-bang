@@ -8,12 +8,16 @@ import ConnectionLine from "./ConnectionLine";
 import type { Repository } from "../lib/repositoryData";
 import * as THREE from "three";
 
+import SonarPing from "./SonarPing";
+import DirectionalArrow from "./DirectionalArrow";
+
 interface Scene3DProps {
   searchActive?: boolean;
   searchQuery?: string;
   onParticleClick?: (repo: any, position: { x: number; y: number }) => void;
   repositories?: Repository[];
   focusedRepo?: Repository | null;
+  hoveredRepo?: Repository | null;
   cardPosition?: { x: number; y: number } | null;
 }
 
@@ -121,6 +125,7 @@ export default function Scene3D({
   onParticleClick,
   repositories = [],
   focusedRepo = null,
+  hoveredRepo = null,
   cardPosition = null,
 }: Scene3DProps) {
   const particlesRef = useRef<THREE.Points>(null);
@@ -134,8 +139,14 @@ export default function Scene3D({
         focusedId={focusedRepo?.id}
       />
       <ConnectionLine repo={focusedRepo} cardPosition={cardPosition} />
-      {focusedRepo && (
+      {/* {focusedRepo && (
         <SelectionHalo repo={focusedRepo} repositories={repositories} />
+      )} */}
+      {hoveredRepo && !focusedRepo && (
+        <>
+          <SonarPing repo={hoveredRepo} repositories={repositories} />
+          <DirectionalArrow repo={hoveredRepo} repositories={repositories} />
+        </>
       )}
       <ParticleInteraction
         particlesRef={particlesRef}

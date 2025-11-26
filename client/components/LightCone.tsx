@@ -2,7 +2,11 @@ import { useRef, useMemo } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { type Repository, calculatePopularity } from "../lib/repositoryData";
-import { getStartTime, calculatePositionFromParams, END_TIME } from "../lib/funnelUtils";
+import {
+  getStartTime,
+  calculatePositionFromParams,
+  END_TIME,
+} from "../lib/funnelUtils";
 
 const DEFAULT_PARTICLE_COUNT = 25000;
 
@@ -64,7 +68,7 @@ void main() {
   // Dimming factor
   float dimFactor = 1.0;
   if (isFocused && !isTarget) {
-    dimFactor = 0.1; // Dim non-selected particles to 10%
+    dimFactor = 0.5; // Dim non-selected particles less drastically (was 0.1)
   }
 
   // Sharper glow, less blur (40% less blurred means tighter falloff)
@@ -148,7 +152,7 @@ export default function LightCone({
   // We'll use the index in the array as the ID for simplicity in the shader
   const focusedIndex = useMemo(() => {
     if (!focusedId || repositories.length === 0) return -1.0;
-    return repositories.findIndex(r => r.id === focusedId);
+    return repositories.findIndex((r) => r.id === focusedId);
   }, [focusedId, repositories]);
 
   const { geometry, uniforms } = useMemo(() => {
@@ -212,7 +216,12 @@ export default function LightCone({
       }
 
       // Calculate position using shared helper
-      const pos = calculatePositionFromParams(timestamp, angle, radiusRatio, startTime);
+      const pos = calculatePositionFromParams(
+        timestamp,
+        angle,
+        radiusRatio,
+        startTime,
+      );
 
       positions[i * 3] = pos.x;
       positions[i * 3 + 1] = pos.y;

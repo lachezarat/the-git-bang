@@ -9,7 +9,10 @@ interface SelectionHaloProps {
   repositories: Repository[];
 }
 
-export default function SelectionHalo({ repo, repositories }: SelectionHaloProps) {
+export default function SelectionHalo({
+  repo,
+  repositories,
+}: SelectionHaloProps) {
   const meshRef = useRef<THREE.Mesh>(null);
 
   const position = useMemo(() => {
@@ -26,28 +29,13 @@ export default function SelectionHalo({ repo, repositories }: SelectionHaloProps
       const t = state.clock.elapsedTime;
       const scale = 1 + Math.sin(t * 3) * 0.15;
       meshRef.current.scale.set(scale, scale, scale);
-
-      // Optional: Pulsing opacity if we switch to a material that supports it in update
     }
   });
 
   return (
-    <mesh
-      ref={meshRef}
-      position={[position.x, position.y, position.z]}
-    >
-      {/*
-        Sphere args: [radius, widthSegments, heightSegments]
-        Using 2.5 for radius to be slightly larger than the particle
-        Using 12 segments for a retro wireframe look
-      */}
+    <mesh ref={meshRef} position={[position.x, position.y, position.z]}>
       <sphereGeometry args={[2.5, 12, 12]} />
-      <meshBasicMaterial
-        color="#00fff9"
-        wireframe
-        transparent
-        opacity={0.5}
-      />
+      <meshBasicMaterial color="#00fff9" wireframe transparent opacity={0.5} />
     </mesh>
   );
 }

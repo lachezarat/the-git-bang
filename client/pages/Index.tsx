@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useMemo, useCallback } from "react";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls, PerspectiveCamera } from "@react-three/drei";
 import Scene3D from "../components/Scene3D";
@@ -15,13 +15,14 @@ import CameraTracker from "../components/CameraTracker";
 
 export default function Index() {
   const [bootComplete, setBootComplete] = useState(false);
-  const [cursorPos, setCursorPos] = useState({ x: 0, y: 0 });
   const cursorRef = useRef<HTMLDivElement>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchActive, setSearchActive] = useState(false);
   const [selectedRepo, setSelectedRepo] = useState<any>(null);
+  const [hoveredRepo, setHoveredRepo] = useState<any>(null);
   const [repoCardPos, setRepoCardPos] = useState({ x: 0, y: 0 });
   const [currentYear, setCurrentYear] = useState(2025);
+  const [isHoveringClickable, setIsHoveringClickable] = useState(false);
   const controlsRef = useRef<any>(null);
 
   const [selectedLanguage, setSelectedLanguage] = useState<string | null>(null);
@@ -30,7 +31,7 @@ export default function Index() {
   useEffect(() => {
     if (!selectedRepo && controlsRef.current) {
       // Optional: Reset to initial view
-      // controlsRef.current.reset(); 
+      // controlsRef.current.reset();
     }
   }, [selectedRepo]);
 
@@ -42,38 +43,43 @@ export default function Index() {
   } = useRepositoryData();
   const repositories = repoData?.repositories || [];
 
-  const filteredRepositories = selectedLanguage
-    ? repositories.filter((repo) => repo.primaryLanguage === selectedLanguage)
-    : repositories;
+  const filteredRepositories = useMemo(() => {
+    return selectedLanguage
+      ? repositories.filter((repo) => repo.primaryLanguage === selectedLanguage)
+      : repositories;
+  }, [repositories, selectedLanguage]);
 
-  const handleSearchChange = (query: string, isFocused: boolean) => {
-    setSearchQuery(query);
-    setSearchActive(isFocused && query.length > 0);
-  };
+  const handleSearchChange = useCallback(
+    (query: string, isFocused: boolean) => {
+      setSearchQuery(query);
+      setSearchActive(isFocused && query.length > 0);
+    },
+    [],
+  );
 
-  const handleSuggestionSelect = (repo: any) => {
+  const handleSuggestionSelect = useCallback((repo: any) => {
     setSelectedRepo(repo);
     setRepoCardPos({ x: window.innerWidth / 2, y: window.innerHeight / 2 });
     setSearchActive(false);
-  };
+  }, []);
 
-  const handleParticleClick = (
-    repo: any,
-    position: { x: number; y: number },
-  ) => {
-    console.log(
-      "handleParticleClick called with repo:",
-      repo,
-      "position:",
-      position,
-    );
-    setSelectedRepo(repo);
-    setRepoCardPos(position);
-  };
+  const handleParticleClick = useCallback(
+    (repo: any, position: { x: number; y: number }) => {
+      console.log(
+        "handleParticleClick called with repo:",
+        repo,
+        "position:",
+        position,
+      );
+      setSelectedRepo(repo);
+      setRepoCardPos(position);
+    },
+    [],
+  );
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
-      setCursorPos({ x: e.clientX, y: e.clientY });
+      // Directly update the DOM ref to avoid re-renders
       if (cursorRef.current) {
         cursorRef.current.style.left = `${e.clientX}px`;
         cursorRef.current.style.top = `${e.clientY}px`;
@@ -82,6 +88,26 @@ export default function Index() {
 
     window.addEventListener("mousemove", handleMouseMove);
     return () => window.removeEventListener("mousemove", handleMouseMove);
+  }, []);
+
+  useEffect(() => {
+    const handleMouseOver = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      const isClickable = target.closest(
+        'a, button, [role="button"], input, select, textarea, .cursor-pointer',
+      );
+      setIsHoveringClickable(!!isClickable);
+    };
+
+    window.addEventListener("mouseover", handleMouseOver);
+    window.addEventListener("mouseout", () => setIsHoveringClickable(false)); // Optional reset
+
+    return () => {
+      window.removeEventListener("mouseover", handleMouseOver);
+      window.removeEventListener("mouseout", () =>
+        setIsHoveringClickable(false),
+      );
+    };
   }, []);
 
   useEffect(() => {
@@ -107,8 +133,8 @@ export default function Index() {
       <div className="relative w-screen h-screen overflow-hidden bg-space-void">
         <div
           ref={cursorRef}
-          className="custom-cursor"
-          style={{ left: cursorPos.x, top: cursorPos.y }}
+          className={`custom-cursor ${isHoveringClickable ? "hovering" : ""}`}
+          // Initial position will be 0,0 but updated immediately by mousemove event
         />
 
         <div className="blue-noise-overlay" />
@@ -130,7 +156,11 @@ export default function Index() {
             intensity={0.2}
             color="#ff006e"
           />
-          <pointLight position={[0, 20, -20]} intensity={0.15} color="#ffba08" />
+          <pointLight
+            position={[0, 20, -20]}
+            intensity={0.15}
+            color="#ffba08"
+          />
 
           <Scene3D
             searchActive={searchActive}
@@ -138,10 +168,15 @@ export default function Index() {
             onParticleClick={handleParticleClick}
             repositories={filteredRepositories}
             focusedRepo={selectedRepo}
+            hoveredRepo={hoveredRepo}
             cardPosition={repoCardPos}
           />
 
-          <CameraTracker onYearChange={setCurrentYear} />
+          <CameraTracker
+            onYearChange={setCurrentYear}
+            focusedRepo={selectedRepo}
+            repositories={filteredRepositories}
+          />
 
           <OrbitControls
             ref={controlsRef}
@@ -149,8 +184,8 @@ export default function Index() {
             enableZoom={true}
             enablePan={true}
             enableRotate={true}
-            minDistance={37.5}
-            maxDistance={300}
+            minDistance={0.1}
+            maxDistance={1000}
             autoRotate={false}
             autoRotateSpeed={0.1}
             enableDamping
@@ -169,6 +204,7 @@ export default function Index() {
           <HUD
             onSearchChange={handleSearchChange}
             onSuggestionSelect={handleSuggestionSelect}
+            onSuggestionHover={setHoveredRepo}
             repositories={filteredRepositories}
             currentYear={currentYear}
             onLanguageSelect={setSelectedLanguage}
