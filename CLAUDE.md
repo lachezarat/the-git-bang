@@ -86,7 +86,7 @@ Full-stack TypeScript application based on the "Fusion Starter" template, heavil
 - **TanStack React Query** (5.84.2): Server state management & caching
 - **PapaParse** (5.5.3): CSV parsing library
 - **better-sqlite3** (12.4.6): SQLite database driver for Node.js
-- **@libsql/client** (0.15.15): LibSQL client (Turso/SQLite)
+
 
 ### Development Tools
 

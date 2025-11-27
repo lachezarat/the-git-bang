@@ -1,36 +1,22 @@
-import "dotenv/config";
-import { createClient } from "@libsql/client";
+import Database from "better-sqlite3";
 import type { Request, Response } from "express";
+import path from "path";
 
-// Initialize Turso database connection
-const url = process.env.TURSO_DATABASE_URL;
-const authToken = process.env.TURSO_AUTH_TOKEN;
+// Initialize local SQLite database connection
+const dbPath = path.resolve(process.cwd(), "local.db");
+const db = new Database(dbPath);
 
-if (!url || !authToken) {
-  throw new Error(
-    "Missing required environment variables: TURSO_DATABASE_URL and/or TURSO_AUTH_TOKEN"
-  );
-}
-
-const db = createClient({
-  url: url,
-  authToken: authToken,
-});
-
-console.log("✅ Turso database client initialized");
+console.log("✅ Local SQLite database initialized");
 
 export async function handleGetRepository(req: Request, res: Response) {
   const { owner, name } = req.params;
   const repoId = `${owner}/${name}`;
 
   try {
-    const result = await db.execute({
-      sql: "SELECT * FROM repositories WHERE id = ?",
-      args: [repoId],
-    });
+    const stmt = db.prepare("SELECT * FROM repositories WHERE id = ?");
+    const row = stmt.get(repoId) as any;
 
-    if (result.rows.length > 0) {
-      const row = result.rows[0];
+    if (row) {
       // Parse the pipe-separated lists back into arrays for the frontend
       const formatted = {
         ...row,

@@ -33,7 +33,7 @@ export default defineConfig({
         "express",
         "cors",
         "better-sqlite3",
-        "@libsql/client",
+
         "@google/generative-ai",
         "dotenv",
       ],
