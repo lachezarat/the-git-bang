@@ -125,22 +125,18 @@
   }
 
   ::-webkit-scrollbar-thumb {
-    background: linear-gradient(
-      180deg,
-      hsl(var(--space-cyan)) 0%,
-      hsl(var(--space-magenta)) 100%
-    );
+    background: linear-gradient(180deg,
+        hsl(var(--space-cyan)) 0%,
+        hsl(var(--space-magenta)) 100%);
     border-radius: 4px;
     border: 2px solid hsl(var(--space-void));
     box-shadow: 0 0 10px rgba(0, 255, 249, 0.5);
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    background: linear-gradient(
-      180deg,
-      hsl(var(--space-cyan), 0.9) 0%,
-      hsl(var(--space-magenta), 0.9) 100%
-    );
+    background: linear-gradient(180deg,
+        hsl(var(--space-cyan), 0.9) 0%,
+        hsl(var(--space-magenta), 0.9) 100%);
     box-shadow: 0 0 15px rgba(0, 255, 249, 0.8);
   }
 
@@ -237,30 +233,26 @@
     pointer-events: none;
     z-index: 9998;
     background:
-      radial-gradient(
-        ellipse at 30% 40%,
+      radial-gradient(ellipse at 30% 40%,
         rgba(255, 0, 110, 0.02) 0%,
-        transparent 50%
-      ),
-      radial-gradient(
-        ellipse at 70% 60%,
+        transparent 50%),
+      radial-gradient(ellipse at 70% 60%,
         rgba(200, 0, 255, 0.015) 0%,
-        transparent 50%
-      ),
-      radial-gradient(
-        ellipse at 50% 50%,
+        transparent 50%),
+      radial-gradient(ellipse at 50% 50%,
         rgba(180, 50, 255, 0.01) 0%,
-        transparent 60%
-      );
+        transparent 60%);
     animation: purpleNoiseShift 25s ease-in-out infinite;
   }
 
   @keyframes purpleNoiseShift {
+
     0%,
     100% {
       opacity: 0.3;
       transform: scale(1) rotate(0deg);
     }
+
     50% {
       opacity: 0.4;
       transform: scale(1.02) rotate(1deg);
@@ -273,12 +265,10 @@
     left: 0;
     width: 100%;
     height: 3px;
-    background: linear-gradient(
-      to bottom,
-      transparent,
-      rgba(0, 255, 249, 0.8),
-      transparent
-    );
+    background: linear-gradient(to bottom,
+        transparent,
+        rgba(0, 255, 249, 0.8),
+        transparent);
     box-shadow: 0 0 20px rgba(0, 255, 249, 0.5);
     z-index: 10001;
     animation: scanline 2s linear forwards;
@@ -304,6 +294,7 @@
       opacity: 0;
       clip-path: polygon(0 0, 0 0, 0 100%, 0 100%);
     }
+
     100% {
       opacity: 1;
       clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
@@ -312,11 +303,9 @@
 
   .liquid-glass {
     backdrop-filter: blur(24px) saturate(180%);
-    background: linear-gradient(
-      135deg,
-      rgba(10, 14, 26, 0.8) 0%,
-      rgba(10, 14, 26, 0.6) 100%
-    );
+    background: linear-gradient(135deg,
+        rgba(10, 14, 26, 0.8) 0%,
+        rgba(10, 14, 26, 0.6) 100%);
     border: 1px solid rgba(0, 255, 249, 0.3);
     box-shadow:
       0 8px 32px rgba(0, 0, 0, 0.4),
@@ -336,24 +325,20 @@
 
   .repo-card {
     backdrop-filter: blur(40px) saturate(200%);
-    background: linear-gradient(
-      135deg,
-      rgba(10, 14, 26, 0.85) 0%,
-      rgba(10, 14, 26, 0.75) 100%
-    );
+    background: linear-gradient(135deg,
+        rgba(10, 14, 26, 0.85) 0%,
+        rgba(10, 14, 26, 0.75) 100%);
     border: 1px solid rgba(0, 255, 249, 0.4);
     box-shadow:
       inset 0 1px 0 rgba(255, 255, 255, 0.1),
       0 8px 32px rgba(0, 255, 249, 0.2),
       0 0 0 1px rgba(0, 0, 0, 0.8);
-    clip-path: polygon(
-      12px 0,
-      100% 0,
-      100% calc(100% - 12px),
-      calc(100% - 12px) 100%,
-      0 100%,
-      0 12px
-    );
+    clip-path: polygon(12px 0,
+        100% 0,
+        100% calc(100% - 12px),
+        calc(100% - 12px) 100%,
+        0 100%,
+        0 12px);
   }
 
   .repo-card::before {
@@ -375,12 +360,10 @@
     content: "";
     position: absolute;
     inset: -2px;
-    background: linear-gradient(
-      90deg,
-      transparent 0%,
-      rgba(0, 255, 249, 0.8) 50%,
-      transparent 100%
-    );
+    background: linear-gradient(90deg,
+        transparent 0%,
+        rgba(0, 255, 249, 0.8) 50%,
+        transparent 100%);
     animation: borderBeam 3s linear infinite;
     pointer-events: none;
   }
@@ -389,9 +372,38 @@
     0% {
       transform: translateX(-100%) rotate(0deg);
     }
+
     100% {
       transform: translateX(200%) rotate(0deg);
     }
+  }
+
+  /* Sliding Colorful Button Effect */
+  .slide-shine {
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg,
+        transparent,
+        rgba(0, 255, 249, 0.2),
+        transparent);
+    transition: left 0.5s ease;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .group:hover .slide-shine {
+    left: 100%;
+  }
+
+  /* Purple variant for Vibe Coding button */
+  .slide-shine.purple {
+    background: linear-gradient(90deg,
+        transparent,
+        rgba(255, 0, 110, 0.2),
+        transparent);
   }
 
   .terminal-text {
@@ -424,16 +436,14 @@
   }
 
   .hexagon-clip {
-    clip-path: polygon(
-      30% 0%,
-      70% 0%,
-      100% 30%,
-      100% 70%,
-      70% 100%,
-      30% 100%,
-      0% 70%,
-      0% 30%
-    );
+    clip-path: polygon(30% 0%,
+        70% 0%,
+        100% 30%,
+        100% 70%,
+        70% 100%,
+        30% 100%,
+        0% 70%,
+        0% 30%);
   }
 
   .diamond-clip {
@@ -441,24 +451,20 @@
   }
 
   .angular-clip {
-    clip-path: polygon(
-      12px 0,
-      100% 0,
-      100% calc(100% - 12px),
-      calc(100% - 12px) 100%,
-      0 100%,
-      0 12px
-    );
+    clip-path: polygon(12px 0,
+        100% 0,
+        100% calc(100% - 12px),
+        calc(100% - 12px) 100%,
+        0 100%,
+        0 12px);
   }
 
   .scanline-overlay {
-    background: repeating-linear-gradient(
-      0deg,
-      rgba(0, 255, 249, 0.03) 0px,
-      transparent 1px,
-      transparent 2px,
-      rgba(0, 255, 249, 0.03) 3px
-    );
+    background: repeating-linear-gradient(0deg,
+        rgba(0, 255, 249, 0.03) 0px,
+        transparent 1px,
+        transparent 2px,
+        rgba(0, 255, 249, 0.03) 3px);
     animation: scanlineScroll 8s linear infinite;
   }
 
@@ -466,6 +472,7 @@
     0% {
       background-position: 0 0;
     }
+
     100% {
       background-position: 0 4px;
     }
@@ -476,11 +483,13 @@
   }
 
   @keyframes pulseDot {
+
     0%,
     100% {
       opacity: 1;
       transform: scale(1);
     }
+
     50% {
       opacity: 0.5;
       transform: scale(1.2);
@@ -492,6 +501,7 @@
       opacity: 0;
       transform: translate(-50%, -50%) scale(0.8) translateY(20px);
     }
+
     100% {
       opacity: 1;
       transform: translate(-50%, -50%) scale(1) translateY(0);

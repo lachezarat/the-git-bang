@@ -15,6 +15,8 @@ export interface AppIdea {
   title: string;
   description: string;
   builder_angle: string;
+  monetization_strategy?: string;
+  potential_mrr?: string;
 }
 
 export interface GenerateIdeasResponse {

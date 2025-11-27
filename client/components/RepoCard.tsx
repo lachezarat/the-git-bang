@@ -7,6 +7,7 @@ import { CardHeader } from "./repo-card/CardHeader";
 import { CardMetrics } from "./repo-card/CardMetrics";
 import { CardTimeline } from "./repo-card/CardTimeline";
 import { CardActions } from "./repo-card/CardActions";
+import { VibeIdeasDialog } from "./VibeIdeasDialog";
 
 interface RepoCardProps {
   repo: Repository;
@@ -16,7 +17,7 @@ interface RepoCardProps {
 
 export default function RepoCard({ repo, position, onClose }: RepoCardProps) {
   const cardRef = useRef<HTMLDivElement>(null);
-  const [expanded, setExpanded] = useState(false);
+  const [showIdeasDialog, setShowIdeasDialog] = useState(false);
   const [vibeIdeas, setVibeIdeas] = useState<AppIdea[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
 
@@ -92,18 +93,11 @@ export default function RepoCard({ repo, position, onClose }: RepoCardProps) {
     };
   }, []); // Run only on mount
 
-  const handleGenerateVibe = async () => {
-    if (expanded) return;
-    setExpanded(true);
-    setIsGenerating(true);
+  const handleGenerateVibe = async (force = false) => {
+    setShowIdeasDialog(true);
+    if (!force && vibeIdeas.length > 0) return; // Don't regenerate if we already have ideas and not forcing
 
-    if (cardRef.current) {
-      gsap.to(cardRef.current, {
-        height: 800,
-        duration: 0.5,
-        ease: "power2.inOut",
-      });
-    }
+    setIsGenerating(true);
 
     try {
       const response = await fetch("/api/ai/generate", {
@@ -160,8 +154,7 @@ export default function RepoCard({ repo, position, onClose }: RepoCardProps) {
           // transform is handled by GSAP (xPercent/yPercent)
           width: "420px",
           maxHeight: "80vh",
-          height: expanded ? "auto" : "auto",
-          transition: "height 0.5s cubic-bezier(0.16, 1, 0.3, 1)",
+          height: "auto",
         }}
       >
         <div className="p-6 h-full overflow-y-auto">
@@ -178,13 +171,19 @@ export default function RepoCard({ repo, position, onClose }: RepoCardProps) {
 
           <CardActions
             repo={repo}
-            onExpand={handleGenerateVibe}
-            expanded={expanded}
-            vibeIdeas={vibeIdeas}
+            onGenerate={() => handleGenerateVibe(false)}
             isGenerating={isGenerating}
           />
         </div>
       </div>
+
+      <VibeIdeasDialog
+        open={showIdeasDialog}
+        onOpenChange={setShowIdeasDialog}
+        ideas={vibeIdeas}
+        isGenerating={isGenerating}
+        onGenerateMore={() => handleGenerateVibe(true)}
+      />
     </>
   );
 }

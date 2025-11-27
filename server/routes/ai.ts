@@ -13,7 +13,7 @@ function getGeminiClient() {
 
 export async function handleGenerateIdeas(req: Request, res: Response) {
   const genAI = getGeminiClient();
-  const model = genAI?.getGenerativeModel({ model: "gemini-2.5-pro" });
+  const model = genAI?.getGenerativeModel({ model: "gemini-2.5-flash-lite" });
 
   if (!genAI || !model) {
     console.error("Gemini API key is missing. Env check:", {
@@ -39,7 +39,7 @@ export async function handleGenerateIdeas(req: Request, res: Response) {
     const prompt = `
       You are an expert Product Architect and Creative Developer specializing in "Vibe Coding" - the art of rapidly building stylish, high-impact applications using modern visual development tools.
 
-      Your goal is to analyze the following GitHub repository and generate 5 innovative, "vibey", and practical application ideas that could be built using this codebase as a foundation or inspiration.
+      Your goal is to analyze the following GitHub repository and generate 3 innovative, "vibey", and practical application ideas that could be built using this codebase as a foundation or inspiration.
 
       CRITICAL REQUIREMENT:
       Each idea MUST be framed as something that can be rapidly accelerated using **Builder.io**. 
@@ -55,12 +55,14 @@ export async function handleGenerateIdeas(req: Request, res: Response) {
       Return strictly a JSON array of objects. Do not include markdown formatting like \`\`\`json.
       Each object must have:
       - "title": A catchy, cyberpunk/modern name for the app.
-      - "description": A brief 1-sentence pitch.
+      - "description": A detailed 3-4 sentence pitch explaining the core value proposition and how it works.
       - "builder_angle": A specific sentence on how Builder.io speeds this up (e.g. "Use Builder for the landing page...", "Manage the UI components visually...").
+      - "monetization_strategy": A specific strategy to make money (e.g. "Freemium model with pro features", "Enterprise licensing").
+      - "potential_mrr": A realistic estimation of potential Monthly Recurring Revenue for a solo dev (e.g. "$500 - $2k/mo").
 
       Example JSON structure:
       [
-        { "title": "Neo-Dashboard", "description": "...", "builder_angle": "..." }
+        { "title": "Neo-Dashboard", "description": "...", "builder_angle": "...", "monetization_strategy": "...", "potential_mrr": "..." }
       ]
     `;
 

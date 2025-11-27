@@ -3,26 +3,23 @@ import { type Repository } from "../../lib/repositoryData";
 
 interface CardActionsProps {
   repo: Repository;
-  onExpand: () => void | Promise<void>;
-  expanded: boolean;
-  vibeIdeas: AppIdea[];
+  onGenerate: () => void;
   isGenerating: boolean;
 }
 
 export function CardActions({
   repo,
-  onExpand,
-  expanded,
-  vibeIdeas,
+  onGenerate,
   isGenerating,
 }: CardActionsProps) {
   return (
     <div className="space-y-3">
       <button
-        className="card-button w-full border-beam liquid-glass px-6 py-4 flex items-center justify-between group hover:shadow-[0_0_30px_rgba(0,255,249,0.4)] transition-all hover:scale-[1.02]"
+        className="card-button w-full border-beam liquid-glass px-6 py-4 flex items-center justify-between group hover:shadow-[0_0_30px_rgba(0,255,249,0.4)] transition-all hover:scale-[1.02] overflow-hidden"
         onClick={() => window.open(`https://deepwiki.com/${repo.id}`, "_blank")}
       >
-        <div className="flex items-center gap-3">
+        <div className="slide-shine" />
+        <div className="flex items-center gap-3 relative z-10">
           <svg
             className="w-6 h-6 text-space-cyan"
             viewBox="0 0 24 24"
@@ -32,7 +29,7 @@ export function CardActions({
           </svg>
           <div className="text-left">
             <div className="text-space-cyan font-display font-bold">
-              DEEPWIKI
+              EXPLORE IN DEPTH
             </div>
             <div className="text-space-cyan/50 text-xs font-mono">
               View Analysis
@@ -40,7 +37,7 @@ export function CardActions({
           </div>
         </div>
         <svg
-          className="w-5 h-5 text-space-cyan group-hover:translate-x-1 transition-transform"
+          className="w-5 h-5 text-space-cyan group-hover:translate-x-1 transition-transform relative z-10"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -55,11 +52,13 @@ export function CardActions({
       </button>
 
       <button
-        className="card-button w-full border-beam liquid-glass px-6 py-4 flex items-center justify-between group hover:shadow-[0_0_30px_rgba(255,0,110,0.4)] transition-all hover:scale-[1.02]"
+        className="card-button w-full border-beam liquid-glass bg-space-magenta/5 px-6 py-4 flex items-center justify-between group hover:shadow-[0_0_30px_rgba(255,0,110,0.4)] transition-all hover:scale-[1.02] overflow-hidden"
         style={{ borderColor: "rgba(255, 0, 110, 0.3)" }}
-        onClick={onExpand}
+        onClick={onGenerate}
+        disabled={isGenerating}
       >
-        <div className="flex items-center gap-3">
+        <div className="slide-shine purple" />
+        <div className="flex items-center gap-3 relative z-10">
           <svg
             className="w-6 h-6 text-space-magenta"
             viewBox="0 0 24 24"
@@ -69,69 +68,31 @@ export function CardActions({
           </svg>
           <div className="text-left">
             <div className="text-space-magenta font-display font-bold glow-magenta">
-              USE FOR VIBE CODING
+              {isGenerating ? "GENERATING..." : "USE FOR VIBE CODING"}
             </div>
             <div className="text-space-magenta/50 text-xs font-mono">
               AI-Powered App Ideas
             </div>
           </div>
         </div>
-        <svg
-          className="w-5 h-5 text-space-magenta group-hover:translate-x-1 transition-transform"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M9 5l7 7-7 7"
-          />
-        </svg>
+        {isGenerating ? (
+          <div className="w-5 h-5 border-2 border-space-magenta border-t-transparent rounded-full animate-spin relative z-10" />
+        ) : (
+          <svg
+            className="w-5 h-5 text-space-magenta group-hover:translate-x-1 transition-transform relative z-10"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M9 5l7 7-7 7"
+            />
+          </svg>
+        )}
       </button>
-
-      {expanded && (
-        <div className="mt-6 space-y-3 animate-in fade-in slide-in-from-bottom-4 duration-500">
-          <div className="text-space-cyan/80 font-display text-xs uppercase tracking-wider mb-3">
-            Generated App Ideas
-          </div>
-
-          {isGenerating ? (
-            <div className="liquid-glass p-6 border border-space-magenta/20 flex flex-col items-center justify-center gap-3">
-              <div className="w-6 h-6 border-2 border-space-magenta border-t-transparent rounded-full animate-spin" />
-              <div className="text-space-magenta/80 text-xs font-mono animate-pulse">
-                CONSULTING MACHINE SPIRITS...
-              </div>
-            </div>
-          ) : (
-            vibeIdeas.map((idea, i) => (
-              <div
-                key={i}
-                className="liquid-glass p-4 border border-space-magenta/20 hover:border-space-magenta/50 hover:shadow-[0_0_20px_rgba(255,0,110,0.3)] transition-all cursor-pointer group"
-                onClick={() =>
-                  window.open("https://builder.io/c/docs/developers", "_blank")
-                }
-              >
-                <div className="text-space-magenta font-display font-bold text-sm mb-1 group-hover:glow-magenta">
-                  {idea.title}
-                </div>
-                <div className="text-gray-300 text-xs font-sans mb-3 leading-relaxed">
-                  {idea.description}
-                </div>
-                <div className="bg-space-magenta/10 border border-space-magenta/30 p-2 rounded">
-                  <div className="text-space-magenta/80 text-[10px] font-mono uppercase mb-1">
-                    Builder.io Acceleration
-                  </div>
-                  <div className="text-space-cyan/80 text-xs font-mono leading-tight">
-                    {idea.builder_angle}
-                  </div>
-                </div>
-              </div>
-            ))
-          )}
-        </div>
-      )}
     </div>
   );
 }
