@@ -1,4 +1,11 @@
-import "dotenv/config";
+import dotenv from "dotenv";
+import path from "path";
+
+// Load .env first
+dotenv.config();
+// Load .env.local if it exists (overriding .env)
+dotenv.config({ path: path.resolve(process.cwd(), ".env.local"), override: true });
+
 import express from "express";
 import cors from "cors";
 import { handleDemo } from "./routes/demo";

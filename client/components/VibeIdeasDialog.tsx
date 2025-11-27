@@ -57,10 +57,10 @@ export function VibeIdeasDialog({
 
                                     {/* Potential MRR - Absolute Top Right */}
                                     <div className="absolute top-5 right-5 text-right">
-                                        <div className="text-[10px] text-space-cyan uppercase font-mono mb-0.5">
+                                        <div className="text-[10px] text-gray-400 uppercase font-mono mb-1 tracking-wider">
                                             Potential MRR
                                         </div>
-                                        <div className="text-sm font-mono text-white font-bold">
+                                        <div className="text-xl font-mono text-space-cyan font-bold glow-cyan">
                                             {idea.potential_mrr || "N/A"}
                                         </div>
                                     </div>

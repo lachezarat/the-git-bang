@@ -58,7 +58,7 @@ export async function handleGenerateIdeas(req: Request, res: Response) {
       - "description": A detailed 3-4 sentence pitch explaining the core value proposition and how it works.
       - "builder_angle": A specific sentence on how Builder.io speeds this up (e.g. "Use Builder for the landing page...", "Manage the UI components visually...").
       - "monetization_strategy": A specific strategy to make money (e.g. "Freemium model with pro features", "Enterprise licensing").
-      - "potential_mrr": A realistic estimation of potential Monthly Recurring Revenue for a solo dev (e.g. "$500 - $2k/mo").
+      - "potential_mrr": A realistic estimation of potential Monthly Recurring Revenue for a solo dev (e.g. "$10k - $100k/mo").
 
       Example JSON structure:
       [
