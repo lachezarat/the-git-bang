@@ -1,6 +1,8 @@
 import "dotenv/config";
 import OpenAI from "openai";
 import type { Request, Response } from "express";
+import { exec } from "child_process";
+import { promisify } from "util";
 
 // Initialize OpenRouter client
 // We assume OPENROUTER_API_KEY is set in .env
@@ -39,9 +41,14 @@ export async function handleGenerateIdeas(req: Request, res: Response) {
 
   try {
     const prompt = `
-      You are an expert Product Architect and Creative Developer specializing in "Vibe Coding" - the art of rapidly building stylish, high-impact applications using modern visual development tools.
-
-      Your goal is to analyze the following GitHub repository and generate 3 innovative, "vibey", and practical application ideas that could be built using this codebase as a foundation or inspiration.
+      You are a Senior Product Manager and Technical Lead.
+      
+      Your task is to generate 9 innovative and practical app ideas based on the existing repository: "${name}".
+      
+      The ideas should be:
+      1. **Professional & Market-Ready:** Focus on solving real problems or enhancing developer productivity.
+      2. **Feasible:** Can be built using the existing code as a foundation.
+      3. **High Value:** Have clear potential for monetization or significant user adoption.
 
       CRITICAL REQUIREMENT:
       Each idea MUST be framed as something that can be rapidly accelerated using **Builder.io**. 
@@ -75,12 +82,15 @@ export async function handleGenerateIdeas(req: Request, res: Response) {
 
     const responseText = completion.choices[0]?.message?.content || "[]";
 
-    // Clean up potential markdown formatting if the model ignores instructions
-    const cleanJson = responseText
-      .replace(/```json/g, "")
-      .replace(/```/g, "")
-      .trim();
+    // Robust JSON extraction: find the first '[' and the last ']'
+    const jsonMatch = responseText.match(/\[[\s\S]*\]/);
 
+    if (!jsonMatch) {
+      console.error("Failed to extract JSON from response:", responseText);
+      throw new Error("AI response did not contain a valid JSON array.");
+    }
+
+    const cleanJson = jsonMatch[0];
     const ideas = JSON.parse(cleanJson);
 
     res.json({ ideas });
@@ -92,6 +102,23 @@ export async function handleGenerateIdeas(req: Request, res: Response) {
           ? error.message
           : "Failed to generate ideas from the machine spirits.",
     });
+  }
+}
+
+const execAsync = promisify(exec);
+
+async function fetchRepoDigest(repoName: string): Promise<string | null> {
+  try {
+    // Limit the output to 500kb to avoid context window issues if the repo is huge
+    // The -o - flag outputs to stdout
+    const { stdout } = await execAsync(
+      `./.gitingest_venv/bin/gitingest https://github.com/${repoName} -o -`,
+      { maxBuffer: 1024 * 1024 * 5 } // 5MB buffer
+    );
+    return stdout;
+  } catch (error) {
+    console.warn(`Failed to fetch Gitingest for ${repoName}:`, error);
+    return null;
   }
 }
 
@@ -114,6 +141,10 @@ export async function handleExploreRepo(req: Request, res: Response) {
 
   console.log(`🔍 Exploring repository depth for: ${name}`);
 
+  // Fetch the actual code digest
+  const digest = await fetchRepoDigest(name);
+  const hasDigest = !!digest;
+
   try {
     const prompt = `
       You are a Senior Software Architect and Technical Analyst.
@@ -125,6 +156,16 @@ export async function handleExploreRepo(req: Request, res: Response) {
       - Description: ${description}
       - Topics: ${topics?.join(", ")}
       - Languages: ${languages?.join(", ")}
+
+      ${hasDigest
+        ? `
+      **ACTUAL CODEBASE DIGEST (Gitingest):**
+      Below is a text digest of the repository's file structure and content. USE THIS to analyze the REAL architecture, not just the description.
+      
+      ${digest.slice(0, 100000)} ... (truncated if too long)
+      `
+        : ""
+      }
 
       Please provide a response in Markdown format with the following sections:
 
@@ -219,7 +260,7 @@ export async function handleGetIdeaPlan(req: Request, res: Response) {
       **Step 6: Fusion Prompts (CRITICAL)**
       Provide 5-8 specific, high-quality prompts that the user can copy and paste into Builder.io Fusion to build this app.
       - These prompts should be sequential or cover different parts of the app.
-      - **Recommended Model:** Explicitly recommend using **Claude 3.7 Sonnet** (or the most advanced Claude model available) for the best results in Fusion.
+      - **Recommended Model:** Explicitly recommend using **Claude 4.5 Opus** (or the most advanced Claude model available) for the best results in Fusion.
 
       Keep the tone encouraging, professional, and action-oriented. Use Markdown formatting.
     `;

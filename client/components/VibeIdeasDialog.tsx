@@ -6,7 +6,7 @@ import {
     DialogTitle,
 } from "./ui/dialog";
 import { AppIdea } from "@shared/api";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { IdeaPlanDialog } from "./IdeaPlanDialog";
 import { useToast } from "@/hooks/use-toast";
 import { ProgressBar } from "./ProgressBar";
@@ -32,7 +32,24 @@ export function VibeIdeasDialog({
     const [planContent, setPlanContent] = useState<string>("");
     const [isGeneratingPlan, setIsGeneratingPlan] = useState(false);
     const [showPlanDialog, setShowPlanDialog] = useState(false);
+    const [pageIndex, setPageIndex] = useState(0);
     const { toast } = useToast();
+
+    // Reset page index when ideas change (new batch fetched)
+    useEffect(() => {
+        setPageIndex(0);
+    }, [ideas]);
+
+    const displayedIdeas = ideas.slice(pageIndex * 3, (pageIndex + 1) * 3);
+    const hasMoreLocalIdeas = (pageIndex + 1) * 3 < ideas.length;
+
+    const handleLocalGenerateMore = () => {
+        if (hasMoreLocalIdeas) {
+            setPageIndex(prev => prev + 1);
+        } else {
+            onGenerateMore();
+        }
+    };
 
     const handleGetPlan = async (idea: AppIdea) => {
         setSelectedIdea(idea);
@@ -97,7 +114,7 @@ export function VibeIdeasDialog({
                             </div>
                         ) : (
                             <div className="space-y-4">
-                                {ideas.map((idea, i) => (
+                                {displayedIdeas.map((idea, i) => (
                                     <div
                                         key={i}
                                         className="relative overflow-hidden rounded-lg border border-space-magenta/30 bg-gradient-to-br from-space-magenta/10 via-black/60 to-space-cyan/5 hover:from-space-magenta/15 hover:to-space-cyan/10 transition-all duration-300 group"
@@ -166,10 +183,10 @@ export function VibeIdeasDialog({
                     {!isGenerating && ideas.length > 0 && (
                         <div className="mt-4 pt-4 border-t border-white/10 flex flex-col gap-3">
                             <button
-                                onClick={onGenerateMore}
+                                onClick={handleLocalGenerateMore}
                                 className="w-full py-3 bg-space-magenta/10 border border-space-magenta/30 text-space-magenta font-bold hover:bg-space-magenta/20 hover:shadow-[0_0_15px_rgba(255,0,110,0.3)] transition-all rounded uppercase text-sm tracking-wider"
                             >
-                                Generate More Ideas
+                                {hasMoreLocalIdeas ? "Show Next 3 Ideas" : "Generate Fresh Ideas"}
                             </button>
 
                             <div className="flex items-center justify-between">

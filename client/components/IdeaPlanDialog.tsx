@@ -49,7 +49,21 @@ const markdownComponents = {
             </a>
         );
     },
-    code: ({ children }: any) => <code className="bg-space-magenta/10 text-space-magenta px-1.5 py-0.5 rounded font-mono text-sm border border-space-magenta/20">{children}</code>,
+    code: ({ node, inline, className, children, ...props }: any) => {
+        if (inline) {
+            return (
+                <code className="bg-space-magenta/10 text-space-magenta px-1.5 py-0.5 rounded font-mono text-sm border border-space-magenta/20" {...props}>
+                    {children}
+                </code>
+            );
+        }
+        return (
+            <code className="block bg-black/50 text-gray-300 p-4 rounded-lg border border-space-magenta/20 font-mono text-sm overflow-x-auto whitespace-pre-wrap" {...props}>
+                {children}
+            </code>
+        );
+    },
+    pre: ({ children }: any) => <pre className="not-prose my-4">{children}</pre>,
 };
 
 export function IdeaPlanDialog({

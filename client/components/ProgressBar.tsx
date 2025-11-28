@@ -5,7 +5,7 @@ interface ProgressBarProps {
     stages?: string[]; // Array of reasoning steps to cycle through
 }
 
-export function ProgressBar({ duration = 3000, stages = ["Loading..."] }: ProgressBarProps) {
+export function ProgressBar({ duration = 12000, stages = ["Loading..."] }: ProgressBarProps) {
     const [progress, setProgress] = useState(0);
     const [currentStageIndex, setCurrentStageIndex] = useState(0);
 

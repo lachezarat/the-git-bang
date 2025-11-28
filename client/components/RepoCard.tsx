@@ -98,18 +98,14 @@ export default function RepoCard({ repo, position, onClose }: RepoCardProps) {
     };
   }, []); // Run only on mount
 
-  const handleGenerateVibe = async (force = false) => {
-    setShowIdeasDialog(true);
-    if (!force && vibeIdeas.length > 0) return; // Don't regenerate if we already have ideas and not forcing
-
+  const fetchVibeIdeas = async () => {
     setIsGenerating(true);
-
     try {
       const response = await fetch("/api/ai/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          name: repo.name,
+          name: repo.id,
           description: details?.description || "",
           topics: details?.topics || [],
           languages: details?.languages || [repo.primaryLanguage],
@@ -125,7 +121,6 @@ export default function RepoCard({ repo, position, onClose }: RepoCardProps) {
       setVibeIdeas(data.ideas);
     } catch (error) {
       console.error("Error generating ideas:", error);
-      // Fallback in case of error
       setVibeIdeas([
         {
           title: "Error Generating Ideas",
@@ -141,8 +136,27 @@ export default function RepoCard({ repo, position, onClose }: RepoCardProps) {
     }
   };
 
+  const handleGenerateVibe = async (force = false) => {
+    setShowIdeasDialog(true);
+    // If we have ideas and not forcing, just show them (prefetching worked!)
+    if (!force && vibeIdeas.length > 0) return;
+
+    // Otherwise, fetch now
+    if (!isGenerating) {
+      await fetchVibeIdeas();
+    }
+  };
+
   const handleExplore = async () => {
     setShowExploreDialog(true);
+
+    // TRIGGER PREFETCHING IN BACKGROUND
+    // We don't await this, so it runs in parallel with exploration
+    if (vibeIdeas.length === 0 && !isGenerating) {
+      console.log("🚀 Prefetching Vibe Ideas in background...");
+      fetchVibeIdeas();
+    }
+
     if (exploreContent) return;
 
     setIsExploring(true);
@@ -151,7 +165,7 @@ export default function RepoCard({ repo, position, onClose }: RepoCardProps) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          name: repo.name,
+          name: repo.id,
           description: details?.description || "",
           topics: details?.topics || [],
           languages: details?.languages || [repo.primaryLanguage],
@@ -223,6 +237,7 @@ export default function RepoCard({ repo, position, onClose }: RepoCardProps) {
         ideas={vibeIdeas}
         isGenerating={isGenerating}
         onGenerateMore={() => handleGenerateVibe(true)}
+        repoName={repo.id}
       />
 
       <ExploreDialog
