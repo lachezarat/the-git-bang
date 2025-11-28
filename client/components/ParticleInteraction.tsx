@@ -108,16 +108,17 @@ export default function ParticleInteraction({
   useEffect(() => {
     if (!onParticleHover) return;
 
+    let animationFrameId: number | null = null;
+
     const handleMouseMove = (event: MouseEvent) => {
       lastMouseEvent.current = event;
 
-      // Throttle to ~60fps (16ms) for performance
-      if (throttleTimeout.current) return;
+      if (animationFrameId) return;
 
-      throttleTimeout.current = window.setTimeout(() => {
-        throttleTimeout.current = null;
+      animationFrameId = requestAnimationFrame(() => {
+        animationFrameId = null;
         checkHover(event);
-      }, 16);
+      });
     };
 
     const handleMouseLeave = () => {
@@ -137,8 +138,8 @@ export default function ParticleInteraction({
     return () => {
       window.removeEventListener("mousemove", handleMouseMove);
       // window.removeEventListener("mouseleave", handleMouseLeave);
-      if (throttleTimeout.current) {
-        clearTimeout(throttleTimeout.current);
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
       }
     };
   }, [gl, checkHover, onParticleHover]);
@@ -157,8 +158,8 @@ export default function ParticleInteraction({
   }, [repositories, checkHover]);
 
   useEffect(() => {
-    // Increased threshold for better hover detection
-    raycaster.current.params.Points = { threshold: 8.0 };
+    // Reduced threshold for more precise hover detection (was 8.0)
+    raycaster.current.params.Points = { threshold: 4.0 };
 
     const handleMouseDown = (event: MouseEvent) => {
       mouseDownPos.current = { x: event.clientX, y: event.clientY };

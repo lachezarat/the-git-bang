@@ -87,17 +87,20 @@ void main() {
 
   // Sharper glow, less blur
   float glow = 1.0 - dist * 2.0;
-  glow = pow(glow, 5.0);
+  glow = max(0.0, glow);
+  glow = glow * glow * glow * glow * glow; // pow(glow, 5.0) optimized
 
   float aberration = 0.015; // Reduced aberration for cleaner look
 
   float distR = length(center - vec2(aberration, 0.0));
   float glowR = 1.0 - distR * 2.0;
-  glowR = pow(max(glowR, 0.0), 3.0);
+  glowR = max(0.0, glowR);
+  glowR = glowR * glowR * glowR; // pow(glowR, 3.0) optimized
 
   float distB = length(center + vec2(aberration, 0.0));
   float glowB = 1.0 - distB * 2.0;
-  glowB = pow(max(glowB, 0.0), 3.0);
+  glowB = max(0.0, glowB);
+  glowB = glowB * glowB * glowB; // pow(glowB, 3.0) optimized
 
   vec3 finalColor = vec3(
     vColor.r * glowR,

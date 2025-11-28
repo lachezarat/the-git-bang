@@ -28,6 +28,9 @@ export default function Index() {
 
   const [selectedLanguage, setSelectedLanguage] = useState<string | null>(null);
 
+  const [minStars, setMinStars] = useState(0);
+  const [maxStars, setMaxStars] = useState<number | null>(null);
+
   // Reset camera when repo is deselected
   useEffect(() => {
     if (!selectedRepo && controlsRef.current) {
@@ -45,10 +48,16 @@ export default function Index() {
   const repositories = repoData?.repositories || [];
 
   const filteredRepositories = useMemo(() => {
-    return selectedLanguage
-      ? repositories.filter((repo) => repo.primaryLanguage === selectedLanguage)
-      : repositories;
-  }, [repositories, selectedLanguage]);
+    return repositories.filter((repo) => {
+      const matchesLanguage = selectedLanguage
+        ? repo.primaryLanguage === selectedLanguage
+        : true;
+      const matchesMinStars = repo.stars >= minStars;
+      const matchesMaxStars = maxStars !== null ? repo.stars <= maxStars : true;
+
+      return matchesLanguage && matchesMinStars && matchesMaxStars;
+    });
+  }, [repositories, selectedLanguage, minStars, maxStars]);
 
   const handleSearchChange = useCallback(
     (query: string, isFocused: boolean) => {
@@ -228,6 +237,10 @@ export default function Index() {
             onLanguageSelect={setSelectedLanguage}
             selectedLanguage={selectedLanguage}
             hoveredRepo={hoveredRepo}
+            minStars={minStars}
+            maxStars={maxStars}
+            onMinStarsChange={setMinStars}
+            onMaxStarsChange={setMaxStars}
           />
         )}
         {bootComplete && <AmbientSound />}

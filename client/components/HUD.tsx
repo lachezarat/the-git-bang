@@ -15,6 +15,10 @@ interface HUDProps {
   onLanguageSelect?: (language: string | null) => void;
   selectedLanguage?: string | null;
   hoveredRepo?: Repository | null;
+  minStars?: number;
+  maxStars?: number | null;
+  onMinStarsChange?: (value: number) => void;
+  onMaxStarsChange?: (value: number | null) => void;
 }
 
 export default function HUD({
@@ -26,6 +30,10 @@ export default function HUD({
   onLanguageSelect,
   selectedLanguage,
   hoveredRepo = null,
+  minStars = 0,
+  maxStars = null,
+  onMinStarsChange = () => { },
+  onMaxStarsChange = () => { },
 }: HUDProps) {
   return (
     <div className="hud-container">
@@ -38,6 +46,10 @@ export default function HUD({
       <TimelinePanel
         onLanguageSelect={onLanguageSelect}
         selectedLanguage={selectedLanguage}
+        minStars={minStars}
+        maxStars={maxStars}
+        onMinStarsChange={onMinStarsChange}
+        onMaxStarsChange={onMaxStarsChange}
       />
       <ControlsPanel />
       <SearchBar
