@@ -42,6 +42,14 @@ export default function ParticleInteraction({
     }
   });
 
+  // Keep track of latest repositories to avoid stale closures in event handlers
+  const repositoriesRef = useRef(repositories);
+  useEffect(() => {
+    repositoriesRef.current = repositories;
+    // Reset hover state when repositories change (e.g. filtering)
+    lastHoveredIndex.current = null;
+  }, [repositories]);
+
   // Throttled hover detection
   const checkHover = useCallback(
     (event: MouseEvent) => {
@@ -77,9 +85,8 @@ export default function ParticleInteraction({
         // Only update if we're hovering a different particle
         if (index !== lastHoveredIndex.current) {
           lastHoveredIndex.current = index;
-          const repo = repositories[index];
+          const repo = repositoriesRef.current[index];
           if (repo) {
-            console.log("[ParticleInteraction] Hovering repo:", repo.id);
             onParticleHover(repo);
           }
         }
@@ -91,7 +98,7 @@ export default function ParticleInteraction({
         }
       }
     },
-    [camera, particlesRef, onParticleHover, repositories]
+    [camera, particlesRef, onParticleHover] // Removed repositories from deps
   );
 
   // Throttled mousemove handler for hover
@@ -175,7 +182,7 @@ export default function ParticleInteraction({
         const index = intersects[0].index || 0;
 
         // Get the actual repository data
-        const repo = repositories[index];
+        const repo = repositoriesRef.current[index];
 
         if (repo) {
           // Trigger card modal

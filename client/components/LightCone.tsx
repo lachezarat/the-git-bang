@@ -141,13 +141,13 @@ void main() {
   float depthClarity = 1.0 - smoothstep(50.0, 250.0, viewDist);
   alpha *= (1.0 + depthClarity * 0.4);
 
-  // Hover effect: Enhanced glow and brightness
+    // Hover effect: Enhanced glow and brightness
   if (isHovered) {
     // Pulsing intensity for hover (smoother, slower pulse)
     float hoverPulse = 0.6 + 0.4 * sin(uTime * 6.0);
     
     // Brighten the particle - blend with original color
-    vec3 brightColor = finalColor * 2.0; 
+    vec3 brightColor = finalColor * 3.0; 
     
     // Add glow overlay using the particle's own color (vColor)
     // Mix with a bit of white for "glow" but keep it tinted
@@ -200,10 +200,7 @@ export default function LightCone({
     return index;
   }, [hoveredId, repositories]);
 
-  // Debug logging restored
-  useEffect(() => {
-    console.log("[LightCone] hoveredId:", hoveredId, "hoveredIndex:", hoveredIndex);
-  }, [hoveredId, hoveredIndex]);
+
 
   const { geometry, uniforms } = useMemo(() => {
     const count =

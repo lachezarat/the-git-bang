@@ -9,7 +9,7 @@ dotenv.config({ path: path.resolve(process.cwd(), ".env.local"), override: true 
 import express from "express";
 import cors from "cors";
 import { handleDemo } from "./routes/demo";
-import { handleGetRepository } from "./routes/repositories";
+
 import { handleGenerateIdeas, handleExploreRepo } from "./routes/ai";
 
 export function createServer() {
@@ -28,8 +28,7 @@ export function createServer() {
 
   app.get("/api/demo", handleDemo);
 
-  // Repository details from Turso
-  app.get("/api/repo/:owner/:name", handleGetRepository);
+
 
   // AI Generation
   app.post("/api/ai/generate", handleGenerateIdeas);
