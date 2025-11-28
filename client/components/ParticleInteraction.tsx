@@ -79,6 +79,7 @@ export default function ParticleInteraction({
           lastHoveredIndex.current = index;
           const repo = repositories[index];
           if (repo) {
+            console.log("[ParticleInteraction] Hovering repo:", repo.id);
             onParticleHover(repo);
           }
         }
@@ -128,7 +129,7 @@ export default function ParticleInteraction({
 
   useEffect(() => {
     // Increased threshold for better hover detection
-    raycaster.current.params.Points = { threshold: 5.0 };
+    raycaster.current.params.Points = { threshold: 8.0 };
 
     const handleMouseDown = (event: MouseEvent) => {
       mouseDownPos.current = { x: event.clientX, y: event.clientY };

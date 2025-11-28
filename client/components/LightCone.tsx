@@ -200,6 +200,11 @@ export default function LightCone({
     return index;
   }, [hoveredId, repositories]);
 
+  // Debug logging restored
+  useEffect(() => {
+    console.log("[LightCone] hoveredId:", hoveredId, "hoveredIndex:", hoveredIndex);
+  }, [hoveredId, hoveredIndex]);
+
   const { geometry, uniforms } = useMemo(() => {
     const count =
       repositories.length > 0 ? repositories.length : DEFAULT_PARTICLE_COUNT;
@@ -307,10 +312,17 @@ export default function LightCone({
     return { geometry, uniforms };
   }, [repositories]);
 
-  // Debug logging removed
-  /* useEffect(() => {
-    console.log("[LightCone] hoveredId:", hoveredId, "hoveredIndex:", hoveredIndex);
-  }, [hoveredId, hoveredIndex]); */
+  // Handle resize for pixel ratio
+  useEffect(() => {
+    const handleResize = () => {
+      if (materialRef.current) {
+        materialRef.current.uniforms.uPixelRatio.value = Math.min(window.devicePixelRatio, 2);
+      }
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   useFrame((state) => {
     if (materialRef.current) {
