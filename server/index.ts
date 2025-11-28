@@ -10,7 +10,7 @@ import express from "express";
 import cors from "cors";
 import { handleDemo } from "./routes/demo";
 import { handleGetRepository } from "./routes/repositories";
-import { handleGenerateIdeas } from "./routes/ai";
+import { handleGenerateIdeas, handleExploreRepo } from "./routes/ai";
 
 export function createServer() {
   const app = express();
@@ -33,6 +33,7 @@ export function createServer() {
 
   // AI Generation
   app.post("/api/ai/generate", handleGenerateIdeas);
+  app.post("/api/ai/explore", handleExploreRepo);
 
   return app;
 }

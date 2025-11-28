@@ -8,6 +8,7 @@ import { CardMetrics } from "./repo-card/CardMetrics";
 import { CardTimeline } from "./repo-card/CardTimeline";
 import { CardActions } from "./repo-card/CardActions";
 import { VibeIdeasDialog } from "./VibeIdeasDialog";
+import { ExploreDialog } from "./ExploreDialog";
 
 interface RepoCardProps {
   repo: Repository;
@@ -20,6 +21,10 @@ export default function RepoCard({ repo, position, onClose }: RepoCardProps) {
   const [showIdeasDialog, setShowIdeasDialog] = useState(false);
   const [vibeIdeas, setVibeIdeas] = useState<AppIdea[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
+
+  const [showExploreDialog, setShowExploreDialog] = useState(false);
+  const [exploreContent, setExploreContent] = useState("");
+  const [isExploring, setIsExploring] = useState(false);
 
   const { details, loading } = useRepoDetails(repo.id);
 
@@ -136,6 +141,39 @@ export default function RepoCard({ repo, position, onClose }: RepoCardProps) {
     }
   };
 
+  const handleExplore = async () => {
+    setShowExploreDialog(true);
+    if (exploreContent) return;
+
+    setIsExploring(true);
+    try {
+      const response = await fetch("/api/ai/explore", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: repo.name,
+          description: details?.description || "",
+          topics: details?.topics || [],
+          languages: details?.languages || [repo.primaryLanguage],
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `Failed to explore: ${response.status} ${response.statusText}`);
+      }
+      const data = await response.json();
+      setExploreContent(data.markdown);
+    } catch (error) {
+      console.error("Error exploring:", error);
+      setExploreContent(
+        "Failed to explore repository. The machine spirits are silent.",
+      );
+    } finally {
+      setIsExploring(false);
+    }
+  };
+
   const year = new Date(repo.createdAt).getFullYear();
 
   return (
@@ -152,8 +190,8 @@ export default function RepoCard({ repo, position, onClose }: RepoCardProps) {
           left: "50%",
           top: "50%",
           // transform is handled by GSAP (xPercent/yPercent)
-          width: "420px",
-          maxHeight: "80vh",
+          width: "500px",
+          maxHeight: "95vh",
           height: "auto",
         }}
       >
@@ -173,6 +211,8 @@ export default function RepoCard({ repo, position, onClose }: RepoCardProps) {
             repo={repo}
             onGenerate={() => handleGenerateVibe(false)}
             isGenerating={isGenerating}
+            onExplore={handleExplore}
+            isExploring={isExploring}
           />
         </div>
       </div>
@@ -183,6 +223,15 @@ export default function RepoCard({ repo, position, onClose }: RepoCardProps) {
         ideas={vibeIdeas}
         isGenerating={isGenerating}
         onGenerateMore={() => handleGenerateVibe(true)}
+      />
+
+      <ExploreDialog
+        open={showExploreDialog}
+        onOpenChange={setShowExploreDialog}
+        content={exploreContent}
+        isGenerating={isExploring}
+        repoId={repo.id}
+        onGenerateVibe={() => handleGenerateVibe(false)}
       />
     </>
   );

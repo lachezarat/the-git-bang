@@ -1,9 +1,9 @@
-import { useState } from "react";
 import SearchBar from "./SearchBar";
 import StatsPanel from "./StatsPanel";
 import YearMarker from "./YearMarker";
 import TimelinePanel from "./TimelinePanel";
 import ControlsPanel from "./ControlsPanel";
+import HoverInfoPanel from "./HoverInfoPanel";
 import type { Repository } from "../lib/repositoryData";
 
 interface HUDProps {
@@ -14,6 +14,7 @@ interface HUDProps {
   currentYear?: number;
   onLanguageSelect?: (language: string | null) => void;
   selectedLanguage?: string | null;
+  hoveredRepo?: Repository | null;
 }
 
 export default function HUD({
@@ -24,6 +25,7 @@ export default function HUD({
   currentYear = 2025,
   onLanguageSelect,
   selectedLanguage,
+  hoveredRepo = null,
 }: HUDProps) {
   return (
     <div className="hud-container">
@@ -32,6 +34,7 @@ export default function HUD({
         repositoryCount={repositories.length}
         activeLanguage={selectedLanguage}
       />
+      <HoverInfoPanel hoveredRepo={hoveredRepo} />
       <TimelinePanel
         onLanguageSelect={onLanguageSelect}
         selectedLanguage={selectedLanguage}

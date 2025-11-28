@@ -362,7 +362,7 @@
     inset: -2px;
     background: linear-gradient(90deg,
         transparent 0%,
-        rgba(0, 255, 249, 0.8) 50%,
+        rgba(0, 255, 249, 0.5) 50%,
         transparent 100%);
     animation: borderBeam 3s linear infinite;
     pointer-events: none;
@@ -376,6 +376,13 @@
     100% {
       transform: translateX(200%) rotate(0deg);
     }
+  }
+
+  .border-beam.purple::after {
+    background: linear-gradient(90deg,
+        transparent 0%,
+        rgba(255, 0, 110, 0.5) 50%,
+        transparent 100%);
   }
 
   /* Sliding Colorful Button Effect */

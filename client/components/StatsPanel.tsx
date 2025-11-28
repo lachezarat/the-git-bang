@@ -12,7 +12,7 @@ export default function StatsPanel({
       className="hud-element absolute top-6 right-6 pointer-events-auto"
       style={{ animationDelay: "0.2s" }}
     >
-      <div className="liquid-glass px-6 py-4 min-w-[320px] relative overflow-hidden">
+      <div className="liquid-glass px-5 py-4 w-[280px] relative overflow-hidden">
         <div className="scanline-overlay absolute inset-0 pointer-events-none opacity-30" />
 
         <div className="relative space-y-3 font-mono text-xs">

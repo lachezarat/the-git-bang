@@ -20,6 +20,7 @@ export default function Index() {
   const [searchActive, setSearchActive] = useState(false);
   const [selectedRepo, setSelectedRepo] = useState<any>(null);
   const [hoveredRepo, setHoveredRepo] = useState<any>(null);
+  const [hoverSource, setHoverSource] = useState<"3d" | "hud" | null>(null);
   const [repoCardPos, setRepoCardPos] = useState({ x: 0, y: 0 });
   const [currentYear, setCurrentYear] = useState(2025);
   const [isHoveringClickable, setIsHoveringClickable] = useState(false);
@@ -77,12 +78,22 @@ export default function Index() {
     [],
   );
 
+  const handleParticleHover = useCallback((repo: any) => {
+    setHoveredRepo(repo);
+    setHoverSource(repo ? "3d" : null);
+  }, []);
+
+  const handleHudHover = useCallback((repo: any) => {
+    setHoveredRepo(repo);
+    setHoverSource(repo ? "hud" : null);
+  }, []);
+
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
       // Directly update the DOM ref to avoid re-renders
       if (cursorRef.current) {
-        cursorRef.current.style.left = `${e.clientX}px`;
-        cursorRef.current.style.top = `${e.clientY}px`;
+        cursorRef.current.style.left = `${e.clientX - 10}px`;
+        cursorRef.current.style.top = `${e.clientY - 10}px`;
       }
     };
 
@@ -134,7 +145,7 @@ export default function Index() {
         <div
           ref={cursorRef}
           className={`custom-cursor ${isHoveringClickable ? "hovering" : ""}`}
-          // Initial position will be 0,0 but updated immediately by mousemove event
+        // Initial position will be 0,0 but updated immediately by mousemove event
         />
 
         <div className="blue-noise-overlay" />
@@ -166,10 +177,12 @@ export default function Index() {
             searchActive={searchActive}
             searchQuery={searchQuery}
             onParticleClick={handleParticleClick}
+            onParticleHover={handleParticleHover}
             repositories={filteredRepositories}
             focusedRepo={selectedRepo}
             hoveredRepo={hoveredRepo}
             cardPosition={repoCardPos}
+            enableHoverPulse={true}
           />
 
           <CameraTracker
@@ -204,11 +217,12 @@ export default function Index() {
           <HUD
             onSearchChange={handleSearchChange}
             onSuggestionSelect={handleSuggestionSelect}
-            onSuggestionHover={setHoveredRepo}
+            onSuggestionHover={handleHudHover}
             repositories={filteredRepositories}
             currentYear={currentYear}
             onLanguageSelect={setSelectedLanguage}
             selectedLanguage={selectedLanguage}
+            hoveredRepo={hoveredRepo}
           />
         )}
         {bootComplete && <AmbientSound />}

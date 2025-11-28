@@ -43,50 +43,56 @@ export function VibeIdeasDialog({
                             </div>
                         </div>
                     ) : (
-                        <div className="space-y-6">
+                        <div className="space-y-4">
                             {ideas.map((idea, i) => (
                                 <div
                                     key={i}
-                                    className="relative p-5 rounded-lg border border-space-magenta/20 bg-space-magenta/5 hover:bg-space-magenta/10 transition-colors group"
+                                    className="relative overflow-hidden rounded-lg border border-space-magenta/30 bg-gradient-to-br from-space-magenta/10 via-black/60 to-space-cyan/5 hover:from-space-magenta/15 hover:to-space-cyan/10 transition-all duration-300 group"
                                 >
-                                    <div className="pr-24"> {/* Add padding right to avoid overlap with MRR */}
-                                        <h3 className="text-xl font-bold text-space-magenta mb-2 group-hover:glow-magenta transition-all">
-                                            {idea.title}
-                                        </h3>
-                                    </div>
-
-                                    {/* Potential MRR - Absolute Top Right */}
-                                    <div className="absolute top-5 right-5 text-right">
-                                        <div className="text-[10px] text-gray-400 uppercase font-mono mb-1 tracking-wider">
-                                            Potential MRR
-                                        </div>
-                                        <div className="text-xl font-mono text-space-cyan font-bold glow-cyan">
-                                            {idea.potential_mrr || "N/A"}
+                                    {/* Header with title and MRR */}
+                                    <div className="relative p-4 pb-3 border-b border-white/5">
+                                        <div className="flex items-start justify-between gap-4">
+                                            <h3 className="text-lg font-bold text-white group-hover:text-space-magenta transition-colors flex-1 leading-tight">
+                                                {idea.title}
+                                            </h3>
+                                            <div className="text-xl font-mono text-space-cyan font-bold glow-cyan whitespace-nowrap">
+                                                {idea.potential_mrr || "N/A"}
+                                            </div>
                                         </div>
                                     </div>
 
-                                    <p className="text-gray-300 text-sm mb-4 leading-relaxed">
-                                        {idea.description}
-                                    </p>
+                                    {/* Content */}
+                                    <div className="relative p-4 space-y-3">
+                                        <p className="text-gray-300 text-sm leading-relaxed">
+                                            {idea.description}
+                                        </p>
 
-                                    {/* Monetization Strategy - Full Width */}
-                                    <div className="bg-black/40 p-3 rounded border border-white/10 mb-4">
-                                        <div className="text-[10px] text-space-cyan uppercase font-mono mb-1">
-                                            Monetization Strategy
-                                        </div>
-                                        <div className="text-sm font-mono text-white">
-                                            {idea.monetization_strategy || "N/A"}
+                                        {/* Two-column layout for strategy and builder */}
+                                        <div className="grid grid-cols-2 gap-3">
+                                            {/* Monetization Strategy */}
+                                            <div className="bg-black/50 p-3 rounded border-l-2 border-space-cyan/50">
+                                                <div className="text-[9px] text-space-cyan/70 uppercase font-mono mb-1.5 tracking-wider">
+                                                    Strategy
+                                                </div>
+                                                <div className="text-xs font-mono text-gray-200 leading-relaxed">
+                                                    {idea.monetization_strategy || "N/A"}
+                                                </div>
+                                            </div>
+
+                                            {/* Builder Acceleration */}
+                                            <div className="bg-space-magenta/10 p-3 rounded border-l-2 border-space-magenta/50">
+                                                <div className="text-[9px] text-space-magenta/70 uppercase font-mono mb-1.5 tracking-wider">
+                                                    Builder.io Edge
+                                                </div>
+                                                <div className="text-xs text-gray-200 leading-relaxed">
+                                                    {idea.builder_angle}
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
 
-                                    <div className="bg-space-magenta/10 border border-space-magenta/30 p-3 rounded">
-                                        <div className="text-space-magenta/80 text-[10px] font-mono uppercase mb-1">
-                                            Builder.io Acceleration
-                                        </div>
-                                        <div className="text-gray-200 text-sm leading-tight">
-                                            {idea.builder_angle}
-                                        </div>
-                                    </div>
+                                    {/* Bottom accent line */}
+                                    <div className="h-[2px] bg-gradient-to-r from-space-magenta/50 via-space-cyan/30 to-transparent" />
                                 </div>
                             ))}
                         </div>

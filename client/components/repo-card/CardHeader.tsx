@@ -42,7 +42,7 @@ export function CardHeader({
         </svg>
       </button>
 
-      <div className="card-header space-y-3 mb-6">
+      <div className="card-header space-y-3 mb-6 pr-10">
         <div className="flex items-start justify-between gap-4">
           <div className="flex-1">
             <h2 className="text-2xl font-display font-bold text-white glow-cyan mb-1 break-all">
@@ -53,7 +53,7 @@ export function CardHeader({
             </div>
           </div>
 
-          <div className="text-right space-y-1 font-mono text-xs">
+          <div className="text-right space-y-1 font-mono text-xs shrink-0">
             <div className="text-space-amber glow-amber font-bold text-lg tabular-nums">
               {repo.stars.toLocaleString()}
             </div>

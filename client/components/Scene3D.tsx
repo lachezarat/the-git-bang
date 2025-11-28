@@ -15,10 +15,12 @@ interface Scene3DProps {
   searchActive?: boolean;
   searchQuery?: string;
   onParticleClick?: (repo: any, position: { x: number; y: number }) => void;
+  onParticleHover?: (repo: Repository | null) => void;
   repositories?: Repository[];
   focusedRepo?: Repository | null;
   hoveredRepo?: Repository | null;
   cardPosition?: { x: number; y: number } | null;
+  enableHoverPulse?: boolean;
 }
 
 function ConeGuides() {
@@ -123,10 +125,12 @@ export default function Scene3D({
   searchActive = false,
   searchQuery = "",
   onParticleClick,
+  onParticleHover,
   repositories = [],
   focusedRepo = null,
   hoveredRepo = null,
   cardPosition = null,
+  enableHoverPulse = true,
 }: Scene3DProps) {
   const particlesRef = useRef<THREE.Points>(null);
 
@@ -137,6 +141,7 @@ export default function Scene3D({
         particlesRef={particlesRef}
         repositories={repositories}
         focusedId={focusedRepo?.id}
+        hoveredId={enableHoverPulse ? hoveredRepo?.id : null}
       />
       <ConnectionLine repo={focusedRepo} cardPosition={cardPosition} />
       {/* {focusedRepo && (
@@ -144,13 +149,13 @@ export default function Scene3D({
       )} */}
       {hoveredRepo && !focusedRepo && (
         <>
-          <SonarPing repo={hoveredRepo} repositories={repositories} />
           <DirectionalArrow repo={hoveredRepo} repositories={repositories} />
         </>
       )}
       <ParticleInteraction
         particlesRef={particlesRef}
         onParticleClick={onParticleClick}
+        onParticleHover={onParticleHover}
         repositories={repositories}
       />
       {/* <ConeGuides /> */}

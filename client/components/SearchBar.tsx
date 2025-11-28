@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import type { Repository } from "../lib/repositoryData";
 
 interface SearchBarProps {
@@ -32,25 +32,8 @@ export default function SearchBar({
         `${repo.owner}/${repo.name}`.toLowerCase().includes(query),
     );
 
-    // Sort by priority:
-    // 1. Name starts with query
-    // 2. Owner starts with query
-    // 3. Name contains query
-    // 4. Owner contains query
-    const sorted = matches.sort((a, b) => {
-      const aNameStarts = a.name.toLowerCase().startsWith(query);
-      const bNameStarts = b.name.toLowerCase().startsWith(query);
-      const aOwnerStarts = a.owner.toLowerCase().startsWith(query);
-      const bOwnerStarts = b.owner.toLowerCase().startsWith(query);
-
-      if (aNameStarts && !bNameStarts) return -1;
-      if (!aNameStarts && bNameStarts) return 1;
-      if (aOwnerStarts && !bOwnerStarts) return -1;
-      if (!aOwnerStarts && bOwnerStarts) return 1;
-
-      // If same priority, sort by stars (more popular first)
-      return b.stars - a.stars;
-    });
+    // Sort by stars (most popular first)
+    const sorted = matches.sort((a, b) => b.stars - a.stars);
 
     const result = sorted.slice(0, 8);
     return result;
@@ -100,8 +83,25 @@ export default function SearchBar({
       setIsFocused(false);
       setSelectedIndex(-1);
       onSuggestionHover?.(null);
+      setSearchQuery("");
+      onSearchChange?.("", false);
     }
   };
+
+  useEffect(() => {
+    const handleGlobalKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && searchQuery.length > 0) {
+        setSearchQuery("");
+        onSearchChange?.("", false);
+        setIsFocused(false);
+        setSelectedIndex(-1);
+        onSuggestionHover?.(null);
+      }
+    };
+
+    window.addEventListener("keydown", handleGlobalKeyDown);
+    return () => window.removeEventListener("keydown", handleGlobalKeyDown);
+  }, [searchQuery, onSearchChange, onSuggestionHover]);
 
   return (
     <>
@@ -110,14 +110,14 @@ export default function SearchBar({
         <div
           className="fixed left-1/2 -translate-x-1/2 pointer-events-auto"
           style={{
-            bottom: "calc(10rem + 20px)", // Position above the search bar
+            bottom: "calc(5rem + 10px)", // Position closer to the search bar
             zIndex: 10001, // Higher than search bar
             minWidth: "500px",
             maxWidth: "700px",
           }}
         >
           <div
-            className="liquid-glass p-4 space-y-1 max-h-[400px] overflow-y-auto rounded-sm"
+            className="liquid-glass p-4 space-y-1 max-h-[240px] overflow-y-auto rounded-sm"
             style={{
               animation:
                 "geometricReveal 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards",
@@ -130,11 +130,10 @@ export default function SearchBar({
             {suggestions.map((repo, index) => (
               <div
                 key={`${repo.owner}/${repo.name}`}
-                className={`px-4 py-3 cursor-pointer transition-all duration-200 border-l-2 rounded-sm ${
-                  index === selectedIndex
-                    ? "bg-space-cyan/20 border-space-cyan shadow-lg shadow-space-cyan/20"
-                    : "border-transparent hover:bg-space-cyan/10 hover:border-space-cyan/50 hover:shadow-md hover:shadow-space-cyan/10"
-                }`}
+                className={`px-4 py-3 cursor-pointer transition-all duration-200 border-l-2 rounded-sm ${index === selectedIndex
+                  ? "bg-space-cyan/20 border-space-cyan shadow-lg shadow-space-cyan/20"
+                  : "border-transparent hover:bg-space-cyan/10 hover:border-space-cyan/50 hover:shadow-md hover:shadow-space-cyan/10"
+                  }`}
                 onMouseDown={(e) => {
                   e.preventDefault();
                   onSuggestionSelect?.(repo);

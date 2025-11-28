@@ -88,3 +88,65 @@ export async function handleGenerateIdeas(req: Request, res: Response) {
     });
   }
 }
+
+export async function handleExploreRepo(req: Request, res: Response) {
+  const genAI = getGeminiClient();
+  const model = genAI?.getGenerativeModel({ model: "gemini-2.5-flash-lite" });
+
+  if (!genAI || !model) {
+    res
+      .status(500)
+      .json({ error: "AI service not configured (missing API key)" });
+    return;
+  }
+
+  const { name, description, topics, languages } = req.body;
+
+  if (!name) {
+    res.status(400).json({ error: "Repository name is required" });
+    return;
+  }
+
+  console.log(`🔍 Exploring repository depth for: ${name}`);
+
+  try {
+    const prompt = `
+      You are a Senior Software Architect and Technical Analyst.
+      
+      Your task is to provide a "Deep Dive" technical overview of the following GitHub repository.
+      
+      Repository Context:
+      - Name: ${name}
+      - Description: ${description}
+      - Topics: ${topics?.join(", ")}
+      - Languages: ${languages?.join(", ")}
+
+      Please provide a response in Markdown format with the following sections:
+
+      1. **Executive Summary**: A concise 2-3 sentence technical summary of what this project does and its core value.
+      2. **Key Features**: A bulleted list of 3-5 standout technical features or capabilities.
+      3. **Architecture Visualization**:
+         - Create a **Mermaid.js** diagram (use \`\`\`mermaid code block) that visualizes the conceptual architecture, data flow, or user journey of this application. 
+         - Use "graph TD" or "graph LR".
+         - CRITICAL: You MUST enclose ALL node labels in double quotes. Example: A["User"] --> B["API Server"].
+         - Do NOT use brackets [] or parentheses () inside the node labels unless they are inside the double quotes.
+         - Keep the diagram relatively simple but informative (e.g., User -> Frontend -> API -> Database). Infer the likely architecture based on the languages and description (e.g., if it's React/Node, show that structure).
+      4. **Technical Stack Inference**: Briefly mention the likely tech stack components based on the languages and description.
+
+      Keep the tone professional, insightful, and "cyberpunk" cool (subtle usage of tech-forward language).
+    `;
+
+    const result = await model.generateContent(prompt);
+    const responseText = result.response.text();
+
+    res.json({ markdown: responseText });
+  } catch (error) {
+    console.error("Gemini exploration error:", error);
+    res.status(500).json({
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to explore the repository depth.",
+    });
+  }
+}

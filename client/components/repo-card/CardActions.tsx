@@ -5,18 +5,23 @@ interface CardActionsProps {
   repo: Repository;
   onGenerate: () => void;
   isGenerating: boolean;
+  onExplore: () => void;
+  isExploring: boolean;
 }
 
 export function CardActions({
   repo,
   onGenerate,
   isGenerating,
+  onExplore,
+  isExploring,
 }: CardActionsProps) {
   return (
     <div className="space-y-3">
       <button
         className="card-button w-full border-beam liquid-glass px-6 py-4 flex items-center justify-between group hover:shadow-[0_0_30px_rgba(0,255,249,0.4)] transition-all hover:scale-[1.02] overflow-hidden"
-        onClick={() => window.open(`https://deepwiki.com/${repo.id}`, "_blank")}
+        onClick={onExplore}
+        disabled={isExploring}
       >
         <div className="slide-shine" />
         <div className="flex items-center gap-3 relative z-10">
@@ -29,30 +34,34 @@ export function CardActions({
           </svg>
           <div className="text-left">
             <div className="text-space-cyan font-display font-bold">
-              EXPLORE IN DEPTH
+              {isExploring ? "ANALYZING..." : "EXPLORE IN DEPTH"}
             </div>
             <div className="text-space-cyan/50 text-xs font-mono">
               View Analysis
             </div>
           </div>
         </div>
-        <svg
-          className="w-5 h-5 text-space-cyan group-hover:translate-x-1 transition-transform relative z-10"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M9 5l7 7-7 7"
-          />
-        </svg>
+        {isExploring ? (
+          <div className="w-5 h-5 border-2 border-space-cyan border-t-transparent rounded-full animate-spin relative z-10" />
+        ) : (
+          <svg
+            className="w-5 h-5 text-space-cyan group-hover:translate-x-1 transition-transform relative z-10"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M9 5l7 7-7 7"
+            />
+          </svg>
+        )}
       </button>
 
       <button
-        className="card-button w-full border-beam liquid-glass bg-space-magenta/5 px-6 py-4 flex items-center justify-between group hover:shadow-[0_0_30px_rgba(255,0,110,0.4)] transition-all hover:scale-[1.02] overflow-hidden"
+        className="card-button w-full border-beam purple liquid-glass bg-space-magenta/5 px-6 py-4 flex items-center justify-between group hover:shadow-[0_0_30px_rgba(255,0,110,0.4)] transition-all hover:scale-[1.02] overflow-hidden"
         style={{ borderColor: "rgba(255, 0, 110, 0.3)" }}
         onClick={onGenerate}
         disabled={isGenerating}

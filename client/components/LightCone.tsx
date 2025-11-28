@@ -1,4 +1,4 @@
-import { useRef, useMemo } from "react";
+import { useRef, useMemo, useEffect } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { type Repository, calculatePopularity } from "../lib/repositoryData";
@@ -13,6 +13,7 @@ const DEFAULT_PARTICLE_COUNT = 25000;
 const particleVertexShader = `
 uniform float uTime;
 uniform float uPixelRatio;
+uniform float uHoveredId;
 
 attribute float size;
 attribute vec3 customColor;
@@ -32,7 +33,13 @@ void main() {
   vBrightness = brightness;
   vId = id;
 
-  float pulseIntensity = 0.5 + 0.5 * sin(uTime * activity * 2.0 + pulse * 6.28318);
+  // Check if hovered
+  bool isHovered = (abs(id - uHoveredId) < 0.1);
+
+  // Pulse intensity for core brightness (passed to fragment shader)
+  // Hovered particles pulse faster and stronger
+  float pulseSpeed = isHovered ? 8.0 : (activity * 2.0);
+  float pulseIntensity = 0.5 + 0.5 * sin(uTime * pulseSpeed + pulse * 6.28318);
   vPulse = pulseIntensity;
 
   vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
@@ -40,12 +47,18 @@ void main() {
 
   gl_Position = projectionMatrix * mvPosition;
 
-  gl_PointSize = size * uPixelRatio * (300.0 / -mvPosition.z) * (0.8 + 0.4 * pulseIntensity);
+  // Hovered particles are bigger (2.5x as requested) and pulse in size
+  float hoverSizePulse = isHovered ? (1.0 + 0.2 * sin(uTime * 6.0)) : 1.0;
+  float sizeMult = isHovered ? 1.5 * hoverSizePulse : 1.0;
+
+  gl_PointSize = size * uPixelRatio * (300.0 / -mvPosition.z) * sizeMult;
 }
 `;
 
 const particleFragmentShader = `
 uniform float uFocusedId; // -1.0 if none focused
+uniform float uHoveredId; // -1.0 if none hovered
+uniform float uTime;
 
 varying vec3 vColor;
 varying float vPulse;
@@ -64,6 +77,7 @@ void main() {
   // Check focus state
   bool isFocused = (uFocusedId > -0.5);
   bool isTarget = (abs(vId - uFocusedId) < 0.1); // Float comparison
+  bool isHovered = (abs(vId - uHoveredId) < 0.1);
 
   // Dimming factor
   float dimFactor = 1.0;
@@ -71,8 +85,7 @@ void main() {
     dimFactor = 0.5; // Dim non-selected particles less drastically (was 0.1)
   }
 
-  // Sharper glow, less blur (40% less blurred means tighter falloff)
-  // Increased exponent from 3.5 to ~5.0
+  // Sharper glow, less blur
   float glow = 1.0 - dist * 2.0;
   glow = pow(glow, 5.0);
 
@@ -80,11 +93,11 @@ void main() {
 
   float distR = length(center - vec2(aberration, 0.0));
   float glowR = 1.0 - distR * 2.0;
-  glowR = pow(max(glowR, 0.0), 3.0); // Sharpened chromatic aberration too
+  glowR = pow(max(glowR, 0.0), 3.0);
 
   float distB = length(center + vec2(aberration, 0.0));
   float glowB = 1.0 - distB * 2.0;
-  glowB = pow(max(glowB, 0.0), 3.0); // Sharpened chromatic aberration too
+  glowB = pow(max(glowB, 0.0), 3.0);
 
   vec3 finalColor = vec3(
     vColor.r * glowR,
@@ -93,39 +106,63 @@ void main() {
   );
 
   // Apply brightness based on star count (popularity)
-  // High contrast: Popular repos shine very bright, small ones are dim
-  float brightnessFactor = pow(vBrightness, 1.5); // Non-linear brightness curve
-  finalColor *= (0.2 + 2.0 * brightnessFactor) / 1.5; // Reduced brightness by 20%
+  float brightnessFactor = pow(vBrightness, 1.5);
+  finalColor *= (0.2 + 2.0 * brightnessFactor) / 1.5;
 
-  finalColor *= (0.8 + 0.2 * vPulse); // Subtle pulse
+  // Core-focused pulsing: pulse affects the inner core strongly, outer glow less
+  // Core region (dist < 0.15) pulses strongly, outer regions pulse subtly
+  float coreRegion = 1.0 - smoothstep(0.0, 0.2, dist); // 1.0 at center, 0.0 at edges
+  float pulseStrength = mix(0.05, 0.5, coreRegion); // Outer: 5% pulse, Core: 50% pulse
+  float pulseEffect = 1.0 + pulseStrength * (vPulse - 0.5) * 2.0; // Centered around 1.0
 
-  // Solid core for better visibility
-  float core = 1.0 - smoothstep(0.0, 0.1, dist);
-  finalColor += vec3(1.0) * core * (0.4 + 0.4 * brightnessFactor);
+  // Solid core for better visibility - this is where the pulse is most visible
+  float core = 1.0 - smoothstep(0.0, 0.12, dist);
+  float corePulse = 0.4 + 0.6 * vPulse; // Core brightness pulses 0.4 to 1.0
+  finalColor += vec3(1.0) * core * (0.3 + 0.5 * brightnessFactor) * corePulse;
+
+  // Apply pulse to color (stronger in core)
+  finalColor *= pulseEffect;
 
   // Apply selection dimming
   finalColor *= dimFactor;
 
-  // Alpha also affected by brightness - dimmer stars are more transparent
-  // Make small stars much more transparent to reduce noise
-  float alpha = glow * (0.6 + 0.4 * vPulse) * (0.3 + 0.7 * brightnessFactor);
-  
+  // Alpha - stable outer glow, no pulse on alpha for cleaner edges
+  float alpha = glow * (0.3 + 0.7 * brightnessFactor);
+
   // Apply selection dimming to alpha too
   alpha *= dimFactor;
 
-  // Global reduction (30% dimmer)
-  finalColor *= 0.7;
-  alpha *= 0.7;
+  // Global reduction (dimmer)
+  finalColor *= 0.63;
+  alpha *= 0.63;
 
-  // Depth-based clarity (Global Depth-Based Clarity)
-  // -vViewZ is distance from camera. Range ~40 to ~300.
-  // We want closer particles to be less transparent (restore some alpha).
+  // Depth-based clarity
   float viewDist = -vViewZ;
-  float depthClarity = 1.0 - smoothstep(50.0, 250.0, viewDist); // 1.0 when close, 0.0 when far
-
-  // Boost alpha back up for closer particles to increase clarity
-  // This effectively reduces the "30% dimmer" effect when up close
+  float depthClarity = 1.0 - smoothstep(50.0, 250.0, viewDist);
   alpha *= (1.0 + depthClarity * 0.4);
+
+  // Hover effect: Enhanced glow and brightness
+  if (isHovered) {
+    // Pulsing intensity for hover (smoother, slower pulse)
+    float hoverPulse = 0.6 + 0.4 * sin(uTime * 6.0);
+    
+    // Brighten the particle - blend with original color
+    vec3 brightColor = finalColor * 2.0; 
+    
+    // Add glow overlay using the particle's own color (vColor)
+    // Mix with a bit of white for "glow" but keep it tinted
+    vec3 glowColor = mix(vColor, vec3(1.0), 0.3); 
+    vec3 glowOverlay = glowColor * hoverPulse * 0.5;
+    
+    // Outer pulsing ring using particle color
+    float ringDist = abs(dist - 0.35);
+    float ring = 1.0 - smoothstep(0.0, 0.1, ringDist);
+    vec3 ringGlow = vColor * ring * hoverPulse * 1.0;
+    
+    // Combine
+    finalColor = brightColor + glowOverlay + ringGlow;
+    alpha = 1.0;
+  }
 
   gl_FragColor = vec4(finalColor, alpha);
 }
@@ -135,12 +172,14 @@ interface LightConeProps {
   particlesRef?: React.RefObject<THREE.Points>;
   repositories?: Repository[];
   focusedId?: string | null;
+  hoveredId?: string | null;
 }
 
 export default function LightCone({
   particlesRef,
   repositories = [],
   focusedId = null,
+  hoveredId = null,
 }: LightConeProps = {}) {
   const pointsRef = useRef<THREE.Points>(null);
   const materialRef = useRef<THREE.ShaderMaterial>(null);
@@ -154,6 +193,12 @@ export default function LightCone({
     if (!focusedId || repositories.length === 0) return -1.0;
     return repositories.findIndex((r) => r.id === focusedId);
   }, [focusedId, repositories]);
+
+  const hoveredIndex = useMemo(() => {
+    if (!hoveredId || repositories.length === 0) return -1.0;
+    const index = repositories.findIndex((r) => r.id === hoveredId);
+    return index;
+  }, [hoveredId, repositories]);
 
   const { geometry, uniforms } = useMemo(() => {
     const count =
@@ -242,6 +287,7 @@ export default function LightCone({
     const geometry = new THREE.BufferGeometry();
     geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
     geometry.setAttribute("customColor", new THREE.BufferAttribute(colors, 3));
+    geometry.computeBoundingSphere();
     geometry.setAttribute("size", new THREE.BufferAttribute(sizes, 1));
     geometry.setAttribute("pulse", new THREE.BufferAttribute(pulses, 1));
     geometry.setAttribute("activity", new THREE.BufferAttribute(activities, 1));
@@ -255,15 +301,22 @@ export default function LightCone({
       uTime: { value: 0 },
       uPixelRatio: { value: Math.min(window.devicePixelRatio, 2) },
       uFocusedId: { value: -1.0 },
+      uHoveredId: { value: -1.0 },
     };
 
     return { geometry, uniforms };
   }, [repositories]);
 
+  // Debug logging removed
+  /* useEffect(() => {
+    console.log("[LightCone] hoveredId:", hoveredId, "hoveredIndex:", hoveredIndex);
+  }, [hoveredId, hoveredIndex]); */
+
   useFrame((state) => {
     if (materialRef.current) {
       materialRef.current.uniforms.uTime.value = state.clock.elapsedTime;
-      // Update focused ID uniform
+      // robustly update these every frame to handle material recreation or ref desync
+      materialRef.current.uniforms.uHoveredId.value = hoveredIndex;
       materialRef.current.uniforms.uFocusedId.value = focusedIndex;
     }
   });
