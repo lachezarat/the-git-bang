@@ -97,6 +97,41 @@ const Mermaid = ({ chart }: { chart: string }) => {
     );
 };
 
+const markdownComponents = {
+    code({ node, inline, className, children, ...props }: any) {
+        const match = /language-(\w+)/.exec(className || "");
+        const isMermaid = match && match[1] === "mermaid";
+
+        if (!inline && isMermaid) {
+            return <Mermaid chart={String(children).replace(/\n$/, "")} />;
+        }
+
+        return !inline && match ? (
+            <div className="relative group">
+                <div className="absolute -top-3 right-2 text-xs text-space-cyan/50 font-mono bg-black/80 px-2 py-0.5 rounded border border-space-cyan/20">
+                    {match[1]}
+                </div>
+                <pre className="bg-black/50 border border-space-cyan/20 rounded-lg p-4 overflow-x-auto my-4">
+                    <code className={className} {...props}>
+                        {children}
+                    </code>
+                </pre>
+            </div>
+        ) : (
+            <code className="bg-space-cyan/10 text-space-cyan px-1.5 py-0.5 rounded font-mono text-sm" {...props}>
+                {children}
+            </code>
+        );
+    },
+    h1: ({ children }: any) => <h1 className="text-2xl font-bold text-space-cyan mb-4 border-b border-space-cyan/30 pb-2">{children}</h1>,
+    h2: ({ children }: any) => <h2 className="text-xl font-bold text-white mt-6 mb-3 flex items-center gap-2"><span className="text-space-cyan">#</span> {children}</h2>,
+    h3: ({ children }: any) => <h3 className="text-lg font-bold text-gray-200 mt-4 mb-2">{children}</h3>,
+    ul: ({ children }: any) => <ul className="list-disc list-outside ml-5 space-y-1 text-gray-300">{children}</ul>,
+    li: ({ children }: any) => <li className="marker:text-space-cyan">{children}</li>,
+    p: ({ children }: any) => <p className="text-gray-300 leading-relaxed mb-4">{children}</p>,
+    strong: ({ children }: any) => <strong className="text-space-cyan font-bold">{children}</strong>,
+};
+
 export function ExploreDialog({
     open,
     onOpenChange,
@@ -135,47 +170,13 @@ export function ExploreDialog({
                         <div className="prose prose-invert prose-cyan max-w-none">
                             <ReactMarkdown
                                 remarkPlugins={[remarkGfm]}
-                                components={{
-                                    code({ node, inline, className, children, ...props }: any) {
-                                        const match = /language-(\w+)/.exec(className || "");
-                                        const isMermaid = match && match[1] === "mermaid";
-
-                                        if (!inline && isMermaid) {
-                                            return <Mermaid chart={String(children).replace(/\n$/, "")} />;
-                                        }
-
-                                        return !inline && match ? (
-                                            <div className="relative group">
-                                                <div className="absolute -top-3 right-2 text-xs text-space-cyan/50 font-mono bg-black/80 px-2 py-0.5 rounded border border-space-cyan/20">
-                                                    {match[1]}
-                                                </div>
-                                                <pre className="bg-black/50 border border-space-cyan/20 rounded-lg p-4 overflow-x-auto my-4">
-                                                    <code className={className} {...props}>
-                                                        {children}
-                                                    </code>
-                                                </pre>
-                                            </div>
-                                        ) : (
-                                            <code className="bg-space-cyan/10 text-space-cyan px-1.5 py-0.5 rounded font-mono text-sm" {...props}>
-                                                {children}
-                                            </code>
-                                        );
-                                    },
-                                    h1: ({ children }) => <h1 className="text-2xl font-bold text-space-cyan mb-4 border-b border-space-cyan/30 pb-2">{children}</h1>,
-                                    h2: ({ children }) => <h2 className="text-xl font-bold text-white mt-6 mb-3 flex items-center gap-2"><span className="text-space-cyan">#</span> {children}</h2>,
-                                    h3: ({ children }) => <h3 className="text-lg font-bold text-gray-200 mt-4 mb-2">{children}</h3>,
-                                    ul: ({ children }) => <ul className="list-disc list-outside ml-5 space-y-1 text-gray-300">{children}</ul>,
-                                    li: ({ children }) => <li className="marker:text-space-cyan">{children}</li>,
-                                    p: ({ children }) => <p className="text-gray-300 leading-relaxed mb-4">{children}</p>,
-                                    strong: ({ children }) => <strong className="text-space-cyan font-bold">{children}</strong>,
-                                }}
+                                components={markdownComponents}
                             >
                                 {content}
                             </ReactMarkdown>
                         </div>
                     )}
                 </div>
-
                 {!isGenerating && (
                     <div className="mt-6 pt-4 border-t border-white/10 flex items-center justify-between gap-4">
                         <button
@@ -203,6 +204,6 @@ export function ExploreDialog({
                     </div>
                 )}
             </DialogContent>
-        </Dialog>
+        </Dialog >
     );
 }

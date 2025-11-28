@@ -1,23 +1,25 @@
 import "dotenv/config";
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import OpenAI from "openai";
 import type { Request, Response } from "express";
 
-// Initialize Gemini client
-// We assume GEMINI_API_KEY is set in .env
-// Lazy initialization to ensure env vars are loaded
-function getGeminiClient() {
-  const apiKey = process.env.GEMINI_API_KEY;
+// Initialize OpenRouter client
+// We assume OPENROUTER_API_KEY is set in .env
+function getAIClient() {
+  const apiKey = process.env.OPENROUTER_API_KEY;
   if (!apiKey) return null;
-  return new GoogleGenerativeAI(apiKey);
+
+  return new OpenAI({
+    baseURL: "https://openrouter.ai/api/v1",
+    apiKey: apiKey,
+  });
 }
 
 export async function handleGenerateIdeas(req: Request, res: Response) {
-  const genAI = getGeminiClient();
-  const model = genAI?.getGenerativeModel({ model: "gemini-2.5-flash-lite" });
+  const openai = getAIClient();
 
-  if (!genAI || !model) {
-    console.error("Gemini API key is missing. Env check:", {
-      hasKey: !!process.env.GEMINI_API_KEY,
+  if (!openai) {
+    console.error("OpenRouter API key is missing. Env check:", {
+      hasKey: !!process.env.OPENROUTER_API_KEY,
       cwd: process.cwd(),
     });
     res
@@ -66,8 +68,12 @@ export async function handleGenerateIdeas(req: Request, res: Response) {
       ]
     `;
 
-    const result = await model.generateContent(prompt);
-    const responseText = result.response.text();
+    const completion = await openai.chat.completions.create({
+      model: "x-ai/grok-4.1-fast:free",
+      messages: [{ role: "user", content: prompt }],
+    });
+
+    const responseText = completion.choices[0]?.message?.content || "[]";
 
     // Clean up potential markdown formatting if the model ignores instructions
     const cleanJson = responseText
@@ -79,7 +85,7 @@ export async function handleGenerateIdeas(req: Request, res: Response) {
 
     res.json({ ideas });
   } catch (error) {
-    console.error("Gemini generation error:", error);
+    console.error("OpenRouter generation error:", error);
     res.status(500).json({
       error:
         error instanceof Error
@@ -90,10 +96,9 @@ export async function handleGenerateIdeas(req: Request, res: Response) {
 }
 
 export async function handleExploreRepo(req: Request, res: Response) {
-  const genAI = getGeminiClient();
-  const model = genAI?.getGenerativeModel({ model: "gemini-2.5-flash-lite" });
+  const openai = getAIClient();
 
-  if (!genAI || !model) {
+  if (!openai) {
     res
       .status(500)
       .json({ error: "AI service not configured (missing API key)" });
@@ -136,17 +141,104 @@ export async function handleExploreRepo(req: Request, res: Response) {
       Keep the tone professional, insightful, and "cyberpunk" cool (subtle usage of tech-forward language).
     `;
 
-    const result = await model.generateContent(prompt);
-    const responseText = result.response.text();
+    const completion = await openai.chat.completions.create({
+      model: "x-ai/grok-4.1-fast:free",
+      messages: [{ role: "user", content: prompt }],
+    });
+
+    const responseText = completion.choices[0]?.message?.content || "";
 
     res.json({ markdown: responseText });
   } catch (error) {
-    console.error("Gemini exploration error:", error);
+    console.error("OpenRouter exploration error:", error);
     res.status(500).json({
       error:
         error instanceof Error
           ? error.message
           : "Failed to explore the repository depth.",
+    });
+  }
+}
+
+export async function handleGetIdeaPlan(req: Request, res: Response) {
+  const openai = getAIClient();
+
+  if (!openai) {
+    res
+      .status(500)
+      .json({ error: "AI service not configured (missing API key)" });
+    return;
+  }
+
+  const { ideaTitle, ideaDescription, ideaBuilderAngle, repoName } = req.body;
+
+  if (!ideaTitle) {
+    res.status(400).json({ error: "Idea title is required" });
+    return;
+  }
+
+  console.log(`📝 Generating execution plan for: ${ideaTitle}`);
+
+  try {
+    const prompt = `
+      You are a Senior Product Manager and Technical Lead.
+      
+      Your task is to create a detailed, step-by-step execution plan to build the following app idea using **Builder.io** and the existing repository "${repoName}".
+
+      App Idea: "${ideaTitle}"
+      Description: "${ideaDescription}"
+      Builder.io Angle: "${ideaBuilderAngle}"
+
+      CRITICAL INSTRUCTION:
+      You MUST structure the response as a numbered list of steps.
+      
+      **Step 1 MUST BE EXACTLY:**
+      "1. Sign up or Sign in to [Builder.io](https://builderio.partnerlinks.io/5ao76wthwoji)"
+      
+      Do NOT add any description or extra text for Step 1. Just the numbered item with the link.
+
+      **For the remaining steps, you MUST follow the "Builder.io Fusion" workflow:**
+
+      **Step 2: Connect your Repository**
+      - Explain how to connect the existing "${repoName}" repository to Builder.io Fusion.
+      - Mention that code stays in their infrastructure.
+
+      **Step 3: Import Design or Generate**
+      - **CRITICAL:** Explicitly mention **"Import from Figma"** as a key capability to turn designs into code instantly.
+      - Alternatively, explain how to generate features using text prompts if no design exists.
+
+      **Step 4: Iterate and Refine (with MCPs)**
+      - Explain how to use the **Visual Editor** to refine the generated code.
+      - **CRITICAL:** Mention using **MCP Servers (Model Context Protocol)** to connect to external tools or data sources (e.g., "Connect a Stripe MCP", "Use a Database MCP").
+      - Explain how to use the existing components from the repo (Design System integration).
+
+      **Step 5: Review and Merge**
+      - Explain the **Pull Request workflow**: Builder.io sends a PR to the repo.
+      - Mention reviewing the code and merging it into the main branch.
+
+      **Step 6: Fusion Prompts (CRITICAL)**
+      Provide 5-8 specific, high-quality prompts that the user can copy and paste into Builder.io Fusion to build this app.
+      - These prompts should be sequential or cover different parts of the app.
+      - **Recommended Model:** Explicitly recommend using **Claude 3.7 Sonnet** (or the most advanced Claude model available) for the best results in Fusion.
+
+      Keep the tone encouraging, professional, and action-oriented. Use Markdown formatting.
+    `;
+
+    const completion = await openai.chat.completions.create({
+      model: "x-ai/grok-4.1-fast:free",
+      messages: [{ role: "user", content: prompt }],
+    });
+
+    const responseText = completion.choices[0]?.message?.content || "";
+
+    res.json({ markdown: responseText });
+  } catch (error) {
+    console.error("OpenRouter plan generation error:", error);
+    res.status(500).json({
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to generate execution plan.",
     });
   }
 }
