@@ -14,3 +14,21 @@
   from = "/api/*"
   status = 200
   to = "/.netlify/functions/api/:splat"
+
+[[redirects]]
+  from = "/app_viz_data.json"
+  to = "/app_viz_data.json"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/repo-details.json"
+  to = "/repo-details.json"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/repositories_details.json"
+  to = "/repositories_details.json"
+  status = 200
+  force = true

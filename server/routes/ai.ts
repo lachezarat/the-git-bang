@@ -111,13 +111,17 @@ async function fetchRepoDigest(repoName: string): Promise<string | null> {
   try {
     // Limit the output to 500kb to avoid context window issues if the repo is huge
     // The -o - flag outputs to stdout
+    // Set a strict timeout of 3 seconds. If it takes longer, we skip it.
     const { stdout } = await execAsync(
       `./.gitingest_venv/bin/gitingest https://github.com/${repoName} -o -`,
-      { maxBuffer: 1024 * 1024 * 5 } // 5MB buffer
+      {
+        maxBuffer: 1024 * 1024 * 5, // 5MB buffer
+        timeout: 3000 // 3 seconds timeout
+      }
     );
     return stdout;
   } catch (error) {
-    console.warn(`Failed to fetch Gitingest for ${repoName}:`, error);
+    console.warn(`Failed to fetch Gitingest for ${repoName} (likely timeout or error):`, error);
     return null;
   }
 }
@@ -185,7 +189,7 @@ export async function handleExploreRepo(req: Request, res: Response) {
     const completion = await openai.chat.completions.create({
       model: "x-ai/grok-4.1-fast:free",
       messages: [{ role: "user", content: prompt }],
-    });
+    }, { timeout: 25000 });
 
     const responseText = completion.choices[0]?.message?.content || "";
 

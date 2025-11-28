@@ -53,11 +53,12 @@ export default function ParticleInteraction({
   // Throttled hover detection
   const checkHover = useCallback(
     (event: MouseEvent) => {
-      if (!particlesRef.current || !onParticleHover) return;
+      if (!particlesRef.current || !onParticleHover || repositoriesRef.current.length === 0) return;
 
-      // Calculate mouse position in normalized device coordinates
-      mouse.current.x = (event.clientX / window.innerWidth) * 2 - 1;
-      mouse.current.y = -(event.clientY / window.innerHeight) * 2 + 1;
+      // Calculate mouse position relative to canvas
+      const rect = gl.domElement.getBoundingClientRect();
+      mouse.current.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+      mouse.current.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
 
       // Update the picking ray with the camera and mouse position
       raycaster.current.setFromCamera(mouse.current, camera);
@@ -101,11 +102,15 @@ export default function ParticleInteraction({
     [camera, particlesRef, onParticleHover] // Removed repositories from deps
   );
 
+  const lastMouseEvent = useRef<MouseEvent | null>(null);
+
   // Throttled mousemove handler for hover
   useEffect(() => {
     if (!onParticleHover) return;
 
     const handleMouseMove = (event: MouseEvent) => {
+      lastMouseEvent.current = event;
+
       // Throttle to ~60fps (16ms) for performance
       if (throttleTimeout.current) return;
 
@@ -116,23 +121,40 @@ export default function ParticleInteraction({
     };
 
     const handleMouseLeave = () => {
+      // Only clear if we actually left the window/viewport, not just the canvas
+      // But for 3D interaction, maybe we want to keep the last known position?
+      // Let's keep it simple: if mouse leaves window, clear hover.
       if (lastHoveredIndex.current !== null) {
         lastHoveredIndex.current = null;
         onParticleHover(null);
       }
     };
 
-    gl.domElement.addEventListener("mousemove", handleMouseMove);
-    gl.domElement.addEventListener("mouseleave", handleMouseLeave);
+    // Use window instead of gl.domElement to capture mouse even if canvas is not focused/covered
+    window.addEventListener("mousemove", handleMouseMove);
+    // window.addEventListener("mouseleave", handleMouseLeave); // Optional: clear on window leave
 
     return () => {
-      gl.domElement.removeEventListener("mousemove", handleMouseMove);
-      gl.domElement.removeEventListener("mouseleave", handleMouseLeave);
+      window.removeEventListener("mousemove", handleMouseMove);
+      // window.removeEventListener("mouseleave", handleMouseLeave);
       if (throttleTimeout.current) {
         clearTimeout(throttleTimeout.current);
       }
     };
   }, [gl, checkHover, onParticleHover]);
+
+  // Re-check hover when repositories update (data loads)
+  useEffect(() => {
+    if (lastMouseEvent.current) {
+      // Add a small delay to ensure geometry is updated
+      const timer = setTimeout(() => {
+        if (lastMouseEvent.current) {
+          checkHover(lastMouseEvent.current);
+        }
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [repositories, checkHover]);
 
   useEffect(() => {
     // Increased threshold for better hover detection
@@ -143,7 +165,7 @@ export default function ParticleInteraction({
     };
 
     const handleClick = (event: MouseEvent) => {
-      if (!particlesRef.current) return;
+      if (!particlesRef.current || repositoriesRef.current.length === 0) return;
 
       // Check if mouse moved between mousedown and mouseup (drag vs click)
       const dragThreshold = 5;
@@ -154,9 +176,10 @@ export default function ParticleInteraction({
         return; // This was a drag, not a click
       }
 
-      // Calculate mouse position in normalized device coordinates
-      mouse.current.x = (event.clientX / window.innerWidth) * 2 - 1;
-      mouse.current.y = -(event.clientY / window.innerHeight) * 2 + 1;
+      // Calculate mouse position relative to canvas
+      const rect = gl.domElement.getBoundingClientRect();
+      mouse.current.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+      mouse.current.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
 
       // Update the picking ray with the camera and mouse position
       raycaster.current.setFromCamera(mouse.current, camera);

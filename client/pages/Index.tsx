@@ -124,13 +124,18 @@ export default function Index() {
   useEffect(() => {
     // Wait for both boot sequence and data to load
     const timer = setTimeout(() => {
-      if (!dataLoading) {
-        setBootComplete(true);
-      }
+      setBootComplete(true);
     }, 4000);
 
     return () => clearTimeout(timer);
-  }, [dataLoading]);
+  }, []);
+
+  // Additional effect to ensure boot completes when data is loaded
+  useEffect(() => {
+    if (!dataLoading && repositories.length > 0) {
+      setBootComplete(true);
+    }
+  }, [dataLoading, repositories.length]);
 
   // Show error if data loading failed
   useEffect(() => {
