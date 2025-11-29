@@ -19,9 +19,35 @@ export default function SearchBar({
   const [selectedIndex, setSelectedIndex] = useState(-1);
 
   const suggestions = useMemo(() => {
-    if (!searchQuery || searchQuery.length < 1 || repositories.length === 0) {
-      return [];
+    if (!searchQuery || searchQuery.length < 1) {
+      // HOT repositories - curated list
+      // Builder.io first, then other trendy but less massive repos to make Builder stand out
+      const defaults = [
+        "BuilderIO/builder",
+        "emilkowalski/sonner",
+        "unocss/unocss",
+        "pmndrs/react-three-fiber",
+        "resend/react-email"
+      ];
+
+      const foundDefaults = repositories.filter(r => defaults.includes(r.id));
+
+      // Sort by the order in defaults array
+      foundDefaults.sort((a, b) => defaults.indexOf(a.id) - defaults.indexOf(b.id));
+
+      // If we don't have enough defaults, fill with top starred (excluding the titans if possible, but simple fallback is fine)
+      let combined = foundDefaults;
+      if (combined.length < 5) {
+        const topStarred = [...repositories]
+          .filter(r => !defaults.includes(r.id))
+          .sort((a, b) => b.stars - a.stars)
+          .slice(0, 5 - combined.length);
+        combined = [...combined, ...topStarred];
+      }
+
+      return combined;
     }
+
     const query = searchQuery.toLowerCase();
 
     // Filter repositories that match the query
@@ -35,9 +61,9 @@ export default function SearchBar({
     // Sort by stars (most popular first)
     const sorted = matches.sort((a, b) => b.stars - a.stars);
 
-    const result = sorted.slice(0, 8);
+    const result = sorted.slice(0, 5);
     return result;
-  }, [searchQuery, repositories, isFocused]);
+  }, [searchQuery, repositories]);
 
   const handleSearchChange = (value: string) => {
     setSearchQuery(value);
@@ -48,7 +74,10 @@ export default function SearchBar({
   const handleFocus = (focused: boolean) => {
     setIsFocused(focused);
     if (!focused) {
-      setSelectedIndex(-1); // Reset on blur
+      // Small delay to allow click on suggestion
+      setTimeout(() => {
+        setSelectedIndex(-1);
+      }, 200);
     }
     onSearchChange?.(searchQuery, focused);
   };
@@ -106,7 +135,7 @@ export default function SearchBar({
   return (
     <>
       {/* Suggestions dropdown - rendered separately to avoid clip-path clipping */}
-      {searchQuery.length > 0 && suggestions.length > 0 && (
+      {isFocused && suggestions.length > 0 && (
         <div
           className="fixed left-1/2 -translate-x-1/2 pointer-events-auto"
           style={{
@@ -117,16 +146,20 @@ export default function SearchBar({
           }}
         >
           <div
-            className="liquid-glass p-4 space-y-1 max-h-[240px] overflow-y-auto rounded-sm"
+            className="liquid-glass p-4 space-y-1 max-h-[500px] overflow-y-auto rounded-sm"
             style={{
               animation:
                 "geometricReveal 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards",
             }}
           >
-            <div className="text-space-cyan/60 text-xs mb-3 font-mono uppercase tracking-wider border-b border-space-cyan/20 pb-2">
-              {suggestions.length}{" "}
-              {suggestions.length === 1 ? "Repository" : "Repositories"} Found
-            </div>
+            {searchQuery.length === 0 && (
+              <div className="text-space-cyan/60 text-xs mb-3 font-mono uppercase tracking-wider border-b border-space-cyan/20 pb-2 flex items-center gap-2">
+                <svg className="w-3.5 h-3.5 text-orange-500" fill="currentColor" viewBox="0 0 24 24">
+                  <path fillRule="evenodd" d="M12.963 2.286a.75.75 0 00-1.071-.136 9.742 9.742 0 00-3.539 6.177 7.547 7.547 0 01-1.705-1.715.75.75 0 00-1.152-.082A9 9 0 1015.68 4.534a7.46 7.46 0 01-2.717-2.248zM15.75 14.25a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" clipRule="evenodd" />
+                </svg>
+                HOT
+              </div>
+            )}
             {suggestions.map((repo, index) => (
               <div
                 key={`${repo.owner}/${repo.name}`}

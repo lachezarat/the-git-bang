@@ -136,10 +136,26 @@ export async function handleExploreRepo(req: Request, res: Response) {
     return;
   }
 
-  const { name, description, topics, languages } = req.body;
+  console.log(`🔍 [Explore] Request received. Content-Type: ${req.headers["content-type"]}`);
+  console.log(`🔍 [Explore] Raw Body type: ${typeof req.body}`);
+
+  let body = req.body;
+  if (typeof body === "string") {
+    try {
+      body = JSON.parse(body);
+      console.log("🔍 [Explore] Parsed string body successfully.");
+    } catch (e) {
+      console.error("🔍 [Explore] Failed to parse string body:", e);
+    }
+  }
+
+  console.log(`🔍 [Explore] Body content:`, JSON.stringify(body).slice(0, 200) + "...");
+
+  const { name, description, topics, languages } = body;
 
   if (!name) {
-    res.status(400).json({ error: "Repository name is required" });
+    console.error("❌ [Explore] Missing 'name' in body:", body);
+    res.status(400).json({ error: "Repository name is required", receivedBody: body });
     return;
   }
 
