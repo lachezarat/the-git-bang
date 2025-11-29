@@ -28,3 +28,6 @@ dist-ssr
 .gitingest_venv/
 *.txt
 *.html
+
+# Local Netlify folder
+.netlify
