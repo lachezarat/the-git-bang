@@ -32,31 +32,49 @@ export async function handleGenerateIdeas(req: Request, res: Response) {
 
   console.log(`🤖 [Generate] Request received. Content-Type: ${req.headers["content-type"]}`);
 
-  let body = req.body;
+  // Helper to parse body from various formats (Express body, Netlify event body, Buffer)
+  const parseBody = (req: Request): any => {
+    let body = req.body;
 
-  // Fallback: Check for Netlify/AWS Lambda event body directly
-  // @ts-ignore - apiGateway property is added by serverless-http
-  const eventBody = req.apiGateway?.event?.body;
-  if ((!body || Object.keys(body).length === 0) && eventBody) {
-    console.log("🤖 [Generate] req.body is empty, checking event.body...");
-    if (typeof eventBody === "string") {
-      try {
-        body = JSON.parse(eventBody);
-        console.log("🤖 [Generate] Parsed event.body successfully.");
-      } catch (e) {
-        console.error("🤖 [Generate] Failed to parse event.body:", e);
-      }
-    } else {
+    // Check for Netlify/AWS Lambda event body directly
+    // @ts-ignore - apiGateway property is added by serverless-http
+    const eventBody = req.apiGateway?.event?.body;
+
+    // If req.body is empty/useless and we have an event body, use that
+    if ((!body || Object.keys(body).length === 0) && eventBody) {
+      console.log("🔍 Using event.body fallback");
       body = eventBody;
     }
-  } else if (typeof body === "string") {
-    try {
-      body = JSON.parse(body);
-      console.log("🤖 [Generate] Parsed string req.body successfully.");
-    } catch (e) {
-      console.error("🤖 [Generate] Failed to parse string req.body:", e);
+
+    // Handle Buffer or Buffer-like objects (which is what we saw in the logs: { type: 'Buffer', data: [...] })
+    if (body && typeof body === 'object' && body.type === 'Buffer' && Array.isArray(body.data)) {
+      console.log("🔍 Detected Buffer-like body object, converting to string...");
+      try {
+        const buffer = Buffer.from(body.data);
+        body = buffer.toString('utf8');
+        console.log("🔍 Converted Buffer to string successfully.");
+      } catch (e) {
+        console.error("❌ Failed to convert Buffer to string:", e);
+      }
+    } else if (Buffer.isBuffer(body)) {
+      console.log("🔍 Detected raw Buffer body, converting to string...");
+      body = body.toString('utf8');
     }
-  }
+
+    // If it's a string (now), parse it
+    if (typeof body === "string") {
+      try {
+        body = JSON.parse(body);
+        console.log("🔍 Parsed string body successfully.");
+      } catch (e) {
+        console.error("❌ Failed to parse string body:", e);
+      }
+    }
+
+    return body;
+  };
+
+  const body = parseBody(req);
 
   const { name, description, topics, languages } = body || {};
 
@@ -67,7 +85,7 @@ export async function handleGenerateIdeas(req: Request, res: Response) {
       receivedBody: body,
       debug: {
         type: typeof req.body,
-        hasEventBody: !!eventBody
+        isBuffer: Buffer.isBuffer(req.body)
       }
     });
     return;
@@ -173,31 +191,41 @@ export async function handleExploreRepo(req: Request, res: Response) {
   }
 
   console.log(`🔍 [Explore] Request received. Content-Type: ${req.headers["content-type"]}`);
-  console.log(`🔍 [Explore] Raw Body type: ${typeof req.body}`);
 
+  // Re-use the parsing logic (we can't easily share the function across exports without refactoring, so duplicating the logic for safety/speed)
   let body = req.body;
 
-  // Fallback: Check for Netlify/AWS Lambda event body directly
+  // Check for Netlify/AWS Lambda event body directly
   // @ts-ignore - apiGateway property is added by serverless-http
   const eventBody = req.apiGateway?.event?.body;
+
   if ((!body || Object.keys(body).length === 0) && eventBody) {
-    console.log("🔍 [Explore] req.body is empty, checking event.body...");
-    if (typeof eventBody === "string") {
-      try {
-        body = JSON.parse(eventBody);
-        console.log("🔍 [Explore] Parsed event.body successfully.");
-      } catch (e) {
-        console.error("🔍 [Explore] Failed to parse event.body:", e);
-      }
-    } else {
-      body = eventBody;
+    console.log("🔍 [Explore] Using event.body fallback");
+    body = eventBody;
+  }
+
+  // Handle Buffer or Buffer-like objects
+  if (body && typeof body === 'object' && body.type === 'Buffer' && Array.isArray(body.data)) {
+    console.log("🔍 [Explore] Detected Buffer-like body object, converting to string...");
+    try {
+      const buffer = Buffer.from(body.data);
+      body = buffer.toString('utf8');
+      console.log("🔍 [Explore] Converted Buffer to string successfully.");
+    } catch (e) {
+      console.error("❌ [Explore] Failed to convert Buffer to string:", e);
     }
-  } else if (typeof body === "string") {
+  } else if (Buffer.isBuffer(body)) {
+    console.log("🔍 [Explore] Detected raw Buffer body, converting to string...");
+    body = body.toString('utf8');
+  }
+
+  // If it's a string (now), parse it
+  if (typeof body === "string") {
     try {
       body = JSON.parse(body);
-      console.log("🔍 [Explore] Parsed string req.body successfully.");
+      console.log("🔍 [Explore] Parsed string body successfully.");
     } catch (e) {
-      console.error("🔍 [Explore] Failed to parse string req.body:", e);
+      console.error("❌ [Explore] Failed to parse string body:", e);
     }
   }
 
@@ -212,7 +240,7 @@ export async function handleExploreRepo(req: Request, res: Response) {
       receivedBody: body,
       debug: {
         type: typeof req.body,
-        hasEventBody: !!eventBody
+        isBuffer: Buffer.isBuffer(req.body)
       }
     });
     return;
