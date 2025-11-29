@@ -152,6 +152,32 @@ export default function ParticleInteraction({
     };
   }, [gl, checkHover, onParticleHover]);
 
+  // Poll for repositories to become available and re-check hover
+  // This handles the case where particles render before repository data loads
+  useEffect(() => {
+    if (!onParticleHover || repositoriesRef.current.length > 0) return;
+
+    // Set up a polling interval to check for repositories
+    const pollInterval = setInterval(() => {
+      if (repositoriesRef.current.length > 0 && lastMouseEvent.current) {
+        console.log("🔄 Repositories loaded, re-checking hover");
+        checkHover(lastMouseEvent.current);
+        // Stop polling once we have data
+        clearInterval(pollInterval);
+      }
+    }, 500); // Check every 500ms
+
+    // Clean up after 10 seconds max (20 attempts)
+    const timeout = setTimeout(() => {
+      clearInterval(pollInterval);
+    }, 10000);
+
+    return () => {
+      clearInterval(pollInterval);
+      clearTimeout(timeout);
+    };
+  }, [checkHover, onParticleHover]);
+
   // Re-check hover when repositories update (data loads)
   useEffect(() => {
     if (lastMouseEvent.current) {
