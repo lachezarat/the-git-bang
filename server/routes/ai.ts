@@ -326,54 +326,27 @@ export async function handleGetIdeaPlan(req: Request, res: Response) {
   console.log(`📝 Generating execution plan for: ${ideaTitle}`);
 
   try {
-    const prompt = `
-      You are a Senior Product Manager and Technical Lead.
-      
-      Your task is to create a detailed, step-by-step execution plan to build the following app idea using **Builder.io** and the existing repository "${repoName}".
+    const prompt = `Create a step-by-step execution plan for building this app idea using Builder.io.
 
-      App Idea: "${ideaTitle}"
-      Description: "${ideaDescription}"
-      Builder.io Angle: "${ideaBuilderAngle}"
+App: "${ideaTitle}"
+Description: ${ideaDescription}
+Builder.io Angle: ${ideaBuilderAngle}
+Existing Repo: ${repoName}
 
-      CRITICAL INSTRUCTION:
-      You MUST structure the response as a numbered list of steps.
-      
-      **Step 1 MUST BE EXACTLY:**
-      "1. Sign up or Sign in to [Builder.io](https://builderio.partnerlinks.io/5ao76wthwoji)"
-      
-      Do NOT add any description or extra text for Step 1. Just the numbered item with the link.
+REQUIRED STEPS (use this structure):
+1. Sign up or Sign in to [Builder.io](https://builderio.partnerlinks.io/5ao76wthwoji)
+2. Connect repository "${repoName}" to Builder.io Fusion
+3. Import from Figma or generate features with text prompts
+4. Use Visual Editor + MCP Servers (Stripe, Database, etc.) to refine
+5. Review and merge the Pull Request
+6. Provide 5 specific prompts for Builder.io Fusion (recommend Claude 4.5 Opus)
 
-      **For the remaining steps, you MUST follow the "Builder.io Fusion" workflow:**
-
-      **Step 2: Connect your Repository**
-      - Explain how to connect the existing "${repoName}" repository to Builder.io Fusion.
-      - Mention that code stays in their infrastructure.
-
-      **Step 3: Import Design or Generate**
-      - **CRITICAL:** Explicitly mention **"Import from Figma"** as a key capability to turn designs into code instantly.
-      - Alternatively, explain how to generate features using text prompts if no design exists.
-
-      **Step 4: Iterate and Refine (with MCPs)**
-      - Explain how to use the **Visual Editor** to refine the generated code.
-      - **CRITICAL:** Mention using **MCP Servers (Model Context Protocol)** to connect to external tools or data sources (e.g., "Connect a Stripe MCP", "Use a Database MCP").
-      - Explain how to use the existing components from the repo (Design System integration).
-
-      **Step 5: Review and Merge**
-      - Explain the **Pull Request workflow**: Builder.io sends a PR to the repo.
-      - Mention reviewing the code and merging it into the main branch.
-
-      **Step 6: Fusion Prompts (CRITICAL)**
-      Provide 5-8 specific, high-quality prompts that the user can copy and paste into Builder.io Fusion to build this app.
-      - These prompts should be sequential or cover different parts of the app.
-      - **Recommended Model:** Explicitly recommend using **Claude 4.5 Opus** (or the most advanced Claude model available) for the best results in Fusion.
-
-      Keep the tone encouraging, professional, and action-oriented. Use Markdown formatting.
-    `;
+Use Markdown formatting. Be concise and actionable.`;
 
     const completion = await openai.chat.completions.create({
       model: "x-ai/grok-4.1-fast:free",
       messages: [{ role: "user", content: prompt }],
-      max_tokens: 2500,
+      max_tokens: 2000,
     }, { timeout: 8000 });
 
     const responseText = completion.choices[0]?.message?.content || "";
