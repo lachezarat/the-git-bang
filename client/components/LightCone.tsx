@@ -202,8 +202,30 @@ export default function LightCone({
   const hoveredIndex = useMemo(() => {
     if (!hoveredId || repositories.length === 0) return -1.0;
     const index = repositories.findIndex((r) => r.id === hoveredId);
+    // Log for debugging initial load issues
+    if (index >= 0) {
+      console.log(`✨ Hover index calculated: ${index} for repo ${hoveredId}`);
+    }
     return index;
   }, [hoveredId, repositories]);
+
+  // Track if repositories just became available (first load)
+  const prevRepoCount = useRef(0);
+  useEffect(() => {
+    if (prevRepoCount.current === 0 && repositories.length > 0) {
+      console.log("🎯 Repositories just loaded, forcing shader uniform update");
+      // Force immediate update of shader uniforms when data first loads
+      if (materialRef.current && hoveredId) {
+        const index = repositories.findIndex((r) => r.id === hoveredId);
+        if (index >= 0) {
+          materialRef.current.uniforms.uHoveredId.value = index;
+          console.log(`🔄 Forced hover update to index ${index}`);
+        }
+      }
+    }
+    prevRepoCount.current = repositories.length;
+  }, [repositories, hoveredId]);
+
 
 
 
