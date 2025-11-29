@@ -8,9 +8,9 @@ dotenv.config({ path: path.resolve(process.cwd(), ".env.local"), override: true 
 
 import express from "express";
 import cors from "cors";
-import { handleDemo } from "./routes/demo";
+import { handleDemo } from "./routes/demo.ts";
 
-import { handleGenerateIdeas, handleExploreRepo, handleGetIdeaPlan } from "./routes/ai";
+import { handleGenerateIdeas, handleExploreRepo, handleGetIdeaPlan } from "./routes/ai.ts";
 
 export function createServer() {
   const app = express();

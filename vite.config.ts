@@ -39,7 +39,7 @@ function expressPlugin(): Plugin {
     apply: "serve", // Only apply during development (serve mode)
     async configureServer(server) {
       // Use a variable to prevent esbuild from trying to bundle this during build
-      const serverEntry = "./server/index.ts";
+      const serverEntry = path.resolve(__dirname, "./server/index.ts");
       const { createServer } = await import(serverEntry);
       const app = createServer();
 

@@ -160,7 +160,6 @@ export default function ParticleInteraction({
     // Set up a polling interval to check for repositories
     const pollInterval = setInterval(() => {
       if (repositoriesRef.current.length > 0 && lastMouseEvent.current) {
-        console.log("🔄 Repositories loaded, re-checking hover");
         checkHover(lastMouseEvent.current);
         // Stop polling once we have data
         clearInterval(pollInterval);
@@ -180,14 +179,20 @@ export default function ParticleInteraction({
 
   // Re-check hover when repositories update (data loads)
   useEffect(() => {
-    if (lastMouseEvent.current) {
-      // Add a small delay to ensure geometry is updated
-      const timer = setTimeout(() => {
-        if (lastMouseEvent.current) {
-          checkHover(lastMouseEvent.current);
-        }
-      }, 100);
-      return () => clearTimeout(timer);
+    if (repositories.length > 0) {
+      // Try multiple times to catch the moment geometry is ready
+      // This fixes the issue where initial load doesn't trigger hover
+      const checkTimes = [100, 300, 600, 1000];
+
+      const timeouts = checkTimes.map(delay =>
+        setTimeout(() => {
+          if (lastMouseEvent.current) {
+            checkHover(lastMouseEvent.current);
+          }
+        }, delay)
+      );
+
+      return () => timeouts.forEach(t => clearTimeout(t));
     }
   }, [repositories, checkHover]);
 

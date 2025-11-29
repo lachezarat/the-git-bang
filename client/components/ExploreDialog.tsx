@@ -62,6 +62,9 @@ const Mermaid = ({ chart }: { chart: string }) => {
                 activationBorderColor: "#00fff9",
                 activationBkgColor: "#1a1f2e",
                 sequenceNumberColor: "#fff",
+                // Specific overrides for flowcharts to ensure dark nodes
+                nodeBkg: "#1a1f2e",
+                nodeTextColor: "#ffffff",
             },
         });
     }, []);

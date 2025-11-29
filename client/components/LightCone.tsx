@@ -202,10 +202,6 @@ export default function LightCone({
   const hoveredIndex = useMemo(() => {
     if (!hoveredId || repositories.length === 0) return -1.0;
     const index = repositories.findIndex((r) => r.id === hoveredId);
-    // Log for debugging initial load issues
-    if (index >= 0) {
-      console.log(`✨ Hover index calculated: ${index} for repo ${hoveredId}`);
-    }
     return index;
   }, [hoveredId, repositories]);
 
@@ -213,13 +209,11 @@ export default function LightCone({
   const prevRepoCount = useRef(0);
   useEffect(() => {
     if (prevRepoCount.current === 0 && repositories.length > 0) {
-      console.log("🎯 Repositories just loaded, forcing shader uniform update");
       // Force immediate update of shader uniforms when data first loads
       if (materialRef.current && hoveredId) {
         const index = repositories.findIndex((r) => r.id === hoveredId);
         if (index >= 0) {
           materialRef.current.uniforms.uHoveredId.value = index;
-          console.log(`🔄 Forced hover update to index ${index}`);
         }
       }
     }
@@ -229,7 +223,7 @@ export default function LightCone({
 
 
 
-  const { geometry, uniforms } = useMemo(() => {
+  const geometry = useMemo(() => {
     // Only use fallback if data is NOT loaded and we have no repos.
     // If data IS loaded and we have no repos (e.g. filtered out), count should be 0.
     const shouldUseFallback = !dataLoaded && repositories.length === 0;
@@ -330,15 +324,16 @@ export default function LightCone({
     );
     geometry.setAttribute("particleId", new THREE.BufferAttribute(particleIds, 1));
 
-    const uniforms = {
-      uTime: { value: 0 },
-      uPixelRatio: { value: Math.min(window.devicePixelRatio, 2) },
-      uFocusedId: { value: -1.0 },
-      uHoveredId: { value: -1.0 },
-    };
-
-    return { geometry, uniforms };
+    return geometry;
   }, [repositories, dataLoaded]);
+
+  // Create uniforms once and update values
+  const uniforms = useMemo(() => ({
+    uTime: { value: 0 },
+    uPixelRatio: { value: Math.min(window.devicePixelRatio, 2) },
+    uFocusedId: { value: -1.0 },
+    uHoveredId: { value: -1.0 },
+  }), []); // Empty dependency array to keep object stable
 
   // Handle resize for pixel ratio
   useEffect(() => {
@@ -353,11 +348,17 @@ export default function LightCone({
   }, []);
 
   useFrame((state) => {
-    if (materialRef.current) {
+    if (materialRef.current && materialRef.current.uniforms) {
       materialRef.current.uniforms.uTime.value = state.clock.elapsedTime;
+
       // robustly update these every frame to handle material recreation or ref desync
-      materialRef.current.uniforms.uHoveredId.value = hoveredIndex;
-      materialRef.current.uniforms.uFocusedId.value = focusedIndex;
+      // This ensures that even if the material was just created, it gets the right values immediately
+      if (materialRef.current.uniforms.uHoveredId && materialRef.current.uniforms.uHoveredId.value !== hoveredIndex) {
+        materialRef.current.uniforms.uHoveredId.value = hoveredIndex;
+      }
+      if (materialRef.current.uniforms.uFocusedId && materialRef.current.uniforms.uFocusedId.value !== focusedIndex) {
+        materialRef.current.uniforms.uFocusedId.value = focusedIndex;
+      }
     }
   });
 

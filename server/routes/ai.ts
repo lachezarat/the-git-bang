@@ -278,9 +278,17 @@ export async function handleExploreRepo(req: Request, res: Response) {
       3. **Architecture Visualization**:
          - Create a **Mermaid.js** diagram (use \`\`\`mermaid code block) that visualizes the conceptual architecture, data flow, or user journey of this application. 
          - Use "graph TD" or "graph LR".
-         - CRITICAL: You MUST enclose ALL node labels in double quotes. Example: A["User"] --> B["API Server"].
-         - Do NOT use brackets [] or parentheses () inside the node labels unless they are inside the double quotes.
-         - Keep the diagram relatively simple but informative (e.g., User -> Frontend -> API -> Database). Infer the likely architecture based on the languages and description (e.g., if it's React/Node, show that structure).
+         - **CRITICAL SYNTAX RULES:**
+           1. **Node IDs**: Use simple alphanumeric IDs (e.g., A, B, Node1). **NEVER** use parentheses \`()\` or brackets \`[]\` in the Node ID itself.
+              - BAD: \`User(Client)\` --> B
+              - GOOD: \`User["Client"]\` --> B
+           2. **Node Labels**: You **MUST** enclose ALL node labels in double quotes.
+              - BAD: \`A[User]\`
+              - GOOD: \`A["User"]\`
+           3. **Edge Labels**: Avoid special characters in edge labels. Use simple text.
+              - BAD: \`A-- >| GET / api / v1 | B\`
+              - GOOD: \`A-- >| "GET /api/v1" | B\` (Quote the edge label if it has spaces or slashes)
+         - Keep the diagram relatively simple but informative (e.g., User -> Frontend -> API -> Database). Infer the likely architecture based on the languages and description.
       4. **Technical Stack Inference**: Briefly mention the likely tech stack components based on the languages and description.
 
       Keep the tone professional, insightful, and "cyberpunk" cool (subtle usage of tech-forward language).
@@ -377,7 +385,7 @@ REQUIRED STEPS (use this structure):
 3. Import from Figma or generate features with text prompts
 4. Use Visual Editor + MCP Servers (Stripe, Database, etc.) to refine
 5. Review and merge the Pull Request
-6. Provide 8 specific prompts for Builder.io Fusion (recommend using Claude 4.5 Opus, DO NOT CHANGE THIS MODEL, ITS IMPORTANT)
+6. Provide 8 specific prompts for Builder.io Fusion (recommend using Claude 4.5 Opus) DO NOT CHANGE THE MODEL
 
 Use Markdown formatting. Be concise and actionable.`;
 
