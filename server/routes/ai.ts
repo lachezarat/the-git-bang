@@ -140,22 +140,45 @@ export async function handleExploreRepo(req: Request, res: Response) {
   console.log(`🔍 [Explore] Raw Body type: ${typeof req.body}`);
 
   let body = req.body;
-  if (typeof body === "string") {
+
+  // Fallback: Check for Netlify/AWS Lambda event body directly
+  // @ts-ignore - apiGateway property is added by serverless-http
+  const eventBody = req.apiGateway?.event?.body;
+  if ((!body || Object.keys(body).length === 0) && eventBody) {
+    console.log("🔍 [Explore] req.body is empty, checking event.body...");
+    if (typeof eventBody === "string") {
+      try {
+        body = JSON.parse(eventBody);
+        console.log("🔍 [Explore] Parsed event.body successfully.");
+      } catch (e) {
+        console.error("🔍 [Explore] Failed to parse event.body:", e);
+      }
+    } else {
+      body = eventBody;
+    }
+  } else if (typeof body === "string") {
     try {
       body = JSON.parse(body);
-      console.log("🔍 [Explore] Parsed string body successfully.");
+      console.log("🔍 [Explore] Parsed string req.body successfully.");
     } catch (e) {
-      console.error("🔍 [Explore] Failed to parse string body:", e);
+      console.error("🔍 [Explore] Failed to parse string req.body:", e);
     }
   }
 
-  console.log(`🔍 [Explore] Body content:`, JSON.stringify(body).slice(0, 200) + "...");
+  console.log(`🔍 [Explore] Final Body content:`, JSON.stringify(body).slice(0, 200) + "...");
 
-  const { name, description, topics, languages } = body;
+  const { name, description, topics, languages } = body || {};
 
   if (!name) {
-    console.error("❌ [Explore] Missing 'name' in body:", body);
-    res.status(400).json({ error: "Repository name is required", receivedBody: body });
+    console.error("❌ [Explore] Missing 'name' in body. Received:", body);
+    res.status(400).json({
+      error: "Repository name is required",
+      receivedBody: body,
+      debug: {
+        type: typeof req.body,
+        hasEventBody: !!eventBody
+      }
+    });
     return;
   }
 
