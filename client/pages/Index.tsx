@@ -234,6 +234,16 @@ export default function Index() {
           </Canvas>
         )}
 
+        {viewMode === "list" && (
+          <RepoList
+            repositories={sortedRepositories}
+            onSelect={(repo) => {
+              setSelectedRepo(repo);
+              setRepoCardPos({ x: window.innerWidth / 2, y: window.innerHeight / 2 });
+            }}
+          />
+        )}
+
         <HUD
           onSearchChange={handleSearchChange}
           onSuggestionSelect={handleSuggestionSelect}
@@ -253,16 +263,6 @@ export default function Index() {
           onSortChange={setSortMode}
           sortMode={sortMode}
         />
-
-        {viewMode === "list" && (
-          <RepoList
-            repositories={sortedRepositories}
-            onSelect={(repo) => {
-              setSelectedRepo(repo);
-              setRepoCardPos({ x: window.innerWidth / 2, y: window.innerHeight / 2 });
-            }}
-          />
-        )}
         <AmbientSound />
 
         {selectedRepo && (

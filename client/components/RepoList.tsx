@@ -12,7 +12,6 @@ export default function RepoList({ repositories, onSelect }: RepoListProps) {
     const [visibleCount, setVisibleCount] = useState(BATCH_SIZE);
     const observerTarget = useRef<HTMLDivElement>(null);
 
-    // Reset visible count when repositories change (e.g. filtering)
     useEffect(() => {
         setVisibleCount(BATCH_SIZE);
     }, [repositories]);
