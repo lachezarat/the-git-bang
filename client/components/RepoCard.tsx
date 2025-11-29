@@ -169,16 +169,22 @@ export default function RepoCard({ repo, position, onClose }: RepoCardProps) {
     if (exploreContent) return;
 
     setIsExploring(true);
+
+    const payload = {
+      name: repo.id,
+      description: details?.description || "",
+      topics: details?.topics || [],
+      languages: details?.languages || [repo.primaryLanguage],
+    };
+
+    console.log("🚀 [RepoCard] Exploring repo:", repo.id);
+    console.log("📦 [RepoCard] Payload:", payload);
+
     try {
       const response = await fetch("/api/ai/explore", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: repo.id,
-          description: details?.description || "",
-          topics: details?.topics || [],
-          languages: details?.languages || [repo.primaryLanguage],
-        }),
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
