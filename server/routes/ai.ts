@@ -30,10 +30,46 @@ export async function handleGenerateIdeas(req: Request, res: Response) {
     return;
   }
 
-  const { name, description, topics, languages } = req.body;
+  console.log(`🤖 [Generate] Request received. Content-Type: ${req.headers["content-type"]}`);
+
+  let body = req.body;
+
+  // Fallback: Check for Netlify/AWS Lambda event body directly
+  // @ts-ignore - apiGateway property is added by serverless-http
+  const eventBody = req.apiGateway?.event?.body;
+  if ((!body || Object.keys(body).length === 0) && eventBody) {
+    console.log("🤖 [Generate] req.body is empty, checking event.body...");
+    if (typeof eventBody === "string") {
+      try {
+        body = JSON.parse(eventBody);
+        console.log("🤖 [Generate] Parsed event.body successfully.");
+      } catch (e) {
+        console.error("🤖 [Generate] Failed to parse event.body:", e);
+      }
+    } else {
+      body = eventBody;
+    }
+  } else if (typeof body === "string") {
+    try {
+      body = JSON.parse(body);
+      console.log("🤖 [Generate] Parsed string req.body successfully.");
+    } catch (e) {
+      console.error("🤖 [Generate] Failed to parse string req.body:", e);
+    }
+  }
+
+  const { name, description, topics, languages } = body || {};
 
   if (!name) {
-    res.status(400).json({ error: "Repository name is required" });
+    console.error("❌ [Generate] Missing 'name' in body:", body);
+    res.status(400).json({
+      error: "Repository name is required",
+      receivedBody: body,
+      debug: {
+        type: typeof req.body,
+        hasEventBody: !!eventBody
+      }
+    });
     return;
   }
 
