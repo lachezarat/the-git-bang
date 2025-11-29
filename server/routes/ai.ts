@@ -316,7 +316,45 @@ export async function handleGetIdeaPlan(req: Request, res: Response) {
     return;
   }
 
-  const { ideaTitle, ideaDescription, ideaBuilderAngle, repoName } = req.body;
+  console.log(`📝 [IdeaPlan] Request received. Content-Type: ${req.headers["content-type"]}`);
+
+  // Parse body (same logic as other endpoints for Netlify compatibility)
+  let body = req.body;
+
+  // Check for Netlify/AWS Lambda event body directly
+  // @ts-ignore - apiGateway property is added by serverless-http
+  const eventBody = req.apiGateway?.event?.body;
+
+  if ((!body || Object.keys(body).length === 0) && eventBody) {
+    console.log("🔍 [IdeaPlan] Using event.body fallback");
+    body = eventBody;
+  }
+
+  // Handle Buffer or Buffer-like objects
+  if (body && typeof body === 'object' && body.type === 'Buffer' && Array.isArray(body.data)) {
+    console.log("🔍 [IdeaPlan] Detected Buffer-like body object, converting to string...");
+    try {
+      const buffer = Buffer.from(body.data);
+      body = buffer.toString('utf8');
+    } catch (e) {
+      console.error("❌ [IdeaPlan] Failed to convert Buffer to string:", e);
+    }
+  } else if (Buffer.isBuffer(body)) {
+    console.log("🔍 [IdeaPlan] Detected raw Buffer body, converting to string...");
+    body = body.toString('utf8');
+  }
+
+  // If it's a string (now), parse it
+  if (typeof body === "string") {
+    try {
+      body = JSON.parse(body);
+      console.log("🔍 [IdeaPlan] Parsed string body successfully.");
+    } catch (e) {
+      console.error("❌ [IdeaPlan] Failed to parse string body:", e);
+    }
+  }
+
+  const { ideaTitle, ideaDescription, ideaBuilderAngle, repoName } = body || {};
 
   if (!ideaTitle) {
     res.status(400).json({ error: "Idea title is required" });
