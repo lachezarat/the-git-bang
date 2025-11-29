@@ -40,7 +40,7 @@ export default function RepoList({ repositories, onSelect }: RepoListProps) {
 
     return (
         <div className="absolute inset-0 z-10 overflow-y-auto pt-24 pb-12 px-4 md:px-12 pointer-events-auto">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 max-w-7xl mx-auto">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-6 max-w-[65%] mx-auto">
                 {visibleRepositories.map((repo) => (
                     <div
                         key={repo.id}

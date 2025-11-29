@@ -118,7 +118,7 @@ export default function TimelinePanel({
       className="hud-element absolute bottom-6 left-6 pointer-events-auto"
       style={{ animationDelay: "0.7s" }}
     >
-      <div className="liquid-glass px-6 py-4 min-w-[340px]">
+      <div className="liquid-glass px-6 py-4 min-w-[300px]">
         <div className="space-y-4 font-mono text-xs">
           <div className="text-space-magenta/80 glow-magenta mb-3 font-display text-sm uppercase tracking-wider flex justify-between items-center">
             <span>Star Filter</span>

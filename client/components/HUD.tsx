@@ -53,7 +53,6 @@ export default function HUD({
         repositoryCount={repositories.length}
         activeLanguage={selectedLanguage}
       />
-      <HoverInfoPanel hoveredRepo={hoveredRepo} />
       <TimelinePanel
         onLanguageSelect={onLanguageSelect}
         selectedLanguage={selectedLanguage}
@@ -62,7 +61,13 @@ export default function HUD({
         onMinStarsChange={onMinStarsChange}
         onMaxStarsChange={onMaxStarsChange}
       />
-      <ControlsPanel />
+
+      {viewMode === "3d" && (
+        <>
+          <HoverInfoPanel hoveredRepo={hoveredRepo} />
+          <ControlsPanel />
+        </>
+      )}
       <SearchBar
         onSearchChange={onSearchChange}
         onSuggestionSelect={onSuggestionSelect}
