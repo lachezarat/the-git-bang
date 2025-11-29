@@ -6,7 +6,7 @@ import {
     DialogTitle,
 } from "./ui/dialog";
 import { AppIdea } from "@shared/api";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { IdeaPlanDialog } from "./IdeaPlanDialog";
 import { useToast } from "@/hooks/use-toast";
 import { ProgressBar } from "./ProgressBar";
@@ -40,12 +40,23 @@ export function VibeIdeasDialog({
         setPageIndex(0);
     }, [ideas]);
 
+    const scrollRef = useRef<HTMLDivElement>(null);
+    const [isSwitching, setIsSwitching] = useState(false);
+
     const displayedIdeas = ideas.slice(pageIndex * 3, (pageIndex + 1) * 3);
     const hasMoreLocalIdeas = (pageIndex + 1) * 3 < ideas.length;
 
     const handleLocalGenerateMore = () => {
         if (hasMoreLocalIdeas) {
-            setPageIndex(prev => prev + 1);
+            setIsSwitching(true);
+            // Quick loading state for better UX
+            setTimeout(() => {
+                setPageIndex(prev => prev + 1);
+                if (scrollRef.current) {
+                    scrollRef.current.scrollTop = 0;
+                }
+                setIsSwitching(false);
+            }, 600);
         } else {
             onGenerateMore();
         }
@@ -99,18 +110,25 @@ export function VibeIdeasDialog({
                         </DialogDescription>
                     </DialogHeader>
 
-                    <div className="max-h-[60vh] overflow-y-auto pr-2 mt-4">
-                        {isGenerating ? (
+                    <div ref={scrollRef} className="max-h-[60vh] overflow-y-auto pr-2 mt-4 custom-scrollbar">
+                        {isGenerating || isSwitching ? (
                             <div className="flex flex-col items-center justify-center py-12 space-y-4">
-                                <ProgressBar
-                                    stages={[
-                                        "Reading repository context...",
-                                        "Analyzing tech stack...",
-                                        "Brainstorming concepts...",
-                                        "Refining monetization strategies...",
-                                        "Finalizing ideas..."
-                                    ]}
-                                />
+                                {isSwitching ? (
+                                    <div className="flex flex-col items-center animate-pulse">
+                                        <div className="w-8 h-8 border-2 border-space-magenta border-t-transparent rounded-full animate-spin mb-2" />
+                                        <span className="text-space-magenta font-mono text-sm">Fetching next batch...</span>
+                                    </div>
+                                ) : (
+                                    <ProgressBar
+                                        stages={[
+                                            "Reading repository context...",
+                                            "Analyzing tech stack...",
+                                            "Brainstorming concepts...",
+                                            "Refining monetization strategies...",
+                                            "Finalizing ideas..."
+                                        ]}
+                                    />
+                                )}
                             </div>
                         ) : (
                             <div className="space-y-4">
