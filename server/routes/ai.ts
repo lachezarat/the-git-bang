@@ -94,45 +94,35 @@ export async function handleGenerateIdeas(req: Request, res: Response) {
   console.log(`🤖 Generating Vibe Coding ideas for: ${name}`);
 
   try {
-    const prompt = `
-      You are a Senior Product Manager and Technical Lead.
-      
-      Your task is to generate 9 innovative and practical app ideas based on the existing repository: "${name}".
-      
-      The ideas should be:
-      1. **Professional & Market-Ready:** Focus on solving real problems or enhancing developer productivity.
-      2. **Feasible:** Can be built using the existing code as a foundation.
-      3. **High Value:** Have clear potential for monetization or significant user adoption.
+    const prompt = `Generate 3 innovative app ideas for "${name}" repository.
 
-      CRITICAL REQUIREMENT:
-      Each idea MUST be framed as something that can be rapidly accelerated using **Builder.io**. 
-      Explain how Builder.io's visual CMS, drag-and-drop capabilities, or GenAI integration would make building this specific idea faster and better.
+Repository: ${name}
+Description: ${description}
+Topics: ${topics?.join(", ") || "N/A"}
+Languages: ${languages?.join(", ") || "N/A"}
 
-      Repository Context:
-      - Name: ${name}
-      - Description: ${description}
-      - Topics: ${topics?.join(", ")}
-      - Languages: ${languages?.join(", ")}
+Requirements:
+- Professional, market-ready ideas
+- Can be built using this repo as foundation
+- Include Builder.io integration angle
+- Include monetization strategy
 
-      Output Format:
-      Return strictly a JSON array of objects. Do not include markdown formatting like \`\`\`json.
-      Each object must have:
-      - "title": A catchy, cyberpunk/modern name for the app.
-      - "description": A detailed 3-4 sentence pitch explaining the core value proposition and how it works.
-      - "builder_angle": A specific sentence on how Builder.io speeds this up (e.g. "Use Builder for the landing page...", "Manage the UI components visually...").
-      - "monetization_strategy": A specific strategy to make money (e.g. "Freemium model with pro features", "Enterprise licensing").
-      - "potential_mrr": A realistic estimation of potential Monthly Recurring Revenue for a solo dev (e.g. "$10k - $100k/mo").
-
-      Example JSON structure:
-      [
-        { "title": "Neo-Dashboard", "description": "...", "builder_angle": "...", "monetization_strategy": "...", "potential_mrr": "..." }
-      ]
-    `;
+Return ONLY a JSON array (no markdown):
+[
+  {
+    "title": "App Name",
+    "description": "2-3 sentence pitch",
+    "builder_angle": "How Builder.io accelerates this",
+    "monetization_strategy": "Revenue model",
+    "potential_mrr": "$X-$Y/mo"
+  }
+]`;
 
     const completion = await openai.chat.completions.create({
       model: "x-ai/grok-4.1-fast:free",
       messages: [{ role: "user", content: prompt }],
-    });
+      max_tokens: 1500,
+    }, { timeout: 8000 });
 
     const responseText = completion.choices[0]?.message?.content || "[]";
 
@@ -299,7 +289,8 @@ export async function handleExploreRepo(req: Request, res: Response) {
     const completion = await openai.chat.completions.create({
       model: "x-ai/grok-4.1-fast:free",
       messages: [{ role: "user", content: prompt }],
-    }, { timeout: 25000 });
+      max_tokens: 2000,
+    }, { timeout: 8000 });
 
     const responseText = completion.choices[0]?.message?.content || "";
 
@@ -382,7 +373,8 @@ export async function handleGetIdeaPlan(req: Request, res: Response) {
     const completion = await openai.chat.completions.create({
       model: "x-ai/grok-4.1-fast:free",
       messages: [{ role: "user", content: prompt }],
-    });
+      max_tokens: 2500,
+    }, { timeout: 8000 });
 
     const responseText = completion.choices[0]?.message?.content || "";
 
