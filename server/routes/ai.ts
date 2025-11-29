@@ -162,15 +162,22 @@ export async function handleGenerateIdeas(req: Request, res: Response) {
 const execAsync = promisify(exec);
 
 async function fetchRepoDigest(repoName: string): Promise<string | null> {
+  // Skip gitingest on serverless environments (Netlify, Lambda, etc.)
+  // The virtual environment isn't deployed and would cause timeouts
+  if (process.env.NETLIFY || process.env.AWS_LAMBDA_FUNCTION_NAME) {
+    console.log(`⏭️  Skipping gitingest on serverless environment for ${repoName}`);
+    return null;
+  }
+
   try {
     // Limit the output to 500kb to avoid context window issues if the repo is huge
     // The -o - flag outputs to stdout
-    // Set a strict timeout of 3 seconds. If it takes longer, we skip it.
+    // Set a strict timeout of 5 seconds. If it takes longer, we skip it.
     const { stdout } = await execAsync(
       `./.gitingest_venv/bin/gitingest https://github.com/${repoName} -o -`,
       {
         maxBuffer: 1024 * 1024 * 5, // 5MB buffer
-        timeout: 15000 // 15 seconds timeout
+        timeout: 5000 // 5 seconds timeout (reduced for Netlify's 10s function limit)
       }
     );
     return stdout;
