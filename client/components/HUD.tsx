@@ -30,7 +30,7 @@ export default function HUD({
   onLanguageSelect,
   selectedLanguage,
   hoveredRepo = null,
-  minStars = 0,
+  minStars = 1000,
   maxStars = null,
   onMinStarsChange = () => { },
   onMaxStarsChange = () => { },

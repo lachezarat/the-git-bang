@@ -12,15 +12,16 @@ import SonarPing from "./SonarPing";
 import DirectionalArrow from "./DirectionalArrow";
 
 interface Scene3DProps {
-  searchActive?: boolean;
-  searchQuery?: string;
-  onParticleClick?: (repo: any, position: { x: number; y: number }) => void;
-  onParticleHover?: (repo: Repository | null) => void;
-  repositories?: Repository[];
-  focusedRepo?: Repository | null;
-  hoveredRepo?: Repository | null;
-  cardPosition?: { x: number; y: number } | null;
+  searchActive: boolean;
+  searchQuery: string;
+  onParticleClick: (repo: any, position: { x: number; y: number }) => void;
+  onParticleHover: (repo: any) => void;
+  repositories: Repository[];
+  focusedRepo: Repository | null;
+  hoveredRepo: Repository | null;
+  cardPosition: { x: number; y: number };
   enableHoverPulse?: boolean;
+  dataLoaded?: boolean;
 }
 
 function ConeGuides() {

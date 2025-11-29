@@ -176,6 +176,7 @@ interface LightConeProps {
   repositories?: Repository[];
   focusedId?: string | null;
   hoveredId?: string | null;
+  dataLoaded?: boolean;
 }
 
 export default function LightCone({
@@ -183,6 +184,7 @@ export default function LightCone({
   repositories = [],
   focusedId = null,
   hoveredId = null,
+  dataLoaded = false,
 }: LightConeProps = {}) {
   const pointsRef = useRef<THREE.Points>(null);
   const materialRef = useRef<THREE.ShaderMaterial>(null);
@@ -206,8 +208,11 @@ export default function LightCone({
 
 
   const { geometry, uniforms } = useMemo(() => {
-    const count =
-      repositories.length > 0 ? repositories.length : DEFAULT_PARTICLE_COUNT;
+    // Only use fallback if data is NOT loaded and we have no repos.
+    // If data IS loaded and we have no repos (e.g. filtered out), count should be 0.
+    const shouldUseFallback = !dataLoaded && repositories.length === 0;
+    const count = shouldUseFallback ? DEFAULT_PARTICLE_COUNT : repositories.length;
+
     const positions = new Float32Array(count * 3);
     const colors = new Float32Array(count * 3);
     const sizes = new Float32Array(count);
@@ -230,7 +235,7 @@ export default function LightCone({
       // Set ID attribute (just the index)
       ids[i] = i;
 
-      if (repositories.length > 0) {
+      if (!shouldUseFallback) {
         const repo = repositories[i];
         timestamp = repo.createdAt;
         popularity = calculatePopularity(repo.stars);
@@ -250,6 +255,7 @@ export default function LightCone({
 
         // Normalize to 0-1 range
         normalizedSize = Math.max(0, Math.min(1, logStars / maxLogStars));
+
       } else {
         // Fallback random generation (should not happen with loaded data)
         timestamp = startTime + Math.random() * (END_TIME - startTime);

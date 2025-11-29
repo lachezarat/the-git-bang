@@ -28,7 +28,7 @@ export default function Index() {
 
   const [selectedLanguage, setSelectedLanguage] = useState<string | null>(null);
 
-  const [minStars, setMinStars] = useState(0);
+  const [minStars, setMinStars] = useState(1000);
   const [maxStars, setMaxStars] = useState<number | null>(null);
 
   // Reset camera when repo is deselected
@@ -197,6 +197,7 @@ export default function Index() {
             hoveredRepo={hoveredRepo}
             cardPosition={repoCardPos}
             enableHoverPulse={true}
+            dataLoaded={!dataLoading}
           />
 
           <CameraTracker

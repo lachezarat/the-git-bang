@@ -44,7 +44,7 @@ export default function TimelinePanel({
   const [isDraggingMax, setIsDraggingMax] = useState(false);
 
   // Constants for the slider range
-  const ABSOLUTE_MIN = 0;
+  const ABSOLUTE_MIN = 1000;
   const ABSOLUTE_MAX = 400000; // Approx max stars in dataset
   const LOG_MIN = Math.log(ABSOLUTE_MIN + 1);
   const LOG_MAX = Math.log(ABSOLUTE_MAX + 1);
