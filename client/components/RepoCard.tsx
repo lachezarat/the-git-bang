@@ -113,8 +113,17 @@ export default function RepoCard({ repo, position, onClose }: RepoCardProps) {
       });
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || "Failed to generate ideas");
+        const errorText = await response.text();
+        console.error(`API Error (${response.status}):`, errorText);
+        let errorMessage = "Failed to generate ideas";
+        try {
+          const errorData = JSON.parse(errorText);
+          errorMessage = errorData.error || errorMessage;
+        } catch (e) {
+          // Response was not JSON (likely 502 or 500 HTML page)
+          errorMessage = `Server error: ${response.status} ${response.statusText}`;
+        }
+        throw new Error(errorMessage);
       }
 
       const data = (await response.json()) as { ideas: AppIdea[] };

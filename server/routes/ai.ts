@@ -116,7 +116,7 @@ async function fetchRepoDigest(repoName: string): Promise<string | null> {
       `./.gitingest_venv/bin/gitingest https://github.com/${repoName} -o -`,
       {
         maxBuffer: 1024 * 1024 * 5, // 5MB buffer
-        timeout: 3000 // 3 seconds timeout
+        timeout: 15000 // 15 seconds timeout
       }
     );
     return stdout;
