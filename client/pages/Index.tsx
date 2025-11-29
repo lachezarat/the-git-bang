@@ -2,10 +2,10 @@ import { useEffect, useRef, useState, useMemo, useCallback } from "react";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls, PerspectiveCamera } from "@react-three/drei";
 import Scene3D from "../components/Scene3D";
-import BootSequence from "../components/BootSequence";
 import HUD from "../components/HUD";
 import ScanlineOverlay from "../components/ScanlineOverlay";
 import RepoCard from "../components/RepoCard";
+import RepoList from "../components/RepoList";
 import AmbientSound from "../components/AmbientSound";
 import ErrorBoundary from "../components/ErrorBoundary";
 import { useRepositoryData } from "../hooks/useRepositoryData";
@@ -14,7 +14,6 @@ import * as THREE from "three";
 import CameraTracker from "../components/CameraTracker";
 
 export default function Index() {
-  const [bootComplete, setBootComplete] = useState(false);
   const cursorRef = useRef<HTMLDivElement>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchActive, setSearchActive] = useState(false);
@@ -30,6 +29,9 @@ export default function Index() {
 
   const [minStars, setMinStars] = useState(1000);
   const [maxStars, setMaxStars] = useState<number | null>(null);
+
+  const [viewMode, setViewMode] = useState<"3d" | "list">("3d");
+  const [sortMode, setSortMode] = useState<"stars" | "date">("stars");
 
   // Reset camera when repo is deselected
   useEffect(() => {
@@ -58,6 +60,26 @@ export default function Index() {
       return matchesLanguage && matchesMinStars && matchesMaxStars;
     });
   }, [repositories, selectedLanguage, minStars, maxStars]);
+
+  const sortedRepositories = useMemo(() => {
+    return [...filteredRepositories].sort((a, b) => {
+      if (sortMode === "stars") {
+        return b.stars - a.stars;
+      } else {
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      }
+    });
+  }, [filteredRepositories, sortMode]);
+
+  const handleSurpriseMe = useCallback(() => {
+    if (filteredRepositories.length > 0) {
+      const randomRepo = filteredRepositories[Math.floor(Math.random() * filteredRepositories.length)];
+      setSelectedRepo(randomRepo);
+      setRepoCardPos({ x: window.innerWidth / 2, y: window.innerHeight / 2 });
+      // If in 3D mode, maybe we want to fly to it?
+      // For now, just opening the card is good.
+    }
+  }, [filteredRepositories]);
 
   const handleSearchChange = useCallback(
     (query: string, isFocused: boolean) => {
@@ -130,22 +152,6 @@ export default function Index() {
     };
   }, []);
 
-  useEffect(() => {
-    // Wait for both boot sequence and data to load
-    const timer = setTimeout(() => {
-      setBootComplete(true);
-    }, 4000);
-
-    return () => clearTimeout(timer);
-  }, []);
-
-  // Additional effect to ensure boot completes when data is loaded
-  useEffect(() => {
-    if (!dataLoading && repositories.length > 0) {
-      setBootComplete(true);
-    }
-  }, [dataLoading, repositories.length]);
-
   // Show error if data loading failed
   useEffect(() => {
     if (dataError) {
@@ -166,85 +172,98 @@ export default function Index() {
         <div className="noise-overlay" />
         <ScanlineOverlay />
 
-        {!bootComplete && <BootSequence />}
+        {viewMode === "3d" && (
+          <Canvas
+            className="absolute inset-0"
+            dpr={[1, 2]}
+            gl={{ antialias: true }}
+          >
+            <PerspectiveCamera makeDefault fov={75} position={[0, 0, 225]} />
+            <ambientLight intensity={0.05} />
+            <pointLight position={[20, 20, 20]} intensity={0.3} color="#00fff9" />
+            <pointLight
+              position={[-20, -20, -20]}
+              intensity={0.2}
+              color="#ff006e"
+            />
+            <pointLight
+              position={[0, 20, -20]}
+              intensity={0.15}
+              color="#ffba08"
+            />
 
-        <Canvas
-          className="absolute inset-0"
-          dpr={[1, 2]}
-          gl={{ antialias: true }}
-        >
-          <PerspectiveCamera makeDefault fov={75} position={[0, 0, 225]} />
-          <ambientLight intensity={0.05} />
-          <pointLight position={[20, 20, 20]} intensity={0.3} color="#00fff9" />
-          <pointLight
-            position={[-20, -20, -20]}
-            intensity={0.2}
-            color="#ff006e"
-          />
-          <pointLight
-            position={[0, 20, -20]}
-            intensity={0.15}
-            color="#ffba08"
-          />
+            <Scene3D
+              searchActive={searchActive}
+              searchQuery={searchQuery}
+              onParticleClick={handleParticleClick}
+              onParticleHover={handleParticleHover}
+              repositories={filteredRepositories}
+              focusedRepo={selectedRepo}
+              hoveredRepo={hoveredRepo}
+              cardPosition={repoCardPos}
+              enableHoverPulse={true}
+              dataLoaded={!dataLoading}
+            />
 
-          <Scene3D
-            searchActive={searchActive}
-            searchQuery={searchQuery}
-            onParticleClick={handleParticleClick}
-            onParticleHover={handleParticleHover}
-            repositories={filteredRepositories}
-            focusedRepo={selectedRepo}
-            hoveredRepo={hoveredRepo}
-            cardPosition={repoCardPos}
-            enableHoverPulse={true}
-            dataLoaded={!dataLoading}
-          />
+            <CameraTracker
+              onYearChange={setCurrentYear}
+              focusedRepo={selectedRepo}
+              repositories={filteredRepositories}
+            />
 
-          <CameraTracker
-            onYearChange={setCurrentYear}
-            focusedRepo={selectedRepo}
-            repositories={filteredRepositories}
-          />
+            <OrbitControls
+              ref={controlsRef}
+              target={[0, 0, 0]}
+              enableZoom={true}
+              enablePan={true}
+              enableRotate={true}
+              minDistance={0.1}
+              maxDistance={1000}
+              autoRotate={false}
+              autoRotateSpeed={0.1}
+              enableDamping
+              dampingFactor={0.05}
+              zoomToCursor={true}
+              screenSpacePanning={true}
+              mouseButtons={{
+                LEFT: THREE.MOUSE.PAN,
+                MIDDLE: THREE.MOUSE.DOLLY,
+                RIGHT: THREE.MOUSE.ROTATE,
+              }}
+            />
+          </Canvas>
+        )}
 
-          <OrbitControls
-            ref={controlsRef}
-            target={[0, 0, 0]}
-            enableZoom={true}
-            enablePan={true}
-            enableRotate={true}
-            minDistance={0.1}
-            maxDistance={1000}
-            autoRotate={false}
-            autoRotateSpeed={0.1}
-            enableDamping
-            dampingFactor={0.05}
-            zoomToCursor={true}
-            screenSpacePanning={true}
-            mouseButtons={{
-              LEFT: THREE.MOUSE.PAN,
-              MIDDLE: THREE.MOUSE.DOLLY,
-              RIGHT: THREE.MOUSE.ROTATE,
+        <HUD
+          onSearchChange={handleSearchChange}
+          onSuggestionSelect={handleSuggestionSelect}
+          onSuggestionHover={handleHudHover}
+          repositories={filteredRepositories}
+          currentYear={currentYear}
+          onLanguageSelect={setSelectedLanguage}
+          selectedLanguage={selectedLanguage}
+          hoveredRepo={hoveredRepo}
+          minStars={minStars}
+          maxStars={maxStars}
+          onMinStarsChange={setMinStars}
+          onMaxStarsChange={setMaxStars}
+          viewMode={viewMode}
+          onViewModeChange={setViewMode}
+          onSurpriseMe={handleSurpriseMe}
+          onSortChange={setSortMode}
+          sortMode={sortMode}
+        />
+
+        {viewMode === "list" && (
+          <RepoList
+            repositories={sortedRepositories}
+            onSelect={(repo) => {
+              setSelectedRepo(repo);
+              setRepoCardPos({ x: window.innerWidth / 2, y: window.innerHeight / 2 });
             }}
           />
-        </Canvas>
-
-        {bootComplete && (
-          <HUD
-            onSearchChange={handleSearchChange}
-            onSuggestionSelect={handleSuggestionSelect}
-            onSuggestionHover={handleHudHover}
-            repositories={filteredRepositories}
-            currentYear={currentYear}
-            onLanguageSelect={setSelectedLanguage}
-            selectedLanguage={selectedLanguage}
-            hoveredRepo={hoveredRepo}
-            minStars={minStars}
-            maxStars={maxStars}
-            onMinStarsChange={setMinStars}
-            onMaxStarsChange={setMaxStars}
-          />
         )}
-        {bootComplete && <AmbientSound />}
+        <AmbientSound />
 
         {selectedRepo && (
           <RepoCard

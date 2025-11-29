@@ -20,7 +20,7 @@ attribute vec3 customColor;
 attribute float pulse;
 attribute float activity;
 attribute float brightness;
-attribute float id;
+attribute float particleId;
 
 varying vec3 vColor;
 varying float vPulse;
@@ -31,10 +31,10 @@ varying float vViewZ;
 void main() {
   vColor = customColor;
   vBrightness = brightness;
-  vId = id;
+  vId = particleId;
 
   // Check if hovered
-  bool isHovered = (abs(id - uHoveredId) < 0.1);
+  bool isHovered = (abs(particleId - uHoveredId) < 0.1);
 
   // Pulse intensity for core brightness (passed to fragment shader)
   // Hovered particles pulse faster and stronger
@@ -219,7 +219,7 @@ export default function LightCone({
     const pulses = new Float32Array(count);
     const activities = new Float32Array(count);
     const brightnesses = new Float32Array(count);
-    const ids = new Float32Array(count);
+    const particleIds = new Float32Array(count);
 
     // Calculate start time based on earliest repository
     const startTime = getStartTime(repositories);
@@ -233,7 +233,7 @@ export default function LightCone({
       let radiusRatio = 0; // repo.positionRadius
 
       // Set ID attribute (just the index)
-      ids[i] = i;
+      particleIds[i] = i;
 
       if (!shouldUseFallback) {
         const repo = repositories[i];
@@ -306,7 +306,7 @@ export default function LightCone({
       "brightness",
       new THREE.BufferAttribute(brightnesses, 1),
     );
-    geometry.setAttribute("id", new THREE.BufferAttribute(ids, 1));
+    geometry.setAttribute("particleId", new THREE.BufferAttribute(particleIds, 1));
 
     const uniforms = {
       uTime: { value: 0 },
@@ -316,7 +316,7 @@ export default function LightCone({
     };
 
     return { geometry, uniforms };
-  }, [repositories]);
+  }, [repositories, dataLoaded]);
 
   // Handle resize for pixel ratio
   useEffect(() => {
