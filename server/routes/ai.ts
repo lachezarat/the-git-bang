@@ -377,7 +377,7 @@ REQUIRED STEPS (use this structure):
 3. Import from Figma or generate features with text prompts
 4. Use Visual Editor + MCP Servers (Stripe, Database, etc.) to refine
 5. Review and merge the Pull Request
-6. Provide 5 specific prompts for Builder.io Fusion (recommend Claude 4.5 Opus)
+6. Provide 8 specific prompts for Builder.io Fusion (recommend using Claude 4.5 Opus, DO NOT CHANGE THIS MODEL, ITS IMPORTANT)
 
 Use Markdown formatting. Be concise and actionable.`;
 
