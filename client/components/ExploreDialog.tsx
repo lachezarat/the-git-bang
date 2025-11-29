@@ -9,6 +9,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { useEffect, useRef, useState } from "react";
 import mermaid from "mermaid";
+import { ProgressBar } from "./ProgressBar";
 
 interface ExploreDialogProps {
     open: boolean;
@@ -154,17 +155,16 @@ export function ExploreDialog({
 
                 <div className="flex-1 overflow-y-auto pr-2 mt-4 custom-scrollbar">
                     {isGenerating ? (
-                        <div className="flex flex-col items-center justify-center py-20 space-y-6">
-                            <div className="relative">
-                                <div className="w-16 h-16 border-4 border-space-cyan/30 border-t-space-cyan rounded-full animate-spin" />
-                                <div className="absolute inset-0 flex items-center justify-center">
-                                    <div className="w-8 h-8 bg-space-cyan/20 rounded-full animate-pulse" />
-                                </div>
-                            </div>
-                            <div className="text-space-cyan font-mono animate-pulse text-center">
-                                <div className="text-lg font-bold">ANALYZING ARCHITECTURE</div>
-                                <div className="text-sm opacity-70 mt-1">Deciphering code patterns...</div>
-                            </div>
+                        <div className="flex flex-col items-center justify-center py-20">
+                            <ProgressBar
+                                stages={[
+                                    "Analyzing repository structure...",
+                                    "Mapping technical architecture...",
+                                    "Identifying key components...",
+                                    "Generating insights...",
+                                    "Finalizing analysis..."
+                                ]}
+                            />
                         </div>
                     ) : (
                         <div className="prose prose-invert prose-cyan max-w-none">
