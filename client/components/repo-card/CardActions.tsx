@@ -77,10 +77,10 @@ export function CardActions({
           </svg>
           <div className="text-left">
             <div className="text-space-magenta font-display font-bold glow-magenta">
-              {isGenerating ? "GENERATING..." : "USE FOR VIBE CODING"}
+              {isGenerating ? "GENERATING..." : "GENERATE A UNIQUE IDEA FOR VIBE CODING"}
             </div>
             <div className="text-space-magenta/50 text-xs font-mono">
-              AI-Powered App Ideas
+              AI-Powered App Idea
             </div>
           </div>
         </div>

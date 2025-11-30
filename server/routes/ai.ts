@@ -97,45 +97,30 @@ export async function handleGenerateIdeas(req: Request, res: Response) {
   console.log(`🤖 Generating Vibe Coding ideas for: ${name}`);
 
   try {
-    const prompt = `Generate 1 innovative, unique app idea for "${name}" repository.
+    const prompt = `Generate 1 innovative app idea for "${name}" repository.
 
 Repository: ${name}
 Description: ${description}
 Topics: ${topics?.join(", ") || "N/A"}
 Languages: ${languages?.join(", ") || "N/A"}
 
-Requirements:
-- Must be a UNIQUE, creative idea (avoid generic solutions)
-- Professional, market-ready concept with real-world application
-- Can be built using this repo as foundation
-- Include detailed implementation roadmap
-- Include specific Builder.io integration strategy
-- Include comprehensive monetization strategy with revenue projections
-
-Return ONLY a JSON array with ONE detailed idea (no markdown):
+Return ONLY a JSON array with ONE idea (no markdown):
 [
   {
-    "title": "Compelling App Name",
-    "description": "3-4 sentence detailed pitch explaining the unique value proposition, target audience, and key differentiator",
-    "builder_angle": "Specific Builder.io features to leverage (e.g., Visual CMS, A/B testing, personalization). Explain exactly how Builder.io accelerates development and enables non-technical users to manage content",
-    "technical_stack": "Recommended tech stack including frameworks, databases, APIs, and third-party services",
-    "implementation_roadmap": "5-7 step development roadmap with estimated timeframes (e.g., '1. Setup core architecture (Week 1-2), 2. Implement authentication (Week 3)...')",
-    "monetization_strategy": "Detailed revenue model including pricing tiers, customer acquisition strategy, and growth tactics",
-    "potential_mrr": "$X-$Y/mo based on realistic projections",
-    "target_audience": "Specific user personas and market segments",
-    "competitive_advantage": "What makes this unique compared to existing solutions",
-    "prompt_suggestions": [
-      "Builder.io prompt 1: Detailed prompt for creating landing page components",
-      "Builder.io prompt 2: Prompt for setting up content models",
-      "Builder.io prompt 3: Prompt for implementing dynamic sections"
-    ]
+    "title": "App Name",
+    "description": "2-3 bullet points describing the app",
+    "monetization_strategy": "1-2 sentences max",
+    "builder_angle": "1-2 sentences on how Builder.io helps",
+    "potential_mrr": "$X-$Y/mo"
   }
-]`;
+]
+
+Keep it concise and scannable.`;
 
     const completion = await openai.chat.completions.create({
       model: "x-ai/grok-4.1-fast:free",
       messages: [{ role: "user", content: prompt }],
-      max_tokens: 2000,
+      max_tokens: 1000,
     }, { timeout: 10000 });
 
     const responseText = completion.choices[0]?.message?.content || "[]";
@@ -158,14 +143,14 @@ Return ONLY a JSON array with ONE detailed idea (no markdown):
       error:
         error instanceof Error
           ? error.message
-          : "Failed to generate ideas from the machine spirits.",
+          : "Failed to generate idea from the machine spirits.",
     });
   }
 }
 
 const execAsync = promisify(exec);
 
-async function getDeepWikiDocs(repoName: string): Promise<string | null> {
+async function getDeepWikiDocs(repoName: string): Promise<{ content: string | null; notIndexed?: boolean; indexUrl?: string }> {
   console.log(`🔌 Connecting to DeepWiki MCP for ${repoName}...`);
 
   try {
@@ -210,15 +195,24 @@ async function getDeepWikiDocs(repoName: string): Promise<string | null> {
 
     if (!markdown || markdown.length < 100) {
       console.warn("⚠️ DeepWiki returned empty or too short content.");
-      return null;
+      return { content: null };
     }
 
     console.log(`📄 Fetched ${markdown.length} bytes of docs from DeepWiki`);
-    return markdown;
+    return { content: markdown };
 
   } catch (error) {
-    console.warn(`❌ Failed to fetch DeepWiki docs for ${repoName}:`, error);
-    return null;
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    console.warn(`❌ Failed to fetch DeepWiki docs for ${repoName}:`, errorMessage);
+
+    // Check if this is a "Repository not found" error
+    if (errorMessage.includes("Repository not found") || errorMessage.includes("not indexed")) {
+      const indexUrl = `https://deepwiki.com/${repoName}`;
+      console.log(`📍 Repository not indexed. Index URL: ${indexUrl}`);
+      return { content: null, notIndexed: true, indexUrl };
+    }
+
+    return { content: null };
   }
 }
 
@@ -291,14 +285,26 @@ export async function handleExploreRepo(req: Request, res: Response) {
   console.log(`🔍 Exploring repository depth for: ${name}`);
 
   // Fetch the DeepWiki docs
-  const docs = await getDeepWikiDocs(name);
+  const docsResult = await getDeepWikiDocs(name);
 
-  if (docs) {
+  if (docsResult.content) {
     // Return DeepWiki documentation directly (no AI processing)
-    console.log(`✅ Returning ${docs.length} bytes of DeepWiki docs directly`);
+    console.log(`✅ Returning ${docsResult.content.length} bytes of DeepWiki docs directly`);
     res.json({
-      markdown: docs,
+      markdown: docsResult.content,
       source: 'deepwiki'
+    });
+    return;
+  }
+
+  // Check if repository is not indexed
+  if (docsResult.notIndexed) {
+    console.log(`⚠️ Repository ${name} is not indexed on DeepWiki`);
+    res.json({
+      markdown: `# Repository Not Indexed Yet\n\nThis repository has not been indexed on DeepWiki yet.\n\nTo enable deep analysis with comprehensive documentation, please visit:\n\n**${docsResult.indexUrl}**\n\nOnce indexed, you'll be able to access detailed documentation, ask questions, and get AI-powered insights about this repository.`,
+      source: 'not-indexed',
+      notIndexed: true,
+      indexUrl: docsResult.indexUrl
     });
     return;
   }
@@ -447,7 +453,7 @@ Use Markdown formatting. Be concise and actionable.`;
 }
 
 // Helper function to ask questions via DeepWiki MCP
-async function askDeepWikiQuestion(repoName: string, question: string): Promise<string | null> {
+async function askDeepWikiQuestion(repoName: string, question: string): Promise<{ answer: string | null; notIndexed?: boolean; indexUrl?: string }> {
   console.log(`❓ Asking DeepWiki about ${repoName}: "${question}"`);
 
   try {
@@ -489,15 +495,24 @@ async function askDeepWikiQuestion(repoName: string, question: string): Promise<
 
     if (!answer || answer.length < 10) {
       console.warn("⚠️ DeepWiki returned empty or too short answer.");
-      return null;
+      return { answer: null };
     }
 
     console.log(`💡 Received answer (${answer.length} chars)`);
-    return answer;
+    return { answer };
 
   } catch (error) {
-    console.warn(`❌ Failed to ask DeepWiki question for ${repoName}:`, error);
-    return null;
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    console.warn(`❌ Failed to ask DeepWiki question for ${repoName}:`, errorMessage);
+
+    // Check if this is a "Repository not found" error
+    if (errorMessage.includes("Repository not found") || errorMessage.includes("not indexed")) {
+      const indexUrl = `https://deepwiki.com/${repoName}`;
+      console.log(`📍 Repository not indexed. Index URL: ${indexUrl}`);
+      return { answer: null, notIndexed: true, indexUrl };
+    }
+
+    return { answer: null };
   }
 }
 
@@ -543,9 +558,19 @@ export async function handleAskQuestion(req: Request, res: Response) {
   console.log(`❓ Asking about ${name}: "${question}"`);
 
   try {
-    const answer = await askDeepWikiQuestion(name, question);
+    const result = await askDeepWikiQuestion(name, question);
 
-    if (!answer) {
+    if (result.notIndexed) {
+      res.json({
+        answer: `This repository has not been indexed on DeepWiki yet.\n\nTo enable Q&A functionality, please visit [${result.indexUrl}](${result.indexUrl}) to index this repository.\n\nOnce indexed, you'll be able to ask detailed questions about the codebase.`,
+        source: 'not-indexed',
+        notIndexed: true,
+        indexUrl: result.indexUrl
+      });
+      return;
+    }
+
+    if (!result.answer) {
       res.json({
         answer: "I don't have enough information to answer that question about this repository.",
         source: 'fallback'
@@ -554,7 +579,7 @@ export async function handleAskQuestion(req: Request, res: Response) {
     }
 
     res.json({
-      answer: answer,
+      answer: result.answer,
       source: 'deepwiki'
     });
   } catch (error) {

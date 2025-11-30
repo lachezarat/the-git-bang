@@ -129,7 +129,7 @@ export default function RepoCard({ repo, position, onClose }: RepoCardProps) {
       if (!response.ok) {
         const errorText = await response.text();
         console.error(`API Error (${response.status}):`, errorText);
-        let errorMessage = "Failed to generate ideas";
+        let errorMessage = "Failed to generate idea";
         try {
           const errorData = JSON.parse(errorText);
           errorMessage = errorData.error || errorMessage;
@@ -199,7 +199,22 @@ export default function RepoCard({ repo, position, onClose }: RepoCardProps) {
         throw new Error(errorData.error || `Failed to explore: ${response.status} ${response.statusText}`);
       }
       const data = await response.json();
-      setExploreContent(data.markdown);
+
+      // If repository is not indexed, display the helpful message
+      if (data.notIndexed && data.indexUrl) {
+        setExploreContent(
+          `# Repository Not Indexed\n\n` +
+          `This repository has not been indexed on DeepWiki yet.\n\n` +
+          `📍 **To enable deep analysis, visit:** [${data.indexUrl}](${data.indexUrl})\n\n` +
+          `Once indexed, you'll have access to:\n` +
+          `- Comprehensive documentation analysis\n` +
+          `- AI-powered Q&A about the codebase\n` +
+          `- Detailed architectural insights\n` +
+          `- Mermaid diagrams and visualizations`
+        );
+      } else {
+        setExploreContent(data.markdown);
+      }
     } catch (error) {
       console.error("Error exploring:", error);
       setExploreContent(
@@ -226,7 +241,7 @@ export default function RepoCard({ repo, position, onClose }: RepoCardProps) {
           left: "50%",
           top: "50%",
           // transform is handled by GSAP (xPercent/yPercent)
-          width: "500px",
+          width: "550px",
           maxHeight: "95vh",
           height: "auto",
         }}
