@@ -248,61 +248,9 @@ export default function ParticleInteraction({
         const repo = repositoriesRef.current[index];
 
         if (repo) {
-          // Trigger card modal
+          // Trigger card modal immediately without camera animation
           if (onParticleClick) {
             onParticleClick(repo, { x: event.clientX, y: event.clientY });
-          }
-
-          // Calculate camera target position (move camera closer to the particle)
-          const direction = new THREE.Vector3()
-            .subVectors(point, camera.position)
-            .normalize();
-          const distance = 40; // Fixed distance from particle to camera
-          const newCameraPosition = new THREE.Vector3()
-            .copy(point)
-            .sub(direction.multiplyScalar(distance));
-
-          // Lock controls
-          if (controls) {
-            (controls as any).enablePan = false;
-            isLocked.current = true;
-          }
-
-          // Animate camera to new position
-          isAnimating.current = true;
-
-          gsap.to(camera.position, {
-            x: newCameraPosition.x,
-            y: newCameraPosition.y,
-            z: newCameraPosition.z,
-            duration: 1.5,
-            ease: "power2.inOut",
-            onUpdate: () => {
-              if (controls) {
-                (controls as any).target.copy(point);
-                (controls as any).update();
-              }
-            },
-            onComplete: () => {
-              isAnimating.current = false;
-              // Record distance after animation settles
-              if (controls) {
-                lastDistance.current = camera.position.distanceTo(
-                  (controls as any).target,
-                );
-              }
-            },
-          });
-
-          // Animate orbit controls target
-          if (controls) {
-            gsap.to((controls as any).target, {
-              x: point.x,
-              y: point.y,
-              z: point.z,
-              duration: 1.5,
-              ease: "power2.inOut",
-            });
           }
         }
       }

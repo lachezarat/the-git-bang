@@ -3,6 +3,9 @@ import OpenAI from "openai";
 import type { Request, Response } from "express";
 import { exec } from "child_process";
 import { promisify } from "util";
+import { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import { SSEClientTransport } from "@modelcontextprotocol/sdk/client/sse.js";
+import { EventSource } from "eventsource";
 
 // Initialize OpenRouter client
 // We assume OPENROUTER_API_KEY is set in .env
@@ -94,7 +97,7 @@ export async function handleGenerateIdeas(req: Request, res: Response) {
   console.log(`🤖 Generating Vibe Coding ideas for: ${name}`);
 
   try {
-    const prompt = `Generate 3 innovative app ideas for "${name}" repository.
+    const prompt = `Generate 1 innovative, unique app idea for "${name}" repository.
 
 Repository: ${name}
 Description: ${description}
@@ -102,27 +105,38 @@ Topics: ${topics?.join(", ") || "N/A"}
 Languages: ${languages?.join(", ") || "N/A"}
 
 Requirements:
-- Professional, market-ready ideas
+- Must be a UNIQUE, creative idea (avoid generic solutions)
+- Professional, market-ready concept with real-world application
 - Can be built using this repo as foundation
-- Include Builder.io integration angle
-- Include monetization strategy
+- Include detailed implementation roadmap
+- Include specific Builder.io integration strategy
+- Include comprehensive monetization strategy with revenue projections
 
-Return ONLY a JSON array (no markdown):
+Return ONLY a JSON array with ONE detailed idea (no markdown):
 [
   {
-    "title": "App Name",
-    "description": "2-3 sentence pitch",
-    "builder_angle": "How Builder.io accelerates this",
-    "monetization_strategy": "Revenue model",
-    "potential_mrr": "$X-$Y/mo"
+    "title": "Compelling App Name",
+    "description": "3-4 sentence detailed pitch explaining the unique value proposition, target audience, and key differentiator",
+    "builder_angle": "Specific Builder.io features to leverage (e.g., Visual CMS, A/B testing, personalization). Explain exactly how Builder.io accelerates development and enables non-technical users to manage content",
+    "technical_stack": "Recommended tech stack including frameworks, databases, APIs, and third-party services",
+    "implementation_roadmap": "5-7 step development roadmap with estimated timeframes (e.g., '1. Setup core architecture (Week 1-2), 2. Implement authentication (Week 3)...')",
+    "monetization_strategy": "Detailed revenue model including pricing tiers, customer acquisition strategy, and growth tactics",
+    "potential_mrr": "$X-$Y/mo based on realistic projections",
+    "target_audience": "Specific user personas and market segments",
+    "competitive_advantage": "What makes this unique compared to existing solutions",
+    "prompt_suggestions": [
+      "Builder.io prompt 1: Detailed prompt for creating landing page components",
+      "Builder.io prompt 2: Prompt for setting up content models",
+      "Builder.io prompt 3: Prompt for implementing dynamic sections"
+    ]
   }
 ]`;
 
     const completion = await openai.chat.completions.create({
       model: "x-ai/grok-4.1-fast:free",
       messages: [{ role: "user", content: prompt }],
-      max_tokens: 1500,
-    }, { timeout: 8000 });
+      max_tokens: 2000,
+    }, { timeout: 10000 });
 
     const responseText = completion.choices[0]?.message?.content || "[]";
 
@@ -151,28 +165,59 @@ Return ONLY a JSON array (no markdown):
 
 const execAsync = promisify(exec);
 
-async function fetchRepoDigest(repoName: string): Promise<string | null> {
-  // Skip gitingest on serverless environments (Netlify, Lambda, etc.)
-  // The virtual environment isn't deployed and would cause timeouts
-  if (process.env.NETLIFY || process.env.AWS_LAMBDA_FUNCTION_NAME) {
-    console.log(`⏭️  Skipping gitingest on serverless environment for ${repoName}`);
-    return null;
-  }
+async function getDeepWikiDocs(repoName: string): Promise<string | null> {
+  console.log(`🔌 Connecting to DeepWiki MCP for ${repoName}...`);
 
   try {
-    // Limit the output to 500kb to avoid context window issues if the repo is huge
-    // The -o - flag outputs to stdout
-    // Set a strict timeout of 5 seconds. If it takes longer, we skip it.
-    const { stdout } = await execAsync(
-      `./.gitingest_venv/bin/gitingest https://github.com/${repoName} -o -`,
+    // Polyfill EventSource for Node.js environment
+    // @ts-ignore
+    global.EventSource = EventSource;
+
+    const transport = new SSEClientTransport(
+      new URL("https://mcp.deepwiki.com/sse"),
+    );
+
+    const client = new Client(
       {
-        maxBuffer: 1024 * 1024 * 5, // 5MB buffer
-        timeout: 5000 // 5 seconds timeout (reduced for Netlify's 10s function limit)
+        name: "the-git-bang-client",
+        version: "1.0.0",
+      },
+      {
+        capabilities: {},
       }
     );
-    return stdout;
+
+    await client.connect(transport);
+    console.log("✅ Connected to DeepWiki MCP");
+
+    // Call the read_wiki_contents tool
+    // The tool expects a GitHub URL or owner/repo format
+    const repoUrl = `https://github.com/${repoName}`;
+
+    const result = await client.callTool({
+      name: "read_wiki_contents",
+      arguments: {
+        repoName: repoName
+      }
+    });
+
+    await client.close();
+
+    // The result content is usually a list of content blocks
+    // We want the text content
+    // @ts-ignore - MCP SDK types might be slightly different, but structure is standard
+    const markdown = result.content.map(c => c.text).join("\n");
+
+    if (!markdown || markdown.length < 100) {
+      console.warn("⚠️ DeepWiki returned empty or too short content.");
+      return null;
+    }
+
+    console.log(`📄 Fetched ${markdown.length} bytes of docs from DeepWiki`);
+    return markdown;
+
   } catch (error) {
-    console.warn(`Failed to fetch Gitingest for ${repoName} (likely timeout or error):`, error);
+    console.warn(`❌ Failed to fetch DeepWiki docs for ${repoName}:`, error);
     return null;
   }
 }
@@ -245,15 +290,27 @@ export async function handleExploreRepo(req: Request, res: Response) {
 
   console.log(`🔍 Exploring repository depth for: ${name}`);
 
-  // Fetch the actual code digest
-  const digest = await fetchRepoDigest(name);
-  const hasDigest = !!digest;
+  // Fetch the DeepWiki docs
+  const docs = await getDeepWikiDocs(name);
+
+  if (docs) {
+    // Return DeepWiki documentation directly (no AI processing)
+    console.log(`✅ Returning ${docs.length} bytes of DeepWiki docs directly`);
+    res.json({
+      markdown: docs,
+      source: 'deepwiki'
+    });
+    return;
+  }
+
+  // Fallback: No DeepWiki docs available, generate a basic overview
+  console.log(`⚠️ No DeepWiki docs found for ${name}, generating basic overview`);
 
   try {
     const prompt = `
       You are a Senior Software Architect and Technical Analyst.
       
-      Your task is to provide a "Deep Dive" technical overview of the following GitHub repository.
+      Your task is to provide a brief "Deep Dive" technical overview of the following GitHub repository.
       
       Repository Context:
       - Name: ${name}
@@ -261,35 +318,11 @@ export async function handleExploreRepo(req: Request, res: Response) {
       - Topics: ${topics?.join(", ")}
       - Languages: ${languages?.join(", ")}
 
-      ${hasDigest
-        ? `
-      **ACTUAL CODEBASE DIGEST (Gitingest):**
-      Below is a text digest of the repository's file structure and content. USE THIS to analyze the REAL architecture, not just the description.
-      
-      ${digest.slice(0, 100000)} ... (truncated if too long)
-      `
-        : ""
-      }
-
       Please provide a response in Markdown format with the following sections:
 
       1. **Executive Summary**: A concise 2-3 sentence technical summary of what this project does and its core value.
-      2. **Key Features**: A bulleted list of 3-5 standout technical features or capabilities.
-      3. **Architecture Visualization**:
-         - Create a **Mermaid.js** diagram (use \`\`\`mermaid code block) that visualizes the conceptual architecture, data flow, or user journey of this application. 
-         - Use "graph TD" or "graph LR".
-         - **CRITICAL SYNTAX RULES:**
-           1. **Node IDs**: Use simple alphanumeric IDs (e.g., A, B, Node1). **NEVER** use parentheses \`()\` or brackets \`[]\` in the Node ID itself.
-              - BAD: \`User(Client)\` --> B
-              - GOOD: \`User["Client"]\` --> B
-           2. **Node Labels**: You **MUST** enclose ALL node labels in double quotes.
-              - BAD: \`A[User]\`
-              - GOOD: \`A["User"]\`
-           3. **Edge Labels**: Avoid special characters in edge labels. Use simple text.
-              - BAD: \`A-- >| GET / api / v1 | B\`
-              - GOOD: \`A-- >| "GET /api/v1" | B\` (Quote the edge label if it has spaces or slashes)
-         - Keep the diagram relatively simple but informative (e.g., User -> Frontend -> API -> Database). Infer the likely architecture based on the languages and description.
-      4. **Technical Stack Inference**: Briefly mention the likely tech stack components based on the languages and description.
+      2. **Key Features**: A bulleted list of 3-5 standout technical features or capabilities (infer from description and topics).
+      3. **Technical Stack**: Infer the tech stack based on languages and description.
 
       Keep the tone professional, insightful, and "cyberpunk" cool (subtle usage of tech-forward language).
     `;
@@ -297,12 +330,16 @@ export async function handleExploreRepo(req: Request, res: Response) {
     const completion = await openai.chat.completions.create({
       model: "x-ai/grok-4.1-fast:free",
       messages: [{ role: "user", content: prompt }],
-      max_tokens: 2000,
+      max_tokens: 1000,
     }, { timeout: 8000 });
 
     const responseText = completion.choices[0]?.message?.content || "";
 
-    res.json({ markdown: responseText });
+    res.json({
+      markdown: responseText,
+      source: 'ai-fallback'
+    });
+
   } catch (error) {
     console.error("OpenRouter exploration error:", error);
     res.status(500).json({
@@ -405,6 +442,125 @@ Use Markdown formatting. Be concise and actionable.`;
         error instanceof Error
           ? error.message
           : "Failed to generate execution plan.",
+    });
+  }
+}
+
+// Helper function to ask questions via DeepWiki MCP
+async function askDeepWikiQuestion(repoName: string, question: string): Promise<string | null> {
+  console.log(`❓ Asking DeepWiki about ${repoName}: "${question}"`);
+
+  try {
+    // Polyfill EventSource for Node.js environment
+    // @ts-ignore
+    global.EventSource = EventSource;
+
+    const transport = new SSEClientTransport(
+      new URL("https://mcp.deepwiki.com/sse"),
+    );
+
+    const client = new Client(
+      {
+        name: "the-git-bang-client",
+        version: "1.0.0",
+      },
+      {
+        capabilities: {},
+      }
+    );
+
+    await client.connect(transport);
+    console.log("✅ Connected to DeepWiki MCP for Q&A");
+
+    // Call the ask_question tool
+    const result = await client.callTool({
+      name: "ask_question",
+      arguments: {
+        repoName: repoName,
+        question: question
+      }
+    });
+
+    await client.close();
+
+    // Extract the answer from the result
+    // @ts-ignore
+    const answer = result.content.map(c => c.text).join("\n");
+
+    if (!answer || answer.length < 10) {
+      console.warn("⚠️ DeepWiki returned empty or too short answer.");
+      return null;
+    }
+
+    console.log(`💡 Received answer (${answer.length} chars)`);
+    return answer;
+
+  } catch (error) {
+    console.warn(`❌ Failed to ask DeepWiki question for ${repoName}:`, error);
+    return null;
+  }
+}
+
+// New endpoint: Ask a question about a repository
+export async function handleAskQuestion(req: Request, res: Response) {
+  console.log("❓ [Ask Question] Request received");
+
+  let body = req.body;
+
+  // Handle buffer body (Netlify/serverless environments)
+  if (typeof body === 'object' && body._readableState) {
+    try {
+      const bufferData = await new Promise<Buffer>((resolve, reject) => {
+        const chunks: Buffer[] = [];
+        body.on('data', (chunk: Buffer) => chunks.push(chunk));
+        body.on('end', () => resolve(Buffer.concat(chunks)));
+        body.on('error', reject);
+      });
+      body = JSON.parse(bufferData.toString('utf8'));
+    } catch (e) {
+      console.error("❌ Failed to parse buffer body:", e);
+    }
+  } else if (Buffer.isBuffer(body)) {
+    body = JSON.parse(body.toString('utf8'));
+  } else if (typeof body === "string") {
+    try {
+      body = JSON.parse(body);
+    } catch (e) {
+      console.error("❌ Failed to parse string body:", e);
+    }
+  }
+
+  const { name, question } = body || {};
+
+  if (!name || !question) {
+    console.error("❌ Missing 'name' or 'question' in request");
+    res.status(400).json({
+      error: "Repository name and question are required"
+    });
+    return;
+  }
+
+  console.log(`❓ Asking about ${name}: "${question}"`);
+
+  try {
+    const answer = await askDeepWikiQuestion(name, question);
+
+    if (!answer) {
+      res.json({
+        answer: "I don't have enough information to answer that question about this repository.",
+        source: 'fallback'
+      });
+      return;
+    }
+
+    res.json({
+      answer: answer,
+      source: 'deepwiki'
+    });
+  } catch (error) {
+    console.error("DeepWiki Q&A error:", error);
+    res.status(500).json({
+      error: error instanceof Error ? error.message : "Failed to get answer from DeepWiki",
     });
   }
 }

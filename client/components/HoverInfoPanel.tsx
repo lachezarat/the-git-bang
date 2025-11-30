@@ -69,9 +69,8 @@ export default function HoverInfoPanel({ hoveredRepo }: HoverInfoPanelProps) {
       style={{ animationDelay: "0.3s", top: "230px" }}
     >
       <div
-        className={`liquid-glass px-5 py-4 w-[280px] relative overflow-hidden transition-all duration-300 ${
-          hoveredRepo ? "opacity-100" : "opacity-40"
-        }`}
+        className={`liquid-glass px-5 py-4 w-[280px] relative overflow-hidden transition-all duration-300 ${hoveredRepo ? "opacity-100" : "opacity-40"
+          }`}
       >
         <div className="scanline-overlay absolute inset-0 pointer-events-none opacity-20" />
 
@@ -79,9 +78,8 @@ export default function HoverInfoPanel({ hoveredRepo }: HoverInfoPanelProps) {
           {/* Header */}
           <div className="flex items-center gap-3 mb-3">
             <div
-              className={`w-2 h-2 rounded-full transition-colors duration-300 ${
-                hoveredRepo ? "pulse-dot" : ""
-              }`}
+              className={`w-2 h-2 rounded-full transition-colors duration-300 ${hoveredRepo ? "pulse-dot" : ""
+                }`}
               style={{ backgroundColor: hoveredRepo ? langColor : "#8b949e40" }}
             />
             <span className="text-space-cyan/60 uppercase tracking-wider">

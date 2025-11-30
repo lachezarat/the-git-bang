@@ -9,8 +9,8 @@ dotenv.config({ path: path.resolve(process.cwd(), ".env.local"), override: true 
 import express from "express";
 import cors from "cors";
 import { handleDemo } from "./routes/demo.ts";
+import { handleGenerateIdeas, handleExploreRepo, handleGetIdeaPlan, handleAskQuestion } from "./routes/ai.ts";
 
-import { handleGenerateIdeas, handleExploreRepo, handleGetIdeaPlan } from "./routes/ai.ts";
 
 export function createServer() {
   const app = express();
@@ -34,6 +34,7 @@ export function createServer() {
   app.post("/api/ai/generate", handleGenerateIdeas);
   app.post("/api/ai/explore", handleExploreRepo);
   app.post("/api/ai/idea-plan", handleGetIdeaPlan);
+  app.post("/api/ai/ask-question", handleAskQuestion);
 
   return app;
 }

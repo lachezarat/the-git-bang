@@ -35,21 +35,35 @@ export default function RepoCard({ repo, position, onClose }: RepoCardProps) {
     const card = cardRef.current;
     const tl = gsap.timeline();
 
-    // Reset initial states
-    gsap.set(card, { xPercent: -50, yPercent: -50 });
+    // Always center the card and set consistent initial state
+    gsap.set(card, {
+      xPercent: -50,
+      yPercent: -50,
+      rotation: 0,
+      transformOrigin: "center center"
+    });
 
+    // Consistent entrance animation: fade + scale
     tl.fromTo(
       card,
-      { opacity: 0, scale: 0.8 },
-      { opacity: 1, scale: 1, duration: 0.6, ease: "expo.out" },
+      {
+        opacity: 0,
+        scale: 0.85
+      },
+      {
+        opacity: 1,
+        scale: 1,
+        duration: 0.5,
+        ease: "power2.out"
+      },
     );
 
     const header = card.querySelector(".card-header");
     if (header) {
       gsap.fromTo(
         header,
-        { opacity: 0, x: -20 },
-        { opacity: 1, x: 0, duration: 0.4, delay: 0.2, ease: "power2.out" },
+        { opacity: 0, y: -10 },
+        { opacity: 1, y: 0, duration: 0.3, delay: 0.15, ease: "power2.out" },
       );
     }
 
@@ -57,13 +71,13 @@ export default function RepoCard({ repo, position, onClose }: RepoCardProps) {
     if (metrics) {
       gsap.fromTo(
         metrics,
-        { opacity: 0, scale: 0.8 },
+        { opacity: 0, scale: 0.95 },
         {
           opacity: 1,
           scale: 1,
-          duration: 0.4,
-          delay: 0.3,
-          ease: "back.out(2)",
+          duration: 0.3,
+          delay: 0.25,
+          ease: "power2.out",
         },
       );
     }
@@ -73,7 +87,7 @@ export default function RepoCard({ repo, position, onClose }: RepoCardProps) {
       gsap.fromTo(
         timeline,
         { opacity: 0, y: 10 },
-        { opacity: 1, y: 0, duration: 0.4, delay: 0.4, ease: "power2.out" },
+        { opacity: 1, y: 0, duration: 0.3, delay: 0.35, ease: "power2.out" },
       );
     }
 
@@ -85,9 +99,9 @@ export default function RepoCard({ repo, position, onClose }: RepoCardProps) {
         {
           opacity: 1,
           y: 0,
-          duration: 0.3,
-          delay: 0.5,
-          stagger: 0.1,
+          duration: 0.25,
+          delay: 0.45,
+          stagger: 0.08,
           ease: "power2.out",
         },
       );
@@ -158,13 +172,6 @@ export default function RepoCard({ repo, position, onClose }: RepoCardProps) {
 
   const handleExplore = async () => {
     setShowExploreDialog(true);
-
-    // TRIGGER PREFETCHING IN BACKGROUND
-    // We don't await this, so it runs in parallel with exploration
-    if (vibeIdeas.length === 0 && !isGenerating) {
-      console.log("🚀 Prefetching Vibe Ideas in background...");
-      fetchVibeIdeas();
-    }
 
     if (exploreContent) return;
 
