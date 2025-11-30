@@ -10,6 +10,15 @@ import { useState, useEffect, useRef } from "react";
 import { IdeaPlanDialog } from "./IdeaPlanDialog";
 import { useToast } from "@/hooks/use-toast";
 import { ProgressBar } from "./ProgressBar";
+import ReactMarkdown from "react-markdown";
+
+// Custom markdown components for better formatting
+const ideaMarkdownComponents = {
+    strong: ({ children }: any) => <strong className="text-cyan-400 font-bold block mt-3 mb-1 first:mt-0">{children}</strong>,
+    p: ({ children }: any) => <p className="mb-3 last:mb-0">{children}</p>,
+    ul: ({ children }: any) => <ul className="space-y-2 ml-0">{children}</ul>,
+    li: ({ children }: any) => <li className="flex gap-2 items-start"><span className="text-cyan-400 mt-0.5">•</span><span className="flex-1">{children}</span></li>,
+};
 
 interface VibeIdeasDialogProps {
     open: boolean;
@@ -156,9 +165,9 @@ export function VibeIdeasDialog({
 
                                         {/* Content */}
                                         <div className="relative p-4 space-y-3">
-                                            <p className="text-gray-300 text-sm leading-relaxed">
-                                                {idea.description}
-                                            </p>
+                                            <div className="text-gray-300 text-sm leading-relaxed">
+                                                <ReactMarkdown components={ideaMarkdownComponents}>{idea.description}</ReactMarkdown>
+                                            </div>
 
                                             {/* Full-width stacked sections */}
                                             <div className="flex flex-col gap-3">
@@ -167,8 +176,8 @@ export function VibeIdeasDialog({
                                                     <div className="text-[10px] text-cyan-400/60 uppercase font-mono mb-2 tracking-widest">
                                                         MONETIZATION
                                                     </div>
-                                                    <div className="text-xs font-mono text-gray-200 leading-relaxed">
-                                                        {idea.monetization_strategy || "N/A"}
+                                                    <div className="text-xs text-gray-200 leading-relaxed">
+                                                        <ReactMarkdown components={ideaMarkdownComponents}>{idea.monetization_strategy || "N/A"}</ReactMarkdown>
                                                     </div>
                                                 </div>
 
@@ -178,7 +187,7 @@ export function VibeIdeasDialog({
                                                         BUILDER.IO EDGE
                                                     </div>
                                                     <div className="text-xs text-gray-200 leading-relaxed">
-                                                        {idea.builder_angle}
+                                                        <ReactMarkdown components={ideaMarkdownComponents}>{idea.builder_angle}</ReactMarkdown>
                                                     </div>
                                                 </div>
                                             </div>

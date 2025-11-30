@@ -97,12 +97,6 @@ export default function Index() {
 
   const handleParticleClick = useCallback(
     (repo: any, position: { x: number; y: number }) => {
-      console.log(
-        "handleParticleClick called with repo:",
-        repo,
-        "position:",
-        position,
-      );
       setSelectedRepo(repo);
       setRepoCardPos(position);
     },

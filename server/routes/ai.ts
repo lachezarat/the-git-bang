@@ -97,44 +97,58 @@ export async function handleGenerateIdeas(req: Request, res: Response) {
   console.log(`🤖 Generating Vibe Coding ideas for: ${name}`);
 
   try {
-    const prompt = `Generate 1 innovative app idea for "${name}" repository.
+    const prompt = `Generate 1 HIGH-VALUE, innovative app idea for repo: "${name}".
 
-Repository: ${name}
-Description: ${description}
+Repo: ${name}
+Desc: ${description}
 Topics: ${topics?.join(", ") || "N/A"}
-Languages: ${languages?.join(", ") || "N/A"}
+Langs: ${languages?.join(", ") || "N/A"}
 
-Return ONLY a JSON array with ONE idea (no markdown):
+REQUIREMENTS:
+- Must target $5k-$100k MRR potential
+- Focus on B2B, SaaS, or premium enterprise markets
+- Each feature bullet must start with **Bold Feature Name:** followed by detailed explanation
+
+Output ONLY valid JSON array with exactly 1 idea:
+
 [
   {
-    "title": "App Name",
-    "description": "2-3 bullet points describing the app",
-    "monetization_strategy": "1-2 sentences max",
-    "builder_angle": "1-2 sentences on how Builder.io helps",
-    "potential_mrr": "$X-$Y/mo"
+    "title": "Premium App Name",
+    "description": "• **Feature Name 1:** Detailed explanation of this key feature and its business value. Be specific and focus on premium capabilities.\\n• **Feature Name 2:** Another compelling feature with clear value proposition.\\n• **Feature Name 3:** Technical advantage or unique capability.\\n• **Feature Name 4:** Integration or workflow benefit.\\n• **Feature Name 5:** Scalability or enterprise-grade feature.",
+    "monetization_strategy": "1-2 concise sentences covering pricing model and target customer segment.",
+    "builder_angle": "1-2 concise sentences on how Builder.io accelerates development and time-to-market.",
+    "potential_mrr": "$5k-$100k/mo"
   }
-]
-
-Keep it concise and scannable.`;
+]`;
 
     const completion = await openai.chat.completions.create({
-      model: "x-ai/grok-4.1-fast:free",
+      model: "google/gemma-3-27b-it:free",
       messages: [{ role: "user", content: prompt }],
-      max_tokens: 1000,
-    }, { timeout: 10000 });
+      max_tokens: 700,        // Increased for detailed, well-formatted output
+      temperature: 0.3,       // Balanced creativity
+      top_p: 1,
+      stream: false,
+      presence_penalty: 0,
+      frequency_penalty: 0,
+    }, { timeout: 6000 });    // Slightly longer timeout for larger responses
 
     const responseText = completion.choices[0]?.message?.content || "[]";
+
+    console.log("📝 Raw AI response:", responseText.substring(0, 200) + "...");
 
     // Robust JSON extraction: find the first '[' and the last ']'
     const jsonMatch = responseText.match(/\[[\s\S]*\]/);
 
     if (!jsonMatch) {
-      console.error("Failed to extract JSON from response:", responseText);
+      console.error("❌ Failed to extract JSON from response. Full response:", responseText);
       throw new Error("AI response did not contain a valid JSON array.");
     }
 
     const cleanJson = jsonMatch[0];
+    console.log("✅ Extracted JSON:", cleanJson.substring(0, 150) + "...");
+
     const ideas = JSON.parse(cleanJson);
+    console.log(`✅ Successfully parsed ${ideas.length} idea(s)`);
 
     res.json({ ideas });
   } catch (error) {
