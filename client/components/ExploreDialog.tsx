@@ -116,7 +116,7 @@ const Mermaid = ({ chart }: { chart: string }) => {
         <>
             <div
                 onClick={() => setIsFullscreen(true)}
-                className="mermaid-chart flex justify-center p-6 bg-black/40 border border-space-cyan/20 my-4 overflow-x-auto cursor-pointer hover:border-space-cyan/40 transition-all"
+                className="mermaid-chart flex justify-center p-6 bg-black/40 border border-space-cyan/20 my-4 overflow-x-auto cursor-pointer hover:border-space-cyan/40 transition-all [&_svg]:!max-w-full [&_svg]:!h-auto"
                 dangerouslySetInnerHTML={{ __html: svg }}
             />
             <div className="text-center -mt-2 mb-4">
@@ -127,7 +127,11 @@ const Mermaid = ({ chart }: { chart: string }) => {
 
             {isFullscreen && (
                 <div className="fixed inset-0 z-[9999] bg-black flex items-center justify-center">
-                    <TransformWrapper initialScale={1} minScale={0.3} maxScale={3} centerOnInit={true}>
+                    <TransformWrapper
+                        initialScale={1}
+                        minScale={0.1}
+                        maxScale={4}
+                    >
                         {({ zoomIn, zoomOut, resetTransform }) => (
                             <>
                                 {/* Controls at top */}
@@ -139,16 +143,11 @@ const Mermaid = ({ chart }: { chart: string }) => {
                                     <button onClick={() => setIsFullscreen(false)} className="px-3 py-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 transition-all text-sm font-bold font-mono" title="Close">✕</button>
                                 </div>
 
-                                {/* Centered diagram with consistent max sizes */}
-                                <TransformComponent wrapperClass="!w-screen !h-screen flex items-center justify-center" contentClass="flex items-center justify-center">
+                                {/* Centered diagram */}
+                                <TransformComponent wrapperClass="!w-screen !h-screen" contentClass="!flex !items-center !justify-center !min-w-screen !min-h-screen">
                                     <div
                                         dangerouslySetInnerHTML={{ __html: svg }}
-                                        className="mermaid-chart-fullscreen max-w-[90vw] max-h-[85vh] flex items-center justify-center"
-                                        style={{
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center'
-                                        }}
+                                        className="mermaid-chart-fullscreen [&_svg]:!max-w-[85vw] [&_svg]:!max-h-[80vh] [&_svg]:!w-auto [&_svg]:!h-auto"
                                     />
                                 </TransformComponent>
 
