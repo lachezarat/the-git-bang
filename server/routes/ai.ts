@@ -437,7 +437,7 @@ Builder.io Angle: ${ideaBuilderAngle}
 Existing Repo: ${repoName}
 
 REQUIRED STEPS (use this structure):
-1. Sign up or Sign in to [Builder.io](https://builderio.partnerlinks.io/5ao76wthwoji)
+1. Sign up or Sign in to [Builder.io](https://builder.io)
 2. Connect repository "${repoName}" to Builder.io Fusion
 3. Import from Figma or generate features with text prompts
 4. Use Visual Editor + MCP Servers (Stripe, Database, etc.) to refine

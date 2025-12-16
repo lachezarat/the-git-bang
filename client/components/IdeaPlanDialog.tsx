@@ -26,29 +26,11 @@ const markdownComponents = {
     li: ({ children }: any) => <li className="marker:text-space-cyan">{children}</li>,
     p: ({ children }: any) => <p className="text-gray-300 leading-relaxed mb-4">{children}</p>,
     strong: ({ children }: any) => <strong className="text-space-cyan font-bold">{children}</strong>,
-    a: ({ href, children }: any) => {
-        const isAffiliate = href?.includes("builderio.partnerlinks.io");
-        if (isAffiliate) {
-            return (
-                <a
-                    href={href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 px-4 py-2 mt-2 bg-space-cyan/20 border border-space-cyan/40 text-space-cyan font-bold hover:bg-space-cyan/30 hover:shadow-[0_0_15px_rgba(0,255,249,0.3)] transition-all uppercase text-xs tracking-wider no-underline group"
-                >
-                    <span>{children}</span>
-                    <svg className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                    </svg>
-                </a>
-            );
-        }
-        return (
-            <a href={href} target="_blank" rel="noopener noreferrer" className="text-space-cyan hover:text-space-cyan/80 underline decoration-space-cyan/30 underline-offset-4 transition-colors">
-                {children}
-            </a>
-        );
-    },
+    a: ({ href, children }: any) => (
+        <a href={href} target="_blank" rel="noopener noreferrer" className="text-space-cyan hover:text-space-cyan/80 underline decoration-space-cyan/30 underline-offset-4 transition-colors">
+            {children}
+        </a>
+    ),
     code: ({ node, inline, className, children, ...props }: any) => {
         if (inline) {
             return (
@@ -109,20 +91,6 @@ export function IdeaPlanDialog({
                         </div>
                     )}
                 </div>
-
-                {!isGenerating && (
-                    <div className="mt-6 pt-4 border-t border-white/10 flex justify-end">
-                        <button
-                            onClick={() => window.open("https://builderio.partnerlinks.io/5ao76wthwoji", "_blank")}
-                            className="flex items-center gap-2 px-6 py-3 bg-cyan-500/10 border border-cyan-500/40 text-cyan-400 font-bold hover:bg-cyan-500/20 hover:shadow-[0_0_20px_rgba(0,255,249,0.3)] transition-all uppercase text-sm tracking-wider group"
-                        >
-                            <span>Open Builder.io Dashboard</span>
-                            <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                            </svg>
-                        </button>
-                    </div>
-                )}
             </DialogContent>
         </Dialog>
     );

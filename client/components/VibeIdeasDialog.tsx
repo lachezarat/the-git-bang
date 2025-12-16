@@ -220,18 +220,6 @@ export function VibeIdeasDialog({
                             >
                                 {hasMoreLocalIdeas ? "SHOW NEXT 3 IDEAS" : "GENERATE FRESH IDEA"}
                             </button>
-
-                            <div className="flex items-center justify-between">
-                                <div className="text-xs text-gray-400 font-mono">
-                                    Ready to build? Start your project with Builder.io
-                                </div>
-                                <button
-                                    onClick={() => window.open("https://builderio.partnerlinks.io/5ao76wthwoji", "_blank")}
-                                    className="text-xs bg-white/10 hover:bg-white/20 text-white px-3 py-1.5 border border-white/20 font-mono uppercase tracking-wider transition-colors"
-                                >
-                                    OPEN BUILDER.IO
-                                </button>
-                            </div>
                         </div>
                     )}
                 </DialogContent>
